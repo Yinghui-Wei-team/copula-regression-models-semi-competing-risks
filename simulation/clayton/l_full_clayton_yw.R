@@ -28,6 +28,10 @@ library(numDeriv)
 dir = "results"
 setwd(dir)
 
+# directory if working on cluster
+# dir = "/home/ywei/Simulation/Paper2/Clayton"
+# setwd(dir)
+
 start_time <- Sys.time()
 set.seed(98452221)
 #set.seed(123)
