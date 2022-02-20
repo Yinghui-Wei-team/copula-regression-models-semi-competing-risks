@@ -1,13 +1,8 @@
-##########################################################
-# Paper 2: Simulation 1
-# Data simulated from: Clayton copula exponential survival model 
-#                      with covariates on hazard rates and association parameter
-# Analysis:            Cox model is fitted
-# Purpose:             Evaluation for misspecification
-################################################################################
-# YW: 22 July 2021:  Data from Clayton copula, analysis by Cox model
-# YW: 22 July 2021: 1. add running time tracker
-#                   2. rename variables, output results
+# Paper 2: Simulation study
+# YW: 23 July 2021  Data from Gumbel copula, analysis by Cox model
+# YW: 23 July 2021: 1. add running time tracker
+#                   2. rename variables (to vectors instead of scalars), output results
+
 
 rm(list=ls())
 library(copula)
@@ -17,42 +12,45 @@ library(plyr)
 library(survival)
 library(numDeriv)
 
-######################## age.grp #########################
-# directory if working on University PC
-dir = "results"
-setwd(dir)
 
-# directory if working on cluster
-# dir = "/home/ywei/Simulation/Paper2/Clayton"
 
-setwd(dir)
+# directory if University PC
+dir1 = "C:/Users/ywei3/University of Plymouth/Lexy Sorrell - Lexy's Work/R/NHSBT/Covariates/Simulations/Results"
 
+
+# directory if on cluster
+dir2 = "home/ywei/Simulation/Paper2/Gumbel"
+
+
+# set working directory
+setwd(dir2)
+
+out_file_summary <- "S1- Cox model-data from Gumbel copula - summary.csv"
+out_file_estimates <- "S1- Cox model-data from Gumbel copula - estimates.csv"
 start_time = Sys.time()
-out_file_summary <- "S1-summary-Cox model-data from Clayton copula.csv"
-out_file_estimates <- "S1-estimates-Cox model-data from Clayton copula.csv"
 
 ########################################################
 ####################### set up #########################
 ########################################################
-set.seed(2000192)
+set.seed(541121303)
 n <- 3000
 runs <- 1000
 
 #true values from KTX data
-true_b0 <- 0.39
-true_b1 <- 1.09
-true_b2 <- 0.14
-true_b3 <- 0.53
+true_b0 <- -2.30
+true_b1 <- 1.35
+true_b2 <- 0
+true_b3 <- 0
 
-true_a0 <- -3.28
-true_a1 <- 0.32
+true_a0 <- -3.33
+true_a1 <- 0.13
 true_a2 <- 0
-true_a3 <- -0.53
+true_a3 <- -0.51
 
-true_c0 <- -4.09
-true_c1 <- 1.35
-true_c2 <- -0.07
-true_c3 <- -0.62
+true_c0 <- -4.16
+true_c1 <- 1.30
+true_c2 <- -0.11
+true_c3 <- -0.64
 
 true_l1 <- rep(0,n)
 true_l2 <- rep(0,n)
@@ -69,37 +67,14 @@ true_hr_l2_age <- exp(true_c1)
 true_hr_l2_gen <- exp(true_c2)
 true_hr_l2_donor <- exp(true_c3)
 
-# ## stuff for later ##
-# save_age_hr_l1 <- rep(0,runs)
-# save_age_hr_l2 <- rep(0,runs)
-# save_gen_hr_l1 <- rep(0,runs)
-# save_gen_hr_l2 <- rep(0,runs)
-# save_donor_hr_l1 <- rep(0,runs)
-# save_donor_hr_l2 <- rep(0,runs)
-
-# YW edits
+# YW defined
 hr_l1_age <- hr_l1_lwci_age <- hr_l1_upci_age <- rep(0,runs)
-#bias_l1_hr_age <- rep(0,runs)
 hr_l1_gen<- hr_l1_lwci_gen <- hr_l1_upci_gen <- rep(0,runs)
-#bias_l1_hr_gen <- rep(0,runs)
 hr_l1_donor <- hr_l1_lwci_donor <- hr_l1_upci_donor <- rep(0,runs)
-#bias_l1_hr_donor <- rep(0,runs)
+
 hr_l2_age <- hr_l2_lwci_age <- hr_l2_upci_age <- rep(0,runs)
-#bias_l2_hr_age <- rep(0,runs)
 hr_l2_gen <- hr_l2_lwci_gen <- hr_l2_upci_gen <-  rep(0,runs)
-#bias_l2_hr_gen <- rep(0,runs)
 hr_l2_donor <- hr_l2_lwci_donor <- hr_l2_upci_donor <- rep(0,runs)
-#bias_l2_hr_donor <- rep(0,runs)
-
-
-
-# counter_hr_l1_age = 0
-# counter_hr_l1_gen = 0
-# counter_hr_l1_donor = 0
-# counter_hr_l2_age = 0
-# counter_hr_l2_gen = 0
-# counter_hr_l2_donor = 0 
-
 
 
 ###############################################################
@@ -117,7 +92,7 @@ for (i in 1:runs){
   donor <- rbinom(n,1,0.30)
   gen <- rbinom(n,1,0.38)
   
-  for(k in 1:n){   #loop to generate U an V from age-varying theta
+  for(k in 1:(n)){   #loop to generate U an V from age-varying theta
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
@@ -126,13 +101,13 @@ for (i in 1:runs){
     
     #Step 3: X_true generated from u1 values (T1 from later)
     
-    theta1 <- exp(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k])
+    theta1 <- exp(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k])+1
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
     
-    fc<- claytonCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
+    fc<- gumbelCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
     u<-uv[,1]  #split u and v from the results of cdm
@@ -162,7 +137,7 @@ for (i in 1:runs){
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
   
-
+  
   #############################################
   ###############    CPHM   ###################
   #############################################  
@@ -171,64 +146,37 @@ for (i in 1:runs){
   cox_l1 <- coxph(Surv(X, d1) ~ age.grp+gen+donor, data = df)
   sum_l1 <- summary(cox_l1)
   
+  # This could have been output to CSV to record sum_l1 and sum_l2, and 
+  # post simulation metrics can then be calculated 
   hr_l1_age[i] <- sum_l1$coefficients[4]
   hr_l1_gen[i] <- sum_l1$coefficients[5]
   hr_l1_donor[i] <- sum_l1$coefficients[6]
   
   hr_l1_lwci_age[i] <- sum_l1$conf.int[7]
-  hr_l1_lwci_gen[i]  <- sum_l1$conf.int[8]
+  hr_l1_lwci_gen[i] <- sum_l1$conf.int[8]
   hr_l1_lwci_donor[i] <- sum_l1$conf.int[9]
   
-  hr_l1_upci_age[i]  <- sum_l1$conf.int[10]
-  hr_l1_upci_gen[i]  <- sum_l1$conf.int[11]
-  hr_l1_upci_donor[i]  <- sum_l1$conf.int[12]
+  hr_l1_upci_age[i] <- sum_l1$conf.int[10]
+  hr_l1_upci_gen[i] <- sum_l1$conf.int[11]
+  hr_l1_upci_donor[i] <- sum_l1$conf.int[12]
   
-  #save_age_hr_l1[i] <- hr_l1_age
-  #save_gen_hr_l1[i] <- hr_l1_gen
-  #save_donor_hr_l1[i] <- hr_l1_donor
-  
-  
-  
+
   ## Terminal event ##
   cox_l2 <- coxph(Surv(Y, d2) ~ age.grp+gen+donor, data = df)
   sum_l2 <- summary(cox_l2)
-
+  
   hr_l2_age[i] <- sum_l2$coefficients[4]
   hr_l2_gen[i] <- sum_l2$coefficients[5]
   hr_l2_donor[i] <- sum_l2$coefficients[6]
   
-  hr_l2_lwci_age[i]  <- sum_l2$conf.int[7]
-  hr_l2_lwci_gen[i]  <- sum_l2$conf.int[8]
-  hr_l2_lwci_donor[i]  <- sum_l2$conf.int[9]
+  hr_l2_lwci_age[i] <- sum_l2$conf.int[7]
+  hr_l2_lwci_gen[i] <- sum_l2$conf.int[8]
+  hr_l2_lwci_donor[i] <- sum_l2$conf.int[9]
   
-  hr_l2_upci_age[i]  <- sum_l2$conf.int[10]
-  hr_l2_upci_gen[i]  <- sum_l2$conf.int[11]
-  hr_l2_upci_donor[i]  <- sum_l2$conf.int[12]
+  hr_l2_upci_age[i] <- sum_l2$conf.int[10]
+  hr_l2_upci_gen[i] <- sum_l2$conf.int[11]
+  hr_l2_upci_donor[i] <- sum_l2$conf.int[12]
   
- # save_age_hr_l2[i] <- hr_l2_age[]
-  #save_gen_hr_l2[i] <- hr_l2_gen
- # save_donor_hr_l2[i] <- hr_l2_donor
-  
-  
-  #############################################
-  ############### REPORTING ###################
-  #############################################
-  # 
-  # if(true_hr_l1_age <= hr_l1_upci_age[i]  && true_hr_l1_age >= hr_l1_lwci_age[i] ) {counter_hr_l1_age=counter_hr_l1_age+1}
-  # if(true_hr_l2_age <= hr_l2_upci_age && true_hr_l2_age >= hr_l2_lwci_age) {counter_hr_l2_age=counter_hr_l2_age+1}
-  # 
-  # if(true_hr_l1_gen <= hr_l1_upci_gen && true_hr_l1_gen >= hr_l1_lwci_gen) {counter_hr_l1_gen=counter_hr_l1_gen+1}
-  # if(true_hr_l2_gen <= hr_l2_upci_gen && true_hr_l2_gen >= hr_l2_lwci_gen) {counter_hr_l2_gen=counter_hr_l2_gen+1}
-  # 
-  # if(true_hr_l1_donor <= hr_l1_upci_donor && true_hr_l1_donor >= hr_l1_lwci_donor) {counter_hr_l1_donor=counter_hr_l1_donor+1}
-  # if(true_hr_l2_donor <= hr_l2_upci_donor && true_hr_l2_donor >= hr_l2_lwci_donor) {counter_hr_l2_donor=counter_hr_l2_donor+1}
-  # 
-  #bias_l1_hr_age[i] <- true_hr_l1_age - hr_l1_age
-  #bias_l2_hr_age[i] <- true_hr_l2_age - hr_l2_age
-  #bias_l1_hr_gen[i] <- true_hr_l1_gen - hr_l1_gen
- # bias_l2_hr_gen[i] <- true_hr_l2_gen - hr_l2_gen
- # bias_l1_hr_donor[i] <- true_hr_l1_donor - hr_l1_donor
-  #bias_l2_hr_donor[i] <- true_hr_l2_donor - hr_l2_donor
   
   print(i)
 }
@@ -244,12 +192,6 @@ hr_l1_bias_donor <- mean(true_hr_l1_donor - hr_l1_donor)
 hr_l2_bias_donor <- mean(true_hr_l2_donor - hr_l2_donor)
 
 #coverage: YW revised
-# hr_l1_cov_age <- (counter_hr_l1_age / runs) * 100
-# hr_l2_cov_age <- (counter_hr_l2_age / runs) * 100
-# hr_l1_cov_gen <- (counter_hr_l1_gen / runs) * 100
-# hr_l2_cov_gen <- (counter_hr_l2_gen / runs) * 100
-# hr_l1_cov_donor <- (counter_hr_l1_donor / runs) * 100
-# hr_l2_cov_donor <- (counter_hr_l2_donor / runs) * 100
 
 hr_l1_cov_age <- 100* sum(true_hr_l1_age <= hr_l1_upci_age & true_hr_l1_age >= hr_l1_lwci_age)/runs
 hr_l2_cov_age <- 100* sum(true_hr_l2_age <= hr_l2_upci_age & true_hr_l2_age >= hr_l2_lwci_age)/runs
@@ -269,28 +211,6 @@ hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
 
 
-# print(paste("HR l1 bias age", hr_l1_bias_age))
-# print(paste("HR l2 bias age", hr_l2_bias_age))
-# print(paste("HR l1 mse age", hr_l1_mse_age))
-# print(paste("HR l2 mse age", hr_l2_mse_age))
-# print(paste("HR l1 cov age", hr_l1_cov_age))
-# print(paste("HR l2 cov age", hr_l2_cov_age))
-# 
-# print(paste("HR l1 bias gen", hr_l1_bias_gen))
-# print(paste("HR l2 bias gen", hr_l2_bias_gen))
-# print(paste("HR l1 mse gen", hr_l1_mse_gen))
-# print(paste("HR l2 mse gen", hr_l2_mse_gen))
-# print(paste("HR l1 cov gen", hr_l1_cov_gen))
-# print(paste("HR l2 cov gen", hr_l2_cov_gen))
-# 
-# print(paste("HR l1 bias donor", hr_l1_bias_donor))
-# print(paste("HR l2 bias donor", hr_l2_bias_donor))
-# print(paste("HR l1 mse donor", hr_l1_mse_donor))
-# print(paste("HR l2 mse donor", hr_l2_mse_donor))
-# print(paste("HR l1 cov donor", hr_l1_cov_donor))
-# print(paste("HR l2 cov donor", hr_l2_cov_donor))
-#################################
-
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
@@ -298,7 +218,6 @@ run_time
 
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
-# hr_l1 represents non-terminal event; hr_l2 represents terminal event
 bias <- c(hr_l1_bias_age, hr_l1_bias_donor, hr_l1_bias_gen,
           hr_l2_bias_age, hr_l2_bias_donor, hr_l2_bias_gen)
 
@@ -327,11 +246,17 @@ run_time = end_time - start_time
 run_time
 
 
-# output results
-write.csv(Results, row.names=F,file=out_file_summary)
+write.csv(Results, row.names=F,file= out_file_summary)
 
-Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l2.age.est = hr_l2_age,
-                       hr.l1.gen.est = hr_l1_gen, hr.l2.gen.est = hr_l2_gen,
-                       hr.l1.donor.est = hr_l1_donor, hr.l2.donor.est = hr_l2_donor)
 
-write.csv(Estimates, row.names=F,file=out_file_estimates)
+Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age, hr.l1.age.uci=hr_l1_upci_age,
+                       hr.l2.age.est = hr_l2_age, hr.l2.age.lci = hr_l2_lwci_age, hr.l2.age.uci=hr_l2_upci_age,
+                       hr.l1.gen.est = hr_l1_gen, hr.l1.gen.lci = hr_l1_lwci_gen, hr.l1.gen.uci=hr_l1_upci_gen,
+                       hr.l2.gen.est = hr_l2_gen, hr.l2.gen.lci = hr_l2_lwci_gen, hr.l2.gen.uci=hr_l2_upci_gen,
+                       hr.l1.donor.est = hr_l1_donor, hr.l1.donor.lci = hr_l1_lwci_donor, hr.l1.gen.uci=hr_l1_upci_donor,
+                       hr.l2.donor.est = hr_l2_donor, hr.l2.donor.lci = hr_l2_lwci_donor, hr.l2.gen.uci=hr_l2_upci_donor)
+
+
+write.csv(Estimates, row.names=F,file= out_file_estimates)
+
+
