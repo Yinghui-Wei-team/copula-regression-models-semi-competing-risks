@@ -17,11 +17,8 @@ library(plyr)
 library(survival)
 library(numDeriv)
 
-
 ######################## age.grp #########################
-
 start_time = Sys.time()
-
 # directory if working on University PC
 
 dir = "results"
