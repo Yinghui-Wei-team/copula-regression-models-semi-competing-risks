@@ -734,8 +734,6 @@ run_time = end_time - start_time
 
 run_time
 
-#setwd("C:/Users/ywei3/University of Plymouth/Lexy Sorrell - Lexy's Work/R/NHSBT/Covariates/Simulations/Results")
-
 write.csv(Results, row.names=F,file="S2-Table5-clayton-exponential-covariates-hazards-association.csv")
 
 Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.est = save_a3, 
