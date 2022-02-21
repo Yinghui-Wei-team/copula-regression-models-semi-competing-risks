@@ -534,7 +534,7 @@ print("normal copula gompertz survival models")
 run.time
 
 results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
+results$run_time= c(round(run.time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
 write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
