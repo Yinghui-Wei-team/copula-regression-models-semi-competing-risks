@@ -9,35 +9,19 @@ library(ggplot2)
 library(plyr)
 library(survival)
 
-copula <- "normal"
-survival_distribution <- "weibull"
-if(survival_distribution == "exp") {table_ref = "table3"}
-if(survival_distribution == "gompertz") {table_ref = "table4"}
-if(survival_distribution == "weibull") {table_ref = "table5"}
-
-start_time = Sys.time()
-
 ########################################################
 ##################### Load data ########################
 ########################################################
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data_2021.csv")
-dim(df)
-attach(df)
-names(df)
+start_time <- Sys.time()
 
+df <- read.csv(file="NHSBT/paper2_data_2021.csv")
 # check descriptive statistics
 # donor type
 dim(df)
-table(df$age.grp)
-table(df$age.grp)/dim(df)[1]
-table(df$gen)
-table(df$gen)/dim(df)[1]
-table(df$donor)
-table(df$donor)/dim(df)[1]
+attach(df)
 
-start.time = Sys.time()
+names(df)
+
 
 ########################################################
 ############### Normal pseudo likelihood ###############
@@ -381,8 +365,8 @@ hr_l2_upci_age <- est_hr_l2_age + 1.96*sqrt(var_hr_l2_age)
 hr_l2_lwci_gen <- est_hr_l2_gen - 1.96*sqrt(var_hr_l2_gen)
 hr_l2_upci_gen <- est_hr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 
-hr_l2_lwci_donor <- est_hr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
-hr_l2_upci_donor <- est_hr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
+hr_l2_lwci_donor <- esthr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
+hr_l2_upci_donor <- esthr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
 
 
@@ -482,28 +466,6 @@ print(est_hr_l2_donor)
 print(hr_l2_lwci_donor)
 print(hr_l2_upci_donor)
 
-# Results --------------------------------------------------------------------
-#YW data needed for paper 2: age
-hr_gf_age <-c(est_hr_l1_age,hr_l1_lwci_age, hr_l1_upci_age)
-hr_gf_age
-hr_d_age <-c(est_hr_l2_age,hr_l2_lwci_age, hr_l2_upci_age)
-hr_d_age
-
-# YW data needed for paper 2: gender
-hr_gf_gender <-c(est_hr_l1_gen,hr_l1_lwci_gen, hr_l1_upci_gen)
-hr_gf_gender
-hr_d_gender <-c(est_hr_l2_gen,hr_l2_lwci_gen, hr_l2_upci_gen)
-hr_d_gender
-
-# YW data needed for paper 2: donor
-hr_gf_donor <-c(est_hr_l1_donor,hr_l1_lwci_donor, hr_l1_upci_donor)
-hr_gf_donor
-
-hr_d_donor <-c(est_hr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
-hr_d_donor
-
-
-
 # YW data needed for paper 2: regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
@@ -541,10 +503,3 @@ run_time
 # results.donor  0.573 0.544 0.602 0.521 0.490 0.552 0.034  -0.026   0.095
 # > aic
 # [1] 145038.4
-
-
-results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
