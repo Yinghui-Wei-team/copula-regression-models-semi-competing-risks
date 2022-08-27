@@ -20,9 +20,8 @@ library(survival)
 ########################################################
 ##################### Load data ########################
 ########################################################
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+# YW: read from parent working directory to project directory and send through the next two lines
+df <- read.csv(file="../../NHSBT/paper2_data_2021.csv")
 dim(df)
 attach(df)
 names(df)
@@ -64,7 +63,7 @@ fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   f1[which(f1<0.1^8)] <- 0.1^8
   f2[which(f2<0.1^8)] <- 0.1^8
   
-  theta <- exp(b0+b1*age.grp+b2*gen+b3*donor)
+  theta <- b0+b1*age.grp+b2*gen+b3*donor
   
   C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
   C[which(C < 0.1^8)] <- 0.1^8 
@@ -248,7 +247,7 @@ aic
 bic
 
 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
+#setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 

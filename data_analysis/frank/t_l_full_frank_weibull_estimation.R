@@ -15,9 +15,8 @@ library(survival)
 ########################################################
 ##################### Load data ########################
 ########################################################
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+# YW: read from parent working directory to project directory and send through the next two lines
+df <- read.csv(file="../../NHSBT/paper2_data_2021.csv")
 dim(df)
 attach(df)
 names(df)
@@ -60,10 +59,11 @@ f1[which(f1 < 0.1^8)] <- 0.1^8
 f2[which(f2 < 0.1^8)] <- 0.1^8 
 
 
-theta <- exp(b0+b1*age.grp+b2*gen+b3*donor)
+theta <- b0+b1*age.grp+b2*gen+b3*donor
 #print(theta)
 #print(log(theta))
 theta[which(theta > 15)]=15
+theta[which(theta < 0)]=0.0001
 
 #print(c(p0,p1,p2))
   
@@ -87,6 +87,7 @@ plfoptim <- optim(c(0.02,  -1,-0.01,-0.01,-0.01,  0.02, -1,-0.01,-0.01,-0.01,  2
                   upper=c(1,-1,1,1,1, 1,-2,2,1,0.01,10,6,3,3), 
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
+
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
@@ -292,8 +293,6 @@ reg_coef
 
 data.frame(reg_coef, row.names=NULL)
 
-
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
 write.csv(reg_coef, "results/real_data_analysis/parameters_frank_weibull.csv")
 # to indicate the level in the estimated results
 results$aic = c(round(aic,1), "NA", "NA")
