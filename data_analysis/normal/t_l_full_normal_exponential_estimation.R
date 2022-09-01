@@ -1,5 +1,5 @@
 # 11-July-2021
-# YW: NHSBT data analysis, Clayton copula exponential survival distribution
+# YW: NHSBT data analysis, Normal copula exponential survival distribution
 # original script by LS; edited and updated for paper2 by YW
 # YW: 2022-02-20: update load data and output results sections
 ###############################################################################
@@ -21,9 +21,8 @@ if(survival_distribution == "weibull") {table_ref = "table5"}
 ##################### Load data ########################
 ########################################################
 
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+# YW: need to firstly set working directory to project directory and send through the next line
+df <- read.csv(file="../../NHSBT/paper2_data_2021.csv")
 dim(df)
 attach(df)
 names(df)
