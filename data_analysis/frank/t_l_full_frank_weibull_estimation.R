@@ -63,14 +63,17 @@ theta <- b0+b1*age.grp+b2*gen+b3*donor
 #print(theta)
 #print(log(theta))
 theta[which(theta > 15)]=15
-theta[which(theta < 0)]=0.0001
 
 #print(c(p0,p1,p2))
   
   C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
   C[which(C < 0.1^8)] <- 0.1^8 
   
-  part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(f1)+log(f2))
+  #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(f1)+log(f2))
+
+  #rewrite part1 to allow theta to take negative values
+  part1 <- d1*d2*(log(theta* (exp(theta*C)-1)/ (exp(theta*S1)-1)/(exp(theta*S2)-1))/+theta*C+log(f1)+log(f2))
+  
   part2 <- d1*(1-d2)*log(((1-exp(theta*C))*f1)/(1-exp(theta*S1)))
   part3 <- (1-d1)*d2*log(((1-exp(theta*C))*f2)/(1-exp(theta*S2)))
   part4<-((1-d1)*(1-d2))*log(C)
