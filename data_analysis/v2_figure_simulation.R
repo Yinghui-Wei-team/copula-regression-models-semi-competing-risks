@@ -36,9 +36,11 @@ p <- p +  scale_shape_manual(values=c(15, 16, 17))+
         strip.text = element_text(size = 15),
         panel.background = element_blank(),
         panel.spacing = unit(2, "lines"),
-        axis.line = element_line(colour = "black")) + facet_wrap(~ copula) 
+        axis.line = element_line(colour = "black")) + 
+  facet_wrap(~ copula) + 
+  geom_line(aes(group = Model), lwd=1)
 
-p
+p 
 
 ggsave(file=paste0("plot_sim_", measure,".pdf"), path = paste0(output_dir, "figures"),
        plot=p, width=12, height=6)
@@ -70,7 +72,9 @@ p <- p +  scale_shape_manual(values=c(15, 16, 17))+
         strip.text = element_text(size = 15),
         panel.background = element_blank(),
         panel.spacing = unit(2, "lines"),
-        axis.line = element_line(colour = "black")) + facet_wrap(~ copula) 
+        axis.line = element_line(colour = "black")) + 
+  facet_wrap(~ copula)  + 
+  geom_line(aes(group = Model), lwd=1)
 
 p 
 
@@ -104,7 +108,9 @@ p <- p +  scale_shape_manual(values=c(15, 16, 17))+
         strip.text = element_text(size = 15),
         panel.background = element_blank(),
         panel.spacing = unit(2, "lines"),
-        axis.line = element_line(colour = "black")) + facet_wrap(~ copula) 
+        axis.line = element_line(colour = "black")) + 
+  facet_wrap(~ copula)  + 
+  geom_line(aes(group = Model), lwd=1)
 
 p 
 

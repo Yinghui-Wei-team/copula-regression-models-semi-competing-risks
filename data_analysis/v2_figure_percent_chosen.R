@@ -7,7 +7,7 @@ output_dir <- "results/simulation_results/"
 
 dist= rep(c("Exponential", "Weibull", "Gompertz"),3)
 model = c(rep("Exponential", 3), rep("Weibull",3), rep("Gompertz", 3))
-df <- data.frame(model, percent, dist)
+df <- data.frame(model, dist)
 df <- df %>% mutate(chosen=ifelse(model == dist, "Model chosen correctly", "Model chosen incorrectly"))
 
 # Normal copula
@@ -15,7 +15,6 @@ df$percent = c(80.9, 8.9, 10.2, 0, 100, 0, 0, 0.2, 99.8)
 copula = "normal"
 df$copula = "Normal"
 df_normal = df
-function_bar_plot(df, copula)
 
 # Clayton copula
 df$percent = c(78.8, 11, 10.2, 0, 100, 0, 0, 3.7, 96.3)
@@ -50,6 +49,7 @@ p <- ggplot(df, aes(x=model,y=percent,  fill=chosen)) +
         axis.line = element_line(colour = "black"),
         legend.position="bottom", legend.title = element_text(size=15),
         legend.text = element_text(size=15),
+        panel.spacing = unit(2, "lines"),
         strip.text = element_text(size = 20)) + 
   facet_wrap(~ copula, ncol = 2) +
   scale_fill_manual(values = coul) + 
