@@ -54,7 +54,7 @@ p <- ggplot(df, aes(x=model,y=percent,  fill=chosen)) +
   facet_wrap(~ copula, ncol = 2) +
   scale_fill_manual(values = coul) + 
   labs(x = "\nUnderlying survival distributions",
-       y = "Percentage of chosen by AIC\n")
+       y = "Percentage of models chosen by AIC\n")
 p
 copula = "all"
 ggsave(file=paste0(output_dir,"figures/figure_percent_", copula,".pdf"), 

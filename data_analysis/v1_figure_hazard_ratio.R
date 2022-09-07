@@ -31,8 +31,8 @@ p <- forest(df[,c(1, 32)],
             est = list(df$hr_gf.cox,
                        df$hr_gf.normal,
                        df$hr_gf.clayton,
-                        df$hr_gf.frank
-                       ),
+                       df$hr_gf.frank
+            ),
             lower = list(df$low_gf.cox,
                          df$low_gf.normal,
                          df$low_gf.clayton,
@@ -53,7 +53,7 @@ p <- forest(df[,c(1, 32)],
 p
 
 ggsave(file=paste0("plot_HR_", outcome,".pdf"), path = paste0(output_dir, "figures"),
-         plot=p, width=9, height=6)
+       plot=p, width=9, height=6)
 
 
 ##########################################################################################

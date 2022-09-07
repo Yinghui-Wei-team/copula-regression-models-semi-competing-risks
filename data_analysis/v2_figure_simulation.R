@@ -96,7 +96,7 @@ p <- ggplot(df_cp_long, aes(x=Estimand, y=cp, colour=Model, shape=Model, size=Mo
 p <- p +  scale_shape_manual(values=c(15, 16, 17))+ 
   scale_color_manual(values=c("royalblue3", "maroon3", "#808080"))+
   ylab("Coverage probability \n") + xlab("\nOutcome and covariate") +
-  ylim(10,100) +
+  ylim(0,100) +
   scale_size_manual(values=c(4,4,4)) +  guides(fill=guide_legend(nrow=3,byrow=TRUE)) +
   geom_hline(yintercept=95, linetype="dashed", color = "#A52A2A")+
   theme(legend.position="bottom", legend.title=element_text(size=13), 
