@@ -1,9 +1,11 @@
+################################################################################
 # Purpose: produce a 2x2 plot to show bias from simulation study
 # Programmed by Yinghui Wei
+################################################################################
 
 library(ggplot2); library(dplyr); library(tidyr)
-output_dir <- "results/simulation_results/"
-df <- read.csv("results/simulation_results/table5_simulation.csv")
+output_dir <- "../../results/simulation_results/"
+df <- read.csv("../../results/simulation_results/table5_simulation.csv")
 
 df <- df %>% mutate(model = ifelse(model=="copula1", "Normal copula with covariates on hazards",
                                    ifelse(model=="copula2", "Normal copula with covariates on hazards and association",

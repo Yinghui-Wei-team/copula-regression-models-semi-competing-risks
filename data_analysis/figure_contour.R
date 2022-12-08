@@ -3,14 +3,14 @@
 # YW updated 31/08/2022
 library(copula)
 
-output_dir <- "results/real_data_analysis/"
+output_dir <- "../../results/real_data_analysis/"
 
-source("data/analysis/source_model_parameter.R")
+source("data_analysis/source_model_parameter.R")
 
-#################################################################
-# Part 2. Contour Plots                                         #
-################################################################
-#----------------------------------------------------------------------
+################################################################################
+# Contour Plots                                                                #
+################################################################################
+
 # 1=(Age>50); 1=genFemale; 1=DonorLiving
 # Reference: male, old, deceased
 age.grp <- 1; gen<- 0; donor <- 0 # patient with highest risks

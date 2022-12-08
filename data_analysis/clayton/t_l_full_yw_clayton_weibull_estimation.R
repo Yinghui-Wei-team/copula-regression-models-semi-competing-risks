@@ -240,5 +240,3 @@ setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
 # to indicate the level in the estimated results
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 write.csv(results, "results/real_data_analysis/table5_clayton_weibull_coef.csv")
-
-

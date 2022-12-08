@@ -1,9 +1,12 @@
-# Purpose: produce stacked bar plot to show percentage correctly chosen by AIC for the underlying survival distributions
+################################################################################
+# Purpose: produce stacked bar plot to show percentage correctly chosen by AIC 
+#          for the underlying survival distributions
 # Programmed by Yinghui Wei
+################################################################################
+
 library(dplyr); library(RColorBrewer);library(ggplot2);library(stringr)
 
-output_dir <- "results/simulation_results/"
-
+output_dir <- "../../results/simulation_results/"
 
 dist= rep(c("Exponential", "Weibull", "Gompertz"),3)
 model = c(rep("Exponential", 3), rep("Weibull",3), rep("Gompertz", 3))
@@ -21,12 +24,10 @@ df$percent = c(78.8, 11, 10.2, 0, 100, 0, 0, 3.7, 96.3)
 df$copula = "Clayton"
 df_clayton = df
 
-
 # Frank copula
 df$percent = c(82.5, 14.4, 3.1, 0, 100, 0, 0, 8.7, 91.3)
 df$copula = "Frank"
 df_frank = df
-
 
 # Gumbel copula
 df$percent = c(79.5, 9.6, 10.9, 0.1, 99.8, 0.1, 0.1, 0.2, 99.8)
