@@ -5,7 +5,7 @@ library(copula)
 
 output_dir <- "results/real_data_analysis/"
 
-source("data_analysis/source_model_parameter.R")
+source("data/analysis/source_model_parameter.R")
 
 #################################################################
 # Part 2. Contour Plots                                         #

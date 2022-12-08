@@ -1,6 +1,7 @@
-# 9-July-2021
-# YW: NHSBT data analysis, Cox models only
-# original script by LS; edited and updated for paper2 by YW
+###############################################################################
+# Purpose: NHSBT data analysis, Cox models only
+# Date: 2021-July-09
+# Programmed by: original script by LS; edited and updated for paper2 by YW
 # YW: 2022-02-20: update load data
 ###############################################################################
 
@@ -10,25 +11,56 @@ library(mvtnorm)
 library(ggplot2)
 library(plyr)
 library(survival)
-
-#as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
+library(dplyr)
+library(ggsurvfit) # need to be installed
 
 ########################################################
 ##################### Load data ########################
 ########################################################
 # need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+dir_data <- "../../"
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 # check descriptive statistics
-# donor type
 
-plot(survfit(Surv(X, d1) ~ 1, data = df), 
-     xlab = "Years since transplant", xlim =c(0,23),
-     ylab = "Graft survival probability")
+df <- df%>% mutate(age.grp = ifelse(age.grp==0, "<=50 years",
+                                    ">50 years")) %>%
+  # gen = 1 female, 0 male
+  mutate(gen = factor(gen)) %>%
+  # donor = 1 living, 0 deceased
+  mutate(donor = factor(donor))
 
-plot(survfit(Surv(Y, d2) ~ 1, data = df), 
-     xlab = "Years since transplant", xlim =c(0,23),
-     ylab = "Overall survival probability")
+# graft survival
+survfit2(Surv(X, d1) ~ 1, data = df) %>%
+  ggsurvfit() +
+  labs(
+    x = "\nDays",
+    y = "Graft survival\n"
+  ) + xlim(0, 25)
+
+
+# graft survival: KM curves stratified by age group
+survfit2(Surv(X, d1) ~ age.grp, data = df) %>%
+  ggsurvfit() +
+  labs(
+    x = "\nDays",
+    y = "Graft survival\n"
+  ) + xlim(0, 25)
+
+# overall survival
+survfit2(Surv(Y, d2) ~ 1, data = df) %>%
+  ggsurvfit() +
+  labs(
+    x = "\nDays",
+    y = "Overall survival\n"
+  ) + xlim(0, 25) + ylim(0, 1)
+
+# Overall survival: KM curves stratified by age group
+survfit2(Surv(X, d2) ~ age.grp, data = df) %>%
+  ggsurvfit() +
+  labs(
+    x = "\nDays",
+    y = "Overall survival\n"
+  ) + xlim(0, 25) + ylim(0, 1)
 
 dim(df)
 table(df$age.grp)
