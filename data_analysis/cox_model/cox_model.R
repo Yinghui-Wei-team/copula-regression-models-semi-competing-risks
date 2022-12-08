@@ -12,23 +12,26 @@ library(ggplot2)
 library(plyr)
 library(survival)
 library(dplyr)
-library(ggsurvfit) # need to be installed
+library(ggsurvfit) 
 
-########################################################
-##################### Load data ########################
-########################################################
-# need to firstly set working directory to project directory and send through the next two lines
+################################################################################
+#Part 1. Load data                                                             #
+################################################################################
+# need to firstly set working directory to project directory and then send through the next two lines
 dir_data <- "../../"
 df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
-# check descriptive statistics
 
-df <- df%>% mutate(age.grp = ifelse(age.grp==0, "<=50 years",
-                                    ">50 years")) %>%
+df <- df%>% 
+  # age.grp = 0 "<=50 years", 1 ">50 years"
+  mutate(age.grp = factor(age.grp)) %>%
   # gen = 1 female, 0 male
   mutate(gen = factor(gen)) %>%
   # donor = 1 living, 0 deceased
   mutate(donor = factor(donor))
 
+################################################################################
+#Part 2. KM Curves                                                             #
+################################################################################
 # graft survival
 survfit2(Surv(X, d1) ~ 1, data = df) %>%
   ggsurvfit() +
@@ -36,7 +39,6 @@ survfit2(Surv(X, d1) ~ 1, data = df) %>%
     x = "\nDays",
     y = "Graft survival\n"
   ) + xlim(0, 25)
-
 
 # graft survival: KM curves stratified by age group
 survfit2(Surv(X, d1) ~ age.grp, data = df) %>%
@@ -62,6 +64,9 @@ survfit2(Surv(X, d2) ~ age.grp, data = df) %>%
     y = "Overall survival\n"
   ) + xlim(0, 25) + ylim(0, 1)
 
+################################################################################
+#Part 3. Summary Statistics                                                    #
+################################################################################
 dim(df)
 table(df$age.grp)
 table(df$age.grp)/dim(df)[1]
@@ -70,13 +75,11 @@ table(df$gen)/dim(df)[1]
 table(df$donor)
 table(df$donor)/dim(df)[1]
 
-attach(df)
-
-# YW: Cox PH models
+################################################################################
+#Part 4. Cox PH Models                                                         #
+################################################################################
 names(df)
-
 # YW: Graft failure
-#cox_gf <- coxph(Surv(X, d1) ~ age.grp + relevel(as.factor(df$gen),ref="3") + donor, data = df)
 start_time= Sys.time()
 cox_gf <- coxph(Surv(X, d1) ~ age.grp + gen + donor, data = df)
 end_time = Sys.time()
@@ -86,7 +89,6 @@ summary(cox_gf)
 extractAIC(cox_gf)
 
 # YW: Death
-#cox_death <- coxph(Surv(Y, d2) ~ age.grp +relevel(as.factor(df$gen),ref="3") + donor, data = df)
 start_time= Sys.time()
 cox_death <- coxph(Surv(Y, d2) ~ age.grp +gen + donor, data = df)
 end_time = Sys.time()
