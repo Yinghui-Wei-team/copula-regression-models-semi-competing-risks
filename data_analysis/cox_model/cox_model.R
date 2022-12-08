@@ -79,7 +79,7 @@ table(df$donor)/dim(df)[1]
 #Part 4. Cox PH Models                                                         #
 ################################################################################
 names(df)
-# YW: Graft failure
+# Graft failure
 start_time= Sys.time()
 cox_gf <- coxph(Surv(X, d1) ~ age.grp + gen + donor, data = df)
 end_time = Sys.time()
@@ -88,7 +88,7 @@ run_time
 summary(cox_gf)
 extractAIC(cox_gf)
 
-# YW: Death
+# Death
 start_time= Sys.time()
 cox_death <- coxph(Surv(Y, d2) ~ age.grp +gen + donor, data = df)
 end_time = Sys.time()
