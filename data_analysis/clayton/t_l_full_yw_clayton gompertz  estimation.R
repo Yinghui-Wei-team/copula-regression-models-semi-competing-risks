@@ -1,7 +1,10 @@
+################################################################################
 # Real data analysis
 # YW: 9 July 2021 Clayton gompertz survival models
 # YW: 14 July 2021: make unified data set for analysis paper2_data.csv
 # original script by LS; edited and updated for paper2 by YW
+################################################################################
+
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -9,9 +12,9 @@ library(ggplot2)
 library(plyr)
 library(survival)
 
-########################################################
-##################### Load data ########################
-########################################################
+################################################################################
+#Load data                                                                     #  
+################################################################################
 # YW: need to firstly set working directory to project directory and send through the next two lines
 setwd("../../../")
 df <- read.csv(file="NHSBT/paper2_data.csv")
@@ -19,15 +22,15 @@ dim(df)
 attach(df)
 names(df)
 
-########################################################
-############### Clayton full gompertz ##################
-########################################################
+################################################################################
+# Clayton full gompertz                                                        #
+################################################################################
 
 as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
-########################################################
-############### Clayton pseudo likelihood ##############
-########################################################
+################################################################################
+# Clayton pseudo likelihood                                                    #
+################################################################################
 start_time = Sys.time()
 cpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   gamma1 <- para[1]
@@ -93,9 +96,9 @@ plcoptim$par
 
 
 
-########################################################
-################## Confidence Intervals ################
-########################################################
+################################################################################
+# Confidence Intervals                                                         #
+################################################################################
 
 #Fisher's Information matrix
 fisher_info<-solve(-plcoptim$hessian) #inverse -hess
@@ -215,7 +218,6 @@ hr_gf_donor
 hr_d_donor <-c(esthr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-
 # YW data needed for paper 2: regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
@@ -223,7 +225,6 @@ association_donor<- c(est_b3, lwci_b3, upci_b3)
 association_age
 association_gender
 association_donor
-
 
 # Results --------------------------------------------------------------------
 # YW data needed for paper 2: age

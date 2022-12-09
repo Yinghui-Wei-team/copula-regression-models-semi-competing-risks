@@ -23,7 +23,8 @@ df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 
 df <- df%>% 
   # age.grp = 0 "<=50 years", 1 ">50 years"
-  mutate(age.grp = factor(age.grp)) %>%
+  #mutate(age.grp = factor(age.grp)) %>%
+  mutate(age.grp = ifelse(age.grp ==0, "<=50 years", ">50 years")) %>%
   # gen = 1 female, 0 male
   mutate(gen = factor(gen)) %>%
   # donor = 1 living, 0 deceased

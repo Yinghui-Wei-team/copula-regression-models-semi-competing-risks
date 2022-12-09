@@ -1,7 +1,10 @@
+################################################################################
 # 9-July-2021
 # YW: NHSBT data analysis, Clayton copula exponential survival distribution
 # original script by LS; edited and updated for paper2 by YW
 # Table 3: exponential survival clayton copula model
+################################################################################
+
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -11,15 +14,15 @@ library(survival)
 
 #as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
-########################################################
-##################### Load data ########################
-########################################################
+################################################################################
+#Load data                                                                     #
+################################################################################
 # YW: need to firstly set working directory to project directory and send through the next two lines
 setwd("../../../")
 df <- read.csv(file="NHSBT/paper2_data.csv")
-########################################################
-############### Clayton pseudo likelihood ##############
-########################################################
+################################################################################
+# Clayton pseudo likelihood                                                    #
+################################################################################
 start_time = Sys.time()
 cpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   a0 <- para[1]
@@ -72,9 +75,9 @@ plcoptim$par
 cpl(c(-1,-0.01,-0.01,-0.01,  -1,-0.01,-0.01,-0.01,  2,0.1,0.1,0.1), X=df$X, Y=df$Y, 
     d1=df$d1, d2=df$d2,age.grp=df$age.grp,donor=df$donor, gen=df$gen)
 
-########################################################
-################## Confidence Intervals ################
-########################################################
+################################################################################
+# Confidence Intervals                                                         #
+################################################################################
 
 #Fisher's Information matrix
 fisher_info<-solve(-plcoptim$hessian) #inverse -hess
