@@ -97,7 +97,7 @@ start_time= Sys.time()
 cox_gf <- coxph(Surv(X, d1) ~ age.grp + gen + donor, data = df)
 test_ph_gf = cox.zph(cox_gf)
 test_ph_gf
-ggcoxzph(test.ph)
+ggcoxzph(test_ph_gf)
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
@@ -109,6 +109,7 @@ start_time= Sys.time()
 cox_death <- coxph(Surv(Y, d2) ~ age.grp +gen + donor, data = df)
 test_ph_death = cox.zph(cox_death)
 test_ph_death
+ggcoxzph(test_ph_death)
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
