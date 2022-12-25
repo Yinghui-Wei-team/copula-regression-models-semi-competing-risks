@@ -4,7 +4,6 @@
 # Programmed by: original script by LS; edited and updated for paper2 by YW
 # YW: 2022-02-20: update load data
 ###############################################################################
-
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -13,58 +12,71 @@ library(plyr)
 library(survival)
 library(dplyr)
 library(ggsurvfit) 
+library(readr)
+library(survminer)
 
 ################################################################################
 #Part 1. Load data                                                             #
 ################################################################################
 # need to firstly set working directory to project directory and then send through the next two lines
-dir_data <- "../../"
-df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
+dir_data <-dir_results <- "../../"
 
-df <- df%>% 
-  # age.grp = 0 "<=50 years", 1 ">50 years"
-  #mutate(age.grp = factor(age.grp)) %>%
-  mutate(age.grp = ifelse(age.grp ==0, "<=50 years", ">50 years")) %>%
-  # gen = 1 female, 0 male
-  mutate(gen = factor(gen)) %>%
-  # donor = 1 living, 0 deceased
-  mutate(donor = factor(donor))
+df <- read_rds(file=paste0(dir_data, "NHSBT/paper2_data_v2.rds"))
 
 ################################################################################
 #Part 2. KM Curves                                                             #
 ################################################################################
 # graft survival
-survfit2(Surv(X, d1) ~ 1, data = df) %>%
+km_gs <- survfit2(Surv(X, d1) ~ 1, data = df) %>%
   ggsurvfit() +
   labs(
     x = "\nDays",
     y = "Graft survival\n"
   ) + xlim(0, 25)
+
+km_gs
+ggsave(file="km_gs.pdf", 
+       path = paste0(dir_results, "results/real_data_analysis/figures"),
+       plot=km_gs)
 
 # graft survival: KM curves stratified by age group
-survfit2(Surv(X, d1) ~ age.grp, data = df) %>%
+km_gs_agegrp <- survfit2(Surv(X, d1) ~ age.grp, data = df) %>%
   ggsurvfit() +
   labs(
-    x = "\nDays",
+    x = "\nYears since transplant",
     y = "Graft survival\n"
   ) + xlim(0, 25)
 
+km_gs_agegrp
+ggsave(file="km_gs_agegrp.pdf", 
+       path = paste0(dir_results, "results/real_data_analysis/figures"),
+       plot=km_gs_agegrp)
+
 # overall survival
-survfit2(Surv(Y, d2) ~ 1, data = df) %>%
+km_os <- survfit2(Surv(Y, d2) ~ 1, data = df) %>%
   ggsurvfit() +
   labs(
-    x = "\nDays",
+    x = "\nYears since transplant",
     y = "Overall survival\n"
   ) + xlim(0, 25) + ylim(0, 1)
+
+km_os
+ggsave(file="km_os.pdf", 
+       path = paste0(dir_results, "results/real_data_analysis/figures"),
+       plot=km_os)
 
 # Overall survival: KM curves stratified by age group
-survfit2(Surv(X, d2) ~ age.grp, data = df) %>%
+km_os_agegrp <- survfit2(Surv(X, d2) ~ age.grp, data = df) %>%
   ggsurvfit() +
   labs(
-    x = "\nDays",
+    x = "\nYears since transplant",
     y = "Overall survival\n"
   ) + xlim(0, 25) + ylim(0, 1)
 
+km_os_agegrp
+ggsave(file="km_os_agegrp.pdf", 
+       path = paste0(dir_results, "results/real_data_analysis/figures"),
+       plot=km_os_agegrp)
 ################################################################################
 #Part 3. Summary Statistics                                                    #
 ################################################################################
@@ -83,6 +95,9 @@ names(df)
 # Graft failure
 start_time= Sys.time()
 cox_gf <- coxph(Surv(X, d1) ~ age.grp + gen + donor, data = df)
+test_ph_gf = cox.zph(cox_gf)
+test_ph_gf
+ggcoxzph(test.ph)
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
@@ -92,6 +107,8 @@ extractAIC(cox_gf)
 # Death
 start_time= Sys.time()
 cox_death <- coxph(Surv(Y, d2) ~ age.grp +gen + donor, data = df)
+test_ph_death = cox.zph(cox_death)
+test_ph_death
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
