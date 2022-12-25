@@ -1,23 +1,30 @@
+################################################################################
+# Purpose: produce hazard ratio plot
+# Programmed by Yinghui Wei
+################################################################################
+
+#################################################################################
+# Load package                                                                  #
+#################################################################################
+
 # https://cran.r-project.org/web/packages/forestploter/vignettes/forestploter-intro.html
 #install.packages("devtools")
 #library(devtools)
 #devtools::install_github("adayim/forestploter")
 library(forestploter)
-
 library(forestploter); library(dplyr);library(ggplot2)
-output_dir <- "results/simulation_results/"
-# df <- read.csv("results/real_data_analysis/table3_combined_hazard_ratios.csv")
-# df <- reshape(df, idvar = "covariate", timevar = "model", direction = "wide")
-# write.csv(df, file=paste0(output_dir, "df_wide.csv"), row.names=F)
 
-df <- read.csv("results/real_data_analysis/table3_df_wide2.csv")
+#################################################################################
+# Load data                                                                     #
+#################################################################################
+output_dir <- "../../results/simulation_results/"
+df <- read.csv("../../results/real_data_analysis/table3_df_wide2.csv")
 df <- df %>% rename(Covariate = covariate)
-#df$` ` <- paste(rep(" ", 40), collapse = " ")
 df$'                                               Hazard Ratios for Graft Failure' <- paste(rep("                  ", nrow(df)), collapse = " ")
 df$'                                               Hazard Ratios for Death' <- paste(rep("                  ", nrow(df)), collapse = " ")
 
 #################################################################################
-# Set-up theme                                                                 #
+# Set-up theme                                                                  #
 #################################################################################
 tm <- forest_theme(base_size = 10,
                    refline_lty = "solid",

@@ -1,3 +1,4 @@
+################################################################################
 # Real data analysis:NHSBT data
 # YW: 15 July 2021 updates:
 #     1. Frank Gompertz survival models
@@ -8,7 +9,7 @@
 # table 4 gompertz survival models with frank copula
 # script name: t - theta; l- lambda; 
 #              full - regression models on both theta and lambda
-###############################################################
+################################################################################
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -17,9 +18,10 @@ library(plyr)
 library(survival)
 
 
-########################################################
-##################### Load data ########################
-########################################################
+################################################################################
+# Load data                                                                    #
+################################################################################
+
 # YW: read from parent working directory to project directory and send through the next two lines
 df <- read.csv(file="../../NHSBT/paper2_data_2021.csv")
 dim(df)
@@ -29,9 +31,10 @@ names(df)
 as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
 
-########################################################
-############### Frank pseudo likelihood ################
-########################################################
+################################################################################
+# Frank pseudo likelihood                                                      #
+################################################################################
+
 start_time = Sys.time()
 fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   gamma1 <- para[1]
@@ -93,9 +96,9 @@ run_time
 
 plfoptim$par
 
-########################################################
-################## Confidence Intervals ################
-########################################################
+################################################################################
+# Confidence Intervals                                                         #
+################################################################################
 
 #Fisher's Information matrix
 fisher_info<-solve(-plfoptim$hessian) #inverse -hess

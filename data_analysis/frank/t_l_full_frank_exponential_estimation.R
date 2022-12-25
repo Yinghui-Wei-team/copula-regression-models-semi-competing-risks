@@ -1,9 +1,12 @@
+################################################################################
 # Real data analysis
 # YW: 11 July 2021 frank exponential survival models
 # original script by LS; edited and updated for paper2 by YW
 # table 3 exponential survival models: frank copula
 # script name: t - theta; l- lambda; 
 #              full - regression models on both theta and lambda
+################################################################################
+
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -11,9 +14,9 @@ library(ggplot2)
 library(plyr)
 library(survival)
 
-########################################################
-##################### Load data ########################
-########################################################
+################################################################################
+# Load data                                                                   #
+###############################################################################
 # YW: need to firstly set working directory to project directory and send through the next two lines
 setwd("../../../")
 df <- read.csv(file="NHSBT/paper2_data.csv")
@@ -21,15 +24,16 @@ dim(df)
 attach(df)
 names(df)
 
-########################################################
-############### Clayton full gompertz ##################
-########################################################
+################################################################################
+# Clayton full gompertz                                                        #
+################################################################################
 
 as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
-########################################################
-############### Frank pseudo likelihood ################
-########################################################
+################################################################################
+# Frank pseudo likelihood                                                      #
+################################################################################
+
 start_time = Sys.time()
 fpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
   a0 <- para[1]
@@ -81,9 +85,9 @@ plfoptim$par
 fpl(c(-1,-0.01,-0.01,-0.01,  -1,-0.01,-0.01,-0.01,  2,0.1,0.1,0.1), X=df$X, Y=df$Y, 
     d1=df$d1, d2=df$d2,age.grp=df$age.grp,donor=df$donor, gen=df$gen)
 
-########################################################
-################## Confidence Intervals ################
-########################################################
+################################################################################
+# Confidence Intervals                                                         #
+################################################################################
 
 #Fisher's Information matrix
 fisher_info<-solve(-plfoptim$hessian) #inverse -hess

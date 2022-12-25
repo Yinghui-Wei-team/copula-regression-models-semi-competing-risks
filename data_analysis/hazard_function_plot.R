@@ -1,13 +1,15 @@
+################################################################################
 # Purpose: create contour plots and hazard function plots for paper2
-# script by MW, 25/08/2021; edited by YW, 29/09/2021
-# YW updated 31/08/2022
+# Programmed by Malgorzata Wojtys and Yinghui Wei
+# First created on 25/08/2021
+################################################################################
 library(copula)
 
-output_dir <- "results/real_data_analysis/"
+output_dir <- "../../results/real_data_analysis/"
 
 source("data_analysis/source_model_parameter.R")
 
-####### Hazard function
+#Hazard function--------------------------------------------------------
 h = function(t,alpha,beta){
   beta*alpha*t^(alpha-1)
 }
