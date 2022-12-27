@@ -5,15 +5,8 @@
 # YW: 2022-02-20: update load data
 ###############################################################################
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(dplyr)
-library(ggsurvfit) 
-library(readr)
-library(survminer)
+library(copula); library(mvtnorm); library(ggplot2);library(plyr)
+library(survival); library(dplyr);library(ggsurvfit);library(readr);library(survminer)
 
 ################################################################################
 #Part 1. Load data                                                             #
