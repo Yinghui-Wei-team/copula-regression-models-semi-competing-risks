@@ -1,5 +1,5 @@
 # Real data analysis
-# YW: 15 July 2021  Frank copula Weibull survival models
+# YW: 15 July 2021  normal copula Weibull survival models
 # YW: 20 July 2021: 1. add running time tracker
 #                   2. add constraints for terms in likelihood involving log()
 rm(list=ls())

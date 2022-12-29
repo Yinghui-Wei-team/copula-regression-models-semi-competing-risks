@@ -18,8 +18,10 @@ library(survival)
 #Load data                                                                     #
 ################################################################################
 # YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+# setwd("../../../")
+# df <- read.csv(file="NHSBT/paper2_data.csv")
+dir_data <-dir_results <- "../../"
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 ################################################################################
 # Clayton pseudo likelihood                                                    #
 ################################################################################
@@ -278,7 +280,6 @@ reg_coef
 results$aic[1] = round(aic,1)
 results$run_time[1]= round(run_time,2)
 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-write.csv(reg_coef, "results/real_data_analysis/parameters_clayton_exp_coef.csv")
-write.csv(results, "results/real_data_analysis/table3_clayton_exp_coef.csv")
-
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
+write.csv(reg_coef, paste0(dir_results, "parameters_clayton_exp_coef.csv"))
+write.csv(results, paste0(dir_results, "table3_clayton_exp_coef.csv"))

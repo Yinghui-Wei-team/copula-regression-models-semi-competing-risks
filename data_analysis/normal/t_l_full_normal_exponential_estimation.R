@@ -5,11 +5,7 @@
 ###############################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
+library(copula); library(mvtnorm); library(ggplot2); library(plyr); library(survival)
 
 copula <- "normal"
 survival_distribution <- "exp"
@@ -22,7 +18,8 @@ if(survival_distribution == "weibull") {table_ref = "table5"}
 ########################################################
 
 # YW: need to firstly set working directory to project directory and send through the next line
-df <- read.csv(file="../../NHSBT/paper2_data_2021.csv")
+dir_data <-dir_results <- "../../"
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 dim(df)
 attach(df)
 names(df)
@@ -299,8 +296,6 @@ hr_l2_lwci_donor <- esthr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- esthr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
 
-
-
 ##AIC BIC
 para <- c(est_a0, est_a1, est_a2, est_a3, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
 loglik <- npl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
@@ -409,7 +404,6 @@ hr_gf_donor
 hr_d_donor <-c(esthr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-
 # YW data needed for paper 2: regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
@@ -428,12 +422,7 @@ names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_th
 results <- round(results, 3)
 results
 # Results --------------------------------------------------------------------
-
-
-
 print(aic)
-
-
 reg_coef <- c(est_a0, lwci_a0, upci_a0, 
               est_a1, lwci_a1, upci_a1, 
               est_a2, lwci_a2, upci_a2, 
@@ -447,21 +436,20 @@ reg_coef <- c(est_a0, lwci_a0, upci_a0,
               est_b2, lwci_b2, upci_b2, 
               est_b3, lwci_b3, upci_b3
 )
-
 reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
 reg_coef <- round(reg_coef, 3)
-
 reg_coef
-
 data.frame(reg_coef, row.names=NULL)
-
 reg_coef
 
-getwd()
-
+#getwd()
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-write(reg_coef, file=paste0("results/real_data_analysis/parameters_",copula, "_", survival_distribution))
-write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
+#setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
+#write(reg_coef, file=paste0("results/real_data_analysis/parameters_",copula, "_", survival_distribution))
+#write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
+
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
+write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
+write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))

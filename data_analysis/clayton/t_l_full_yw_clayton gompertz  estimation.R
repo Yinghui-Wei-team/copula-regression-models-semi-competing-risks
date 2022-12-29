@@ -16,8 +16,11 @@ library(survival)
 #Load data                                                                     #  
 ################################################################################
 # YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
+# setwd("../../../")
+# df <- read.csv(file="NHSBT/paper2_data.csv")
+
+dir_data <-dir_results <- "../../"
+df <- read_rds(file=paste0(dir_data, "NHSBT/paper2_data_v2.rds"))
 dim(df)
 attach(df)
 names(df)

@@ -15,7 +15,7 @@ library(survival); library(dplyr);library(ggsurvfit);library(readr);library(surv
 dir_data <-dir_results <- "../../"
 
 df <- read_rds(file=paste0(dir_data, "NHSBT/paper2_data_v2.rds"))
-
+#df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 ################################################################################
 #Part 2. KM Curves                                                             #
 ################################################################################
