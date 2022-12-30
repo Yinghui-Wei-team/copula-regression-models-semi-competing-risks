@@ -260,15 +260,15 @@ row.names(results) <- c("age.gl50", "gender.female","donor.living")
 # Create a data frame for regression coefficients                              #
 ################################################################################
 
-reg_coef <- c(est_a0, lwci_a0, upci_a0, 
+reg_coef <- c(est_a0, lwci_a0, upci_a0,    # regression coefficients for lambda 1 (hazards for graft failure)
               est_a1, lwci_a1, upci_a1, 
               est_a2, lwci_a2, upci_a2, 
               est_a3, lwci_a3, upci_a3,
-              est_c0, lwci_c0, upci_c0, 
+              est_c0, lwci_c0, upci_c0,   # regression coefficients for lambda 1 (hazards for death)
               est_c1, lwci_c1, upci_c1, 
               est_c2, lwci_c2, upci_c2, 
               est_c3, lwci_c3, upci_c3,
-              est_b0, lwci_b0, upci_b0, 
+              est_b0, lwci_b0, upci_b0,    # regression coefficients for association parameter
               est_b1, lwci_b1, upci_b1, 
               est_b2, lwci_b2, upci_b2, 
               est_b3, lwci_b3, upci_b3
