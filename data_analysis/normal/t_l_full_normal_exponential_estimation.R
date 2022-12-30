@@ -1,21 +1,25 @@
-# 11-July-2021
-# YW: NHSBT data analysis, Normal copula exponential survival distribution
+################################################################################
+# Real data analysis
 # original script by LS; edited and updated for paper2 by YW
+# YW: 11-July-2021
+# YW: NHSBT data analysis, Normal copula exponential survival distribution
 # YW: 2022-02-20: update load data and output results sections
 ###############################################################################
 
 rm(list=ls())
 library(copula); library(mvtnorm); library(ggplot2); library(plyr); library(survival)
 
+start.time = Sys.time()
+
+################################################################################
+# Set up model specs and load data                                             #
+################################################################################
+# model specs
 copula <- "normal"
 survival_distribution <- "exp"
 if(survival_distribution == "exp") {table_ref = "table3"}
 if(survival_distribution == "gompertz") {table_ref = "table4"}
 if(survival_distribution == "weibull") {table_ref = "table5"}
-
-########################################################
-##################### Load data ########################
-########################################################
 
 # YW: need to firstly set working directory to project directory and send through the next line
 dir_data <-dir_results <- "../../"
@@ -33,10 +37,6 @@ table(df$gen)
 table(df$gen)/dim(df)[1]
 table(df$donor)
 table(df$donor)/dim(df)[1]
-
-
-start.time = Sys.time()
-
 
 #########################################################
 ############### Normal pseudo likelihood ################
@@ -65,7 +65,6 @@ npl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
   df.2 <- d1 & (!d2)  #case part 2
   df.3 <- (!d1)&d2;   #case part 3 
   df.4 <- (!d1)&(!d2) #case part 4
-  
   
   #########################################################
   #################### First Component ####################
@@ -185,9 +184,18 @@ npl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
 #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
 #                   control=list(fnscale=-1),hessian=TRUE)
 start_time= Sys.time()
-plnoptim <- optim(c(-2.74,0.32,0.004,-0.535,  -3.41,1.35,-0.06,-0.61,  0.1,1.03,0.1,0.40), npl, method="L-BFGS-B",
-                  lower=c(-10,-10,-10,-10,  -10,-10,-10,-10,  0.01,-1,-1,-1),
-                  upper=c(-1,1,0.1,0.01, -2,2,0.01,0.01  ,1,1,1,1),
+plnoptim <- optim(c(-2.74,0.32,0.004,-0.535,  # a: regression coefficients for lambda 1 (hazard for graft failure)
+                    -3.41,1.35,-0.06,-0.61,   # c: regression coefficients for lambda 2 (hazard for death)
+                    0.1,1.03,0.1,0.40         # b: regression coefficients for association parameter
+                    ), npl, method="L-BFGS-B",
+                  lower=c(-10,-10,-10,-10,  
+                          -10,-10,-10,-10,  
+                          0.01,-1,-1,-1
+                          ),
+                  upper=c(-1,1,0.1,0.01, 
+                          -2,2,0.01,0.01,
+                          1,1,1,1
+                          ),
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
@@ -421,17 +429,24 @@ results <- data.frame(results)
 names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 results <- round(results, 3)
 results
-# Results --------------------------------------------------------------------
 print(aic)
-reg_coef <- c(est_a0, lwci_a0, upci_a0, 
+results$aic = c(round(aic,1), "NA", "NA")
+results$run_time= c(round(run_time,2), "NA", "NA")
+row.names(results) <- c("age.gl50", "gender.female","donor.living") 
+# Results --------------------------------------------------------------------
+
+################################################################################
+# Create a data frame for regression coefficients                              #
+################################################################################
+reg_coef <- c(est_a0, lwci_a0, upci_a0,    # regression coefficients for lambda1 (hazard for graft failure)
               est_a1, lwci_a1, upci_a1, 
               est_a2, lwci_a2, upci_a2, 
               est_a3, lwci_a3, upci_a3,
-              est_c0, lwci_c0, upci_c0, 
+              est_c0, lwci_c0, upci_c0,    # regression coefficients for lambda2 (hazard for death)
               est_c1, lwci_c1, upci_c1, 
               est_c2, lwci_c2, upci_c2, 
               est_c3, lwci_c3, upci_c3,
-              est_b0, lwci_b0, upci_b0, 
+              est_b0, lwci_b0, upci_b0,    # regression coefficients for association parameter
               est_b1, lwci_b1, upci_b1, 
               est_b2, lwci_b2, upci_b2, 
               est_b3, lwci_b3, upci_b3
@@ -442,14 +457,9 @@ reg_coef
 data.frame(reg_coef, row.names=NULL)
 reg_coef
 
-#getwd()
-results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-#setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-#write(reg_coef, file=paste0("results/real_data_analysis/parameters_",copula, "_", survival_distribution))
-#write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
-
+################################################################################
+# Output results                                                               #
+################################################################################
 dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))

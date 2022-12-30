@@ -5,17 +5,14 @@
 #     2. make unified data set for analysis paper2_data.csv
 #     3. Output results into a vector
 # original script by LS; edited and updated for paper2 by YW
-# model: gompertz surival distribution; frank copula; regression on both hazard rates (lambda) and association parameter (theta)
+# model: gompertz surival distribution; frank copula; regression on 
+#        both hazard rates (lambda) and association parameter (theta)
 # table 4 gompertz survival models with frank copula
 # script name: t - theta; l- lambda; 
 #              full - regression models on both theta and lambda
 ################################################################################
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
+library(copula); library(mvtnorm); library(plyr)
 
 ################################################################################
 # Set up model specs and load data                                             #
@@ -43,36 +40,36 @@ table(d1,d2)
 ################################################################################
 start_time = Sys.time()
 fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
-  gamma1 <- para[1]
-  a0 <- para[2]
+  gamma1 <- para[1]   # parameter in Gompertz distribution for graft failure
+  a0 <- para[2]       # regression coefficients for graft failure
   a1 <- para[3]
   a2 <- para[4]
   a3 <- para[5]
-  gamma2 <- para[6]
-  c0 <- para[7]
+  gamma2 <- para[6]  # parameter in Gompertz distribution for death
+  c0 <- para[7]      # regression coefficients for death
   c1 <- para[8]
   c2 <- para[9]
   c3 <- para[10]
   
-  b0 <- para[11]
+  b0 <- para[11]     # regression coefficients for association parameter
   b1 <- para[12]
   b2 <- para[13]
   b3 <- para[14]
   
-  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)   # hazard for graft failure
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)   # hazard for death
   
-  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))
-  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))
+  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))   # survival function for graft failure
+  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))   # survival function for death
   S1[which(S1<0.1^8)] <- 0.1^8
   S2[which(S2<0.1^8)] <- 0.1^8
   
-  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1))
-  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1))
+  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1)) # probability density function for graft failure
+  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1)) # probability density function for death
   f1[which(f1<0.1^8)] <- 0.1^8
   f2[which(f2<0.1^8)] <- 0.1^8
   
-  theta <- b0+b1*age.grp+b2*gen+b3*donor
+  theta <- b0+b1*age.grp+b2*gen+b3*donor   # association parameter
   
   C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
   C[which(C < 0.1^8)] <- 0.1^8 
@@ -86,9 +83,24 @@ fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   return(logpl)
 }
 
-plfoptim <- optim(c(0.02, -1,-0.01,-0.01,-0.01,  0.02,-1,-0.01,-0.01,-0.01,  2,0.1,0.1,0.1), fpl, method="L-BFGS-B",
-                  lower=c(-0.2,-10,-10,-10,-10,  -0.2,-10,-10,-10,-10,  0.01,-1,-1,-1),
-                  upper=c(0.2,-1,1,1,1, 0.2,-2,2,1,0.01  ,10,6,3,3), 
+plfoptim <- optim(c(0.02,                 # gamma1
+                    -1,-0.01,-0.01,-0.01, # a: regression coefficients in lambda 1 (hazard for graft failure)
+                    0.02,                 # gamma2
+                    -1, -0.01,-0.01,-0.01,# c: regression coefficients in lambda 2 (hazard for death)
+                    2,0.1,0.1,0.1         # b: regression coefficients for association parameter
+                    ), fpl, method="L-BFGS-B",
+                  lower=c(-0.2,            # gamma1
+                          -10,-10,-10,-10, # a: regression coefficients in lambda 1 (hazard for graft failure)
+                          -0.2,            # gamma2
+                          -10,-10,-10,-10, # c: regression coefficients in lambda 2 (hazard for death)
+                          0.01,-1,-1,-1    # b: regression coefficients for association parameter
+                          ),
+                  upper=c(0.2,             # gamma1
+                          -1,1,1,1,        # a: regression coefficients in lambda 1 (hazard for graft failure)
+                          0.2,             # gamma2
+                          -2,2,1,0.01,     # c: regression coefficients in lambda 2 (hazard for death)
+                          10,6,3,3         # b: regression coefficients for association parameter
+                          ), 
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
@@ -253,6 +265,10 @@ bic
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
+# to indicate the level in the estimated results
+results$aic = c(round(aic,1), "NA", "NA")
+results$run_time= c(round(run_time,2), "NA", "NA")
+row.names(results) <- c("age.gl50", "gender.female","donor.living")
 
 ################################################################################
 # Create a data frame for regression coefficients                              #
@@ -260,7 +276,7 @@ row.names(results) <- c("age.gl50", "gender.female","donor.living")
 # regression coefficients in hazard 1 (lambda1):  est_a0, est_a1, est_a2, est_a3
 # regression coefficients in hazard 2 (lambda2):  est_c0, est_c1, est_c2, est_c3
 # regression coefficients in association parameter: est_b0, est_b1, est_b2, est_b3, 
-# Gompertz parameter: g1 = gamma1, g2 = gamma2, 
+# Gompertz parameters: g1 = gamma1, g2 = gamma2, 
 reg_coef <- c(est_g1, lwci_g1, upci_g1,
               est_g2, lwci_g2, upci_g2, 
               
@@ -279,26 +295,19 @@ reg_coef <- c(est_g1, lwci_g1, upci_g1,
               est_b2, lwci_b2, upci_b2, 
               est_b3, lwci_b3, upci_b3
 )  
-
 reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
 reg_coef <- round(reg_coef, 3)
-
 reg_coef
-
 data.frame(reg_coef, row.names=NULL)
-
 row.names(reg_coef) <-c("gamma1","gamma2",      # parameters in Gompertz distributions
                         "a0", "a1","a2","a3",   # regression coefficients for hazard 1 (graft failure)
                         "c0","c1","c2","c3",    # regression coefficients for hazard 2 (death)
                         "b0","b1","b2","b3"     # regression coefficients for association parameter
 )
+
 ################################################################################
 # Output results                                                               #
 ################################################################################
-# to indicate the level in the estimated results
-results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))

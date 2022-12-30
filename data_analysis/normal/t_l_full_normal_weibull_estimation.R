@@ -1,28 +1,30 @@
+################################################################################
 # Real data analysis
+# original script by LS; edited and updated by YW for paper 2
 # YW: 15 July 2021  normal copula Weibull survival models
 # YW: 20 July 2021: 1. add running time tracker
 #                   2. add constraints for terms in likelihood involving log()
+# YW: 2022-12-29: revision - made parameters naming consistent, added comments
+#                            and output regression coefficients
+################################################################################
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-
+library(copula); library(mvtnorm);library(plyr)
+start_time = Sys.time()
+################################################################################
+# Set up model specs and load data                                             #
+################################################################################
+# Model specs
 copula <- "normal"
-survival_distribution <- "weibull"
+survival_distribution <- "weibull" 
 if(survival_distribution == "exp") {table_ref = "table3"}
 if(survival_distribution == "gompertz") {table_ref = "table4"}
 if(survival_distribution == "weibull") {table_ref = "table5"}
 
-start_time = Sys.time()
+# Load data
+# set working directory to project directory and send through the next two lines
+dir_data <-dir_results <- "../../"
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 
-########################################################
-##################### Load data ########################
-########################################################
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data_2021.csv")
 dim(df)
 attach(df)
 names(df)
@@ -37,31 +39,29 @@ table(df$gen)/dim(df)[1]
 table(df$donor)
 table(df$donor)/dim(df)[1]
 
-start.time = Sys.time()
-
 ########################################################
 ############### Normal pseudo likelihood ###############
 ########################################################
 
 npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
-  alpha1 <- para[1]
-  x0 <- para[2]
-  x1 <- para[3]
-  x2 <- para[4]
-  x3 <- para[5]
-  alpha2 <- para[6]
-  y0 <- para[7]
-  y1 <- para[8]
-  y2 <- para[9]
-  y3 <- para[10]
+  alpha1 <- para[1]       # shape parameter in weibull survival distribution for graft failure
+  a0 <- para[2]           # regression parameters in lambda1 (hazard for graft failure)
+  a1 <- para[3]
+  a2 <- para[4]
+  a3 <- para[5]
+  alpha2 <- para[6]       # shape parameter in weibull survival distribution for death
+  c0 <- para[7]           # regression parameters in lambda 2 (hazard for death)
+  c1 <- para[8]
+  c2 <- para[9]
+  c3 <- para[10]
   
-  b0 <- para[11]
+  b0 <- para[11]          # regression parameters for association parameter
   b1 <- para[12]
   b2 <- para[13]
   b3 <- para[14]
   
-  beta1 <- exp(x0+x1*age.grp+x2*gen+x3*donor)
-  beta2 <- exp(y0+y1*age.grp+y2*gen+y3*donor)
+  beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)  
+  beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
   
   S1 <- exp(-beta1*X^alpha1)
   S2 <- exp(-beta2*Y^alpha2)
@@ -82,7 +82,6 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   
   if(sum(df.1)>0){
     
-    
     X.1 <- df[df.1,1]
     Y.1 <- df[df.1,2]
     beta1.1 <- beta1[df.1]
@@ -93,7 +92,6 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
     
     f1.1 <- beta1.1*alpha1*X.1^(alpha1-1)*exp(-beta1.1*X.1^alpha1) 
     f2.1 <- beta2.1*alpha2*Y.1^(alpha2-1)*exp(-beta2.1*Y.1^alpha2) 
-    
     
     rho.1 <- rho[df.1]
     
@@ -123,18 +121,18 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
  
     #print(c(a22.1,a22.2,a22.3))
     
-    index1 = which(is.na(qnorm(S1.1))==T|is.infinite(qnorm(S1.1))==T)
+    indea1 = which(is.na(qnorm(S1.1))==T|is.infinite(qnorm(S1.1))==T)
     #print("qnorm S1.1")
-    # if(length(index1)>0) print(c(S1.1[index1],qnorm(S1.1[index1])))
+    # if(length(indea1)>0) print(c(S1.1[indea1],qnorm(S1.1[indea1])))
     
-    index2 = which(is.na(qnorm(S2.1))==T|is.infinite(qnorm(S2.1))==T)
+    indea2 = which(is.na(qnorm(S2.1))==T|is.infinite(qnorm(S2.1))==T)
     #print("s2.1")
-    #if(length(index2)>0) print(qnorm(S2.1[index2]))
+    #if(length(indea2)>0) print(qnorm(S2.1[indea2]))
     
     
-    index3 = which(is.na(rho.1==T|is.infinite(rho.1))==T)
+    indea3 = which(is.na(rho.1==T|is.infinite(rho.1))==T)
    # print("rho.1")
-   # if(length(index3)>0) print(rho.1)
+   # if(length(indea3)>0) print(rho.1)
     
     
     part1 <- sum(-0.5*log(temp_var)+(((2*rho.1*qnorm(S1.1)*qnorm(S2.1)-
@@ -143,7 +141,6 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   } else {
     part1 <- 0;
   }
-  
   
   #########################################################
   ################### Second Component ####################
@@ -179,11 +176,9 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
     part2 <- 0;
   }
   
-  
   #########################################################
   #################### Third Component ####################
   #########################################################
-  
   if(sum(df.3) >0 ){
     
     X.3 <- df[df.3,1]
@@ -216,7 +211,6 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
     part3 <- 0;
   }
   
-  
   #########################################################
   #################### Fourth Component ###################
   #########################################################
@@ -237,7 +231,6 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
     S2.4[which(S2.4<0.1^8)] <- 0.1^8
     S2.4[which(S2.4==1)] <- 0.999999 # YW added 20 July 2021: avoid qnorm(p)=inf if p=1
 
-    
     rho.4 <- rho[df.4]
     
     over.all <- rep(0, length(S1.4))
@@ -268,14 +261,24 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
 
 }
 
-#npl(c(0.7,  -2.5,0.2,0.01,-0.6,    1,   -4,1.3,-0.08,-0.64,  0.35,0.3,0.02,0.03),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
-#npl(c(0.2,  -10,-1,-1,-2,         0.5,    -10,-2,-2,-2,       0.01,-1,-0.5,-0.5),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
-#npl(c(1,      -1,1,1,1,           1.5,     -1,2,2,1            ,0.6,0.6,0.5,0.5),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
-
-
-plnoptim <- optim(c(0.7,  -2.5,0.2,0.01,-0.6,    1,   -4,1.3,-0.08,-0.64,  0.35,0.3,0.02,0.03), npl, method="L-BFGS-B",
-           lower=c(0.2,  -10,-1,-1,-2,         0.5,    -10,-2,-2,-2,       0.01,-1,-0.5,-0.5),
-          upper=c(1,      -1,1,1,1,           1.5,     -1,2,2,1            ,0.6,0.6,0.5,0.5), 
+plnoptim <- optim(c(0.7,  
+                    -2.5,0.2,0.01,-0.6,    
+                    1,   
+                    -4,1.3,-0.08,-0.64,  
+                    0.35,0.3,0.02,0.03
+                    ), npl, method="L-BFGS-B",
+           lower=c(0.2,  
+                   -10,-1,-1,-2,        
+                   0.5,    
+                   -10,-2,-2,-2,       
+                   0.01,-1,-0.5,-0.5
+                   ),
+          upper=c(1,     
+                  -1,1,1,1,           
+                  1.5,     
+                  -1,2,2,1,
+                  0.6,0.6,0.5,0.5
+                  ), 
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
@@ -314,57 +317,56 @@ upci_a1 <- est_a1 + 1.96*se[1]
 upci_a2 <- est_a2 + 1.96*se[6]
 
 #x ci#
-est_x0 <- plnoptim$par[2]
-est_x1 <- plnoptim$par[3]
-est_x2 <- plnoptim$par[4]
-est_x3 <- plnoptim$par[5]
-lwci_x0 <- est_x0 - 1.96*se[2]     
-lwci_x1 <- est_x1 - 1.96*se[3]
-lwci_x2 <- est_x2 - 1.96*se[4]     
-lwci_x3 <- est_x3 - 1.96*se[5]
-upci_x0 <- est_x0 + 1.96*se[2]
-upci_x1 <- est_x1 + 1.96*se[3] 
-upci_x2 <- est_x2 + 1.96*se[4]
-upci_x3 <- est_x3 + 1.96*se[5] 
+est_a0 <- plnoptim$par[2]
+est_a1 <- plnoptim$par[3]
+est_a2 <- plnoptim$par[4]
+est_a3 <- plnoptim$par[5]
+lwci_a0 <- est_a0 - 1.96*se[2]     
+lwci_a1 <- est_a1 - 1.96*se[3]
+lwci_a2 <- est_a2 - 1.96*se[4]     
+lwci_a3 <- est_a3 - 1.96*se[5]
+upci_a0 <- est_a0 + 1.96*se[2]
+upci_a1 <- est_a1 + 1.96*se[3] 
+upci_a2 <- est_a2 + 1.96*se[4]
+upci_a3 <- est_a3 + 1.96*se[5] 
 
 #x ci#
-est_y0 <- plnoptim$par[7]
-est_y1 <- plnoptim$par[8]
-est_y2 <- plnoptim$par[9]
-est_y3 <- plnoptim$par[10]
-lwci_y0 <- est_y0 - 1.96*se[7]     
-lwci_y1 <- est_y1 - 1.96*se[8]
-lwci_y2 <- est_y2 - 1.96*se[9]     
-lwci_y3 <- est_y3 - 1.96*se[10]
-upci_y0 <- est_y0 + 1.96*se[7]
-upci_y1 <- est_y1 + 1.96*se[8] 
-upci_y2 <- est_y2 + 1.96*se[9]
-upci_y3 <- est_y3 + 1.96*se[10] 
+est_c0 <- plnoptim$par[7]
+est_c1 <- plnoptim$par[8]
+est_c2 <- plnoptim$par[9]
+est_c3 <- plnoptim$par[10]
+lwci_c0 <- est_c0 - 1.96*se[7]     
+lwci_c1 <- est_c1 - 1.96*se[8]
+lwci_c2 <- est_c2 - 1.96*se[9]     
+lwci_c3 <- est_c3 - 1.96*se[10]
+upci_c0 <- est_c0 + 1.96*se[7]
+upci_c1 <- est_c1 + 1.96*se[8] 
+upci_c2 <- est_c2 + 1.96*se[9]
+upci_c3 <- est_c3 + 1.96*se[10] 
 
 #hrs
-var_x1 <- fisher_info[3,3]
-var_x2 <- fisher_info[4,4]
-var_x3 <- fisher_info[5,5]
-var_y1 <- fisher_info[8,8]
-var_y2 <- fisher_info[9,9]
-var_y3 <- fisher_info[10,10]
+var_a1 <- fisher_info[3,3]
+var_a2 <- fisher_info[4,4]
+var_a3 <- fisher_info[5,5]
+var_c1 <- fisher_info[8,8]
+var_c2 <- fisher_info[9,9]
+var_c3 <- fisher_info[10,10]
 
-est_hr_l1_age <- exp(est_x1)
-est_hr_l1_gen <- exp(est_x2)
-est_hr_l1_donor <- exp(est_x3)
+est_hr_l1_age <- exp(est_a1)
+est_hr_l1_gen <- exp(est_a2)
+est_hr_l1_donor <- exp(est_a3)
 
-est_hr_l2_age <- exp(est_y1)
-est_hr_l2_gen <- exp(est_y2)
-est_hr_l2_donor <- exp(est_y3)
+est_hr_l2_age <- exp(est_c1)
+est_hr_l2_gen <- exp(est_c2)
+est_hr_l2_donor <- exp(est_c3)
 
-var_hr_l1_age <- exp(est_x1)^2 * var_x1
-var_hr_l1_gen <- exp(est_x2)^2 * var_x2
-var_hr_l1_donor <- exp(est_x3)^2 * var_x3
+var_hr_l1_age <- exp(est_a1)^2 * var_a1
+var_hr_l1_gen <- exp(est_a2)^2 * var_a2
+var_hr_l1_donor <- exp(est_a3)^2 * var_a3
 
-var_hr_l2_age <- exp(est_y1)^2 * var_y1
-var_hr_l2_gen <- exp(est_y2)^2 * var_y2
-var_hr_l2_donor <- exp(est_y3)^2 * var_y3
-
+var_hr_l2_age <- exp(est_c1)^2 * var_c1
+var_hr_l2_gen <- exp(est_c2)^2 * var_c2
+var_hr_l2_donor <- exp(est_c3)^2 * var_c3
 
 hr_l1_lwci_age <- est_hr_l1_age - 1.96*sqrt(var_hr_l1_age)
 hr_l1_upci_age <- est_hr_l1_age + 1.96*sqrt(var_hr_l1_age)
@@ -384,10 +386,8 @@ hr_l2_upci_gen <- est_hr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 hr_l2_lwci_donor <- est_hr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- est_hr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
-
-
 ##AIC BIC
-para <- c(est_a1, est_x0,est_x1, est_x2, est_x3, est_a2, est_y0, est_y1, est_y2, est_y3, est_b0, est_b1, est_b2, est_b3)
+para <- c(est_a1, est_a0,est_a1, est_a2, est_a3, est_a2, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
 loglik <- npl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
 n<-length(X)
@@ -397,114 +397,27 @@ loglik
 aic
 bic
 
-
-
-#### print ###
-print(est_b0)
-print(lwci_b0)
-print(upci_b0)
-
-print(est_b1)
-print(lwci_b1)
-print(upci_b1)
-
-print(est_b2)
-print(lwci_b2)
-print(upci_b2)
-
-print(est_b3)
-print(lwci_b3)
-print(upci_b3)
-
-print(est_a1)
-print(lwci_a1)
-print(upci_a1)
-
-print(est_a2)
-print(lwci_a2)
-print(upci_a2)
-
-print(est_x0)
-print(lwci_x0)
-print(upci_x0)
-
-print(est_x1)
-print(lwci_x1)
-print(upci_x1)
-
-print(est_x2)
-print(lwci_x2)
-print(upci_x2)
-
-print(est_x3)
-print(lwci_x3)
-print(upci_x3)
-
-print(est_y0)
-print(lwci_y0)
-print(upci_y0)
-
-print(est_y1)
-print(lwci_y1)
-print(upci_y1)
-
-print(est_y2)
-print(lwci_y2)
-print(upci_y2)
-
-print(est_y3)
-print(lwci_y3)
-print(upci_y3)
-
-
-print(est_hr_l1_age)
-print(hr_l1_lwci_age)
-print(hr_l1_upci_age)
-
-print(est_hr_l1_gen)
-print(hr_l1_lwci_gen)
-print(hr_l1_upci_gen)
-
-print(est_hr_l1_donor)
-print(hr_l1_lwci_donor)
-print(hr_l1_upci_donor)
-
-
-print(est_hr_l2_age)
-print(hr_l2_lwci_age)
-print(hr_l2_upci_age)
-
-print(est_hr_l2_gen)
-print(hr_l2_lwci_gen)
-print(hr_l2_upci_gen)
-
-print(est_hr_l2_donor)
-print(hr_l2_lwci_donor)
-print(hr_l2_upci_donor)
-
 # Results --------------------------------------------------------------------
-#YW data needed for paper 2: age
+# age
 hr_gf_age <-c(est_hr_l1_age,hr_l1_lwci_age, hr_l1_upci_age)
 hr_gf_age
 hr_d_age <-c(est_hr_l2_age,hr_l2_lwci_age, hr_l2_upci_age)
 hr_d_age
 
-# YW data needed for paper 2: gender
+# gender
 hr_gf_gender <-c(est_hr_l1_gen,hr_l1_lwci_gen, hr_l1_upci_gen)
 hr_gf_gender
 hr_d_gender <-c(est_hr_l2_gen,hr_l2_lwci_gen, hr_l2_upci_gen)
 hr_d_gender
 
-# YW data needed for paper 2: donor
+# donor
 hr_gf_donor <-c(est_hr_l1_donor,hr_l1_lwci_donor, hr_l1_upci_donor)
 hr_gf_donor
 
 hr_d_donor <-c(est_hr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-
-
-# YW data needed for paper 2: regression coefficients on association
+# regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
 association_donor<- c(est_b3, lwci_b3, upci_b3)
@@ -522,15 +435,12 @@ names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_th
 results <- round(results, 3)
 results
 # Results --------------------------------------------------------------------
-
-
 print(aic)
 print(bic)
 
 end_time <- Sys.time()
 run_time = end_time - start_time
 run_time
-
 
 # > names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 # > results <- round(results, 3)
@@ -546,5 +456,53 @@ run_time
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
+
+################################################################################
+# Create a data frame for regression coefficients                              #
+################################################################################
+#------------------------------------------------------------------------------------
+# regression coefficients in hazard 1 (graft failure): est_a0, est_a1, est_a2, est_a3
+# regression coefficients in hazard 2 (death): est_c0, est_c1, est_c2, est_c3
+# regression coefficients in association parameter: est_b0, est_b1, est_b2, est_b3, 
+# Weibull shape parameter: alp1 = alpha1, alp2 = alpha2, 
+# Weibull scale parameter: beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+# Weibull scale parameter: beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+#------------------------------------------------------------------------------------
+reg_coef <- c(est_alp1, lwci_alp1, upci_alp1,
+              est_alp2, lwci_alp2, upci_alp2, 
+              
+              est_a0, lwci_a0, upci_a0, 
+              est_a1, lwci_a1, upci_a1, 
+              est_a2, lwci_a2, upci_a2, 
+              est_a3, lwci_a3, upci_a3,
+              
+              est_c0, lwci_c0, upci_c0, 
+              est_c1, lwci_c1, upci_c1, 
+              est_c2, lwci_c2, upci_c2, 
+              est_c3, lwci_c3, upci_c3, 
+              
+              est_b0, lwci_b0, upci_b0, 
+              est_b1, lwci_b1, upci_b1, 
+              est_b2, lwci_b2, upci_b2, 
+              est_b3, lwci_b3, upci_b3
+)         
+
+reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
+reg_coef <- round(reg_coef, 2)
+data.frame(reg_coef, row.names=NULL)
+
+row.names(reg_coef) <-c("alpha1","alpha2",      # shape parameters in Weibull distributions
+                        "a0", "a1","a2","a3",   # regression coefficients for hazard 1 (graft failure)
+                        "c0","c1","c2","c3",    # regression coefficients for hazard 2 (death)
+                        "b0","b1","b2","b3"     # regression coefficients for association parameter
+)
+
+reg_coef
+
+################################################################################
+# Output results                                                               #
+################################################################################
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
+write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
+write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
+print(paste0("saved output for ", copula, " ", survival_distribution, "!"))

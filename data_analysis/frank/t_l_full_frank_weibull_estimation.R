@@ -38,31 +38,31 @@ table(d1,d2)
 ################################################################################
 start_time = Sys.time()
 fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
-  alpha1 <- para[1]
-  p0 <- para[2]
-  p1 <- para[3]
-  p2 <- para[4]
-  p3 <- para[5]
-  alpha2 <- para[6]
-  q0 <- para[7]
-  q1 <- para[8]
-  q2 <- para[9]
-  q3 <- para[10]
-  b0 <- para[11]
+  alpha1 <- para[1]     # shape parameter in weibull survival distribution for graft failure
+  a0 <- para[2]         # regression parameters in lambda1 (hazard for graft failure)
+  a1 <- para[3]
+  a2 <- para[4]
+  a3 <- para[5]
+  alpha2 <- para[6]     # shape parameter in weibull survival distribution for death
+  c0 <- para[7]         # regression parameters in lambda2 (hazard for death)
+  c1 <- para[8]
+  c2 <- para[9]
+  c3 <- para[10]        
+  b0 <- para[11]        # regression parameters for association parameter
   b1 <- para[12]
   b2 <- para[13]
   b3 <- para[14]
   
-  beta1 <- exp(p0+p1*age.grp+p2*gen+p3*donor)
-  beta2 <- exp(q0+q1*age.grp+q2*gen+q3*donor)
+  beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)   # scale parameter in weibull survival distribution for graft failure
+  beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)   # scale parameter in weibull survival distribution for death
   
-  S1 <- exp(-beta1*X^alpha1)
-  S2 <- exp(-beta2*Y^alpha2)
+  S1 <- exp(-beta1*X^alpha1)          # survival function for graft failure
+  S2 <- exp(-beta2*Y^alpha2)          # survival function for death
   S1[which(S1 < 0.1^8)] <- 0.1^8 
   S2[which(S2 < 0.1^8)] <- 0.1^8 
-  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
-  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2) 
-  f1[which(f1 < 0.1^8)] <- 0.1^8 
+  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1)   # pdf for graft failure
+  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2)   # pdf for death
+  f1[which(f1 < 0.1^8)] <- 0.1^8      
   f2[which(f2 < 0.1^8)] <- 0.1^8 
 
   theta <- b0+b1*age.grp+b2*gen+b3*donor
@@ -70,7 +70,7 @@ fpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   #print(log(theta))
   theta[which(theta > 15)]=15
 
-  #print(c(p0,p1,p2))
+  #print(c(a0,a1,a2))
   
   C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
   C[which(C < 0.1^8)] <- 0.1^8 
@@ -137,12 +137,12 @@ upci_b2 <- est_b2 + 1.96*se[13]
 upci_b3 <- est_b3 + 1.96*se[14] 
 
 #alpha ci: shape parameters in Weibull distributions#
-est_alp1 <- plfoptim$par[1]
-est_alp2 <- plfoptim$par[6]
-lwci_alp1 <- est_alp1 - 1.96*se[1]
-lwci_alp2 <- est_alp2 - 1.96*se[6]     
-upci_alp1 <- est_alp1 + 1.96*se[1] 
-upci_alp2 <- est_alp2 + 1.96*se[6]
+est_ala1 <- plfoptim$par[1]
+est_ala2 <- plfoptim$par[6]
+lwci_ala1 <- est_ala1 - 1.96*se[1]
+lwci_ala2 <- est_ala2 - 1.96*se[6]     
+upci_ala1 <- est_ala1 + 1.96*se[1] 
+upci_ala2 <- est_ala2 + 1.96*se[6]
 
 #a ci: regression parameters for hazard 1 (graft failure)#
 est_a0 <- plfoptim$par[2]
@@ -265,6 +265,10 @@ bic<- -2*loglik+log(n)*k
 loglik
 aic
 bic
+# to indicate the level in the estimated results
+results$aic = c(round(aic,1), "NA", "NA")
+results$run_time= c(round(run_time,2), "NA", "NA")
+row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 
 ################################################################################
 # Create a data frame for regression coefficients                              #
@@ -273,11 +277,11 @@ bic
 # regression coefficients in hazard 1:  est_a0, est_a1, est_a2, est_a3
 # regression coefficients in hazard 2:  est_c0, est_c1, est_c2, est_c3
 # regression coefficients in association parameter: est_b0, est_b1, est_b2, est_b3, 
-# Weibull parameter: alp1 = alpha1, alp2 = alpha2, 
-# Weibull parameter: beta1 <- exp(p0+p1*age.grp+p2*gen+p3*donor), here p are est_x
-# Weibull parameter: beta2 <- exp(q0+q1*age.grp+q2*gen+q3*donor), here q are est_y
-reg_coef <- c(est_alp1, lwci_alp1, upci_alp1,
-              est_alp2, lwci_alp2, upci_alp2, 
+# Weibull parameter: ala1 = alpha1, ala2 = alpha2, 
+# Weibull parameter: beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor), here p are est_x
+# Weibull parameter: beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor), here q are est_y
+reg_coef <- c(est_ala1, lwci_ala1, upci_ala1,
+              est_ala2, lwci_ala2, upci_ala2, 
               
               est_a0, lwci_a0, upci_a0, 
               est_a1, lwci_a1, upci_a1, 
@@ -308,10 +312,7 @@ row.names(reg_coef) <-c("alpha1","alpha2",      # shape parameters in Weibull di
 ################################################################################
 # Output results                                                               #
 ################################################################################
-# to indicate the level in the estimated results
-results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
+print(paste0("saved output for ", copula, " ", survival_distribution, "!"))

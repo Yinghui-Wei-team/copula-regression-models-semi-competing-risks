@@ -1,18 +1,15 @@
 ################################################################################
 # Real data analysis
-# YW: 15 July 2021  Gumbel Copula Weibull survival models
 # original script by LS; edited and updated for paper2 by YW
+# YW: 15 July 2021  Gumbel Copula Weibull survival models
 # YW: 2022-02-20: update load data and output results sections
 # YW: 2022-12-29: revision - made parameters naming consistent, added comments
 #                            and output regression coefficients
 ################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
+library(copula); library(mvtnorm);library(plyr)
+start_time= Sys.time()
 
 ################################################################################
 # Set up model specs and load data                                             #
@@ -81,7 +78,7 @@ gpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   logpl<-sum(part1+part2+part3+part4) 
   return(logpl)
 }
-start_time= Sys.time()
+
 plgoptim <- optim(c(
   0.02,                  # alpha1
   -1,-0.01,-0.01,-0.01,  # a: regression coefficients for lambda 1(graft failure)
@@ -264,6 +261,10 @@ loglik
 aic
 bic
 
+# to indicate the level in the estimated results
+results$aic = c(round(aic,1), "NA", "NA")
+results$run_time= c(round(run_time,2), "NA", "NA")
+row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 ################################################################################
 # Create a data frame for regression coefficients                              #
 ################################################################################
@@ -309,9 +310,7 @@ reg_coef
 ################################################################################
 # Output results                                                               #
 ################################################################################
-# to indicate the level in the estimated results
-results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
+print(paste0("saved output for ", copula, " ", survival_distribution, "!"))
