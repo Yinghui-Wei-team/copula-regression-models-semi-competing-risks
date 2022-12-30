@@ -1,7 +1,7 @@
 ###############################################################################
 # Real data analysis
 # YW: 9 July 2021 normal gompertz survival models - regression on both hazards and association parameters
-# YW: 14 July 2021: make unified data set for analysis paper2_data.csv
+# YW: 14 July 2021: make unified data set for analysis
 # YW: 17 July 2021: adding constraints for terms in likelihood involving log()
 # original script by LS; edited and updated for paper2 by YW
 # YW: 2022-02-20: update load data and output results sections
