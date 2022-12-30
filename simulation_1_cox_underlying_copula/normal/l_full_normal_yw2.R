@@ -12,16 +12,12 @@ library(ggplot2)
 library(plyr)
 library(survival)
 
-
 # directory if University PC
 dir = "results"
 
 # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
-
-
-
 ######################## Full #########################
 
 ########################################################
@@ -52,8 +48,6 @@ true_t <- rep(0,n)
 true_r <- rep(0,n)
 U1 <- rep(0,n)
 V1 <- rep(0,n)
-
-
 
 true_hr_l1_age <- exp(true_a1)
 true_hr_l1_gen <- exp(true_a2)
@@ -359,9 +353,10 @@ for (i in 1:runs){
   t_lw <- 0
   t_up <- 0.9
   
-  
   # defined by YW 11/Sept/2021
-  starting_values = c(-2.74,0.32,0.004,-0.535,  -3.41,1.35,-0.06,-0.61,  0.1)
+  starting_values = c(-2.74,0.32,0.004,-0.535,  
+                      -3.41,1.35,-0.06,-0.61,  
+                      0.1)
   plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
                     lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw, c3_lw,t_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
@@ -734,7 +729,6 @@ rownames(Results)<-NULL
 print(Results)
 
 print(paste("Run time", run_time))
-
 
 write.csv(Results, row.names=F,file="S1-Table4-normal-exponential-covariates-hazards1.csv")
 

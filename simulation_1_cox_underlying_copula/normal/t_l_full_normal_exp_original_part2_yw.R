@@ -398,8 +398,6 @@ for (i in 1:runs){
     fisher_info <- solve(-plnoptim$hessian) #inverse -hess
     #Standard error = sqrt(var/n)
     se <- sqrt(diag(fisher_info)) 
-    
-    
     save_a0[i] <- plnoptim$par[1]
     save_a1[i] <- plnoptim$par[2]
     save_a2[i] <- plnoptim$par[3]

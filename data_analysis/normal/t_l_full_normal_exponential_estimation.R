@@ -303,7 +303,6 @@ hr_l2_upci_gen <- esthr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 hr_l2_lwci_donor <- esthr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- esthr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
-
 ##AIC BIC
 para <- c(est_a0, est_a1, est_a2, est_a3, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
 loglik <- npl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)

@@ -13,7 +13,6 @@ dir = "results"
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
 
-
 setwd(dir)
 
 out_file_estimates <- "t_l_full_norma_exp_original_part3(501-750).csv"

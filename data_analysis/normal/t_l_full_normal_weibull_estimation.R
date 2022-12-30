@@ -285,6 +285,7 @@ plnoptim <- optim(c(0.7,
 
 plnoptim$par
 
+
 ########################################################
 ################## Confidence Intervals ################
 ########################################################
@@ -308,15 +309,15 @@ upci_b1 <- est_b1 + 1.96*se[12]
 upci_b2 <- est_b2 + 1.96*se[13]
 upci_b3 <- est_b3 + 1.96*se[14] 
 
-#a ci#
-est_a1 <- plnoptim$par[1]
-est_a2 <- plnoptim$par[6]
-lwci_a1 <- est_a1 - 1.96*se[1]
-lwci_a2 <- est_a2 - 1.96*se[6]     
-upci_a1 <- est_a1 + 1.96*se[1] 
-upci_a2 <- est_a2 + 1.96*se[6]
+#alpha ci: shape parameters#
+est_alp1 <- plnoptim$par[1]
+est_alp2 <- plnoptim$par[6]
+lwci_alp1 <- est_alp1 - 1.96*se[1]
+lwci_alp2 <- est_alp2 - 1.96*se[6]     
+upci_alp1 <- est_alp1 + 1.96*se[1] 
+upci_alp2 <- est_alp2 + 1.96*se[6]
 
-#x ci#
+#a ci: regression coefficients for lambda 1 (graft failure)#
 est_a0 <- plnoptim$par[2]
 est_a1 <- plnoptim$par[3]
 est_a2 <- plnoptim$par[4]
@@ -330,7 +331,7 @@ upci_a1 <- est_a1 + 1.96*se[3]
 upci_a2 <- est_a2 + 1.96*se[4]
 upci_a3 <- est_a3 + 1.96*se[5] 
 
-#x ci#
+#c ci: regression coefficients for lambda 2 (death) #
 est_c0 <- plnoptim$par[7]
 est_c1 <- plnoptim$par[8]
 est_c2 <- plnoptim$par[9]
@@ -387,7 +388,11 @@ hr_l2_lwci_donor <- est_hr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- est_hr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
 ##AIC BIC
-para <- c(est_a1, est_a0,est_a1, est_a2, est_a3, est_a2, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
+para <- c(est_alp1, 
+          est_a0,est_a1, est_a2, est_a3, 
+          est_alp2, 
+          est_c0, est_c1, est_c2, est_c3, 
+          est_b0, est_b1, est_b2, est_b3)
 loglik <- npl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
 n<-length(X)
@@ -433,14 +438,10 @@ results <-rbind(results.age, results.gender, results.donor)
 results <- data.frame(results)
 names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 results <- round(results, 3)
-results
+
 # Results --------------------------------------------------------------------
 print(aic)
 print(bic)
-
-end_time <- Sys.time()
-run_time = end_time - start_time
-run_time
 
 # > names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 # > results <- round(results, 3)
@@ -455,7 +456,12 @@ run_time
 
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
+results
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
+
+end_time <- Sys.time()
+run_time = end_time - start_time
+run_time
 
 ################################################################################
 # Create a data frame for regression coefficients                              #

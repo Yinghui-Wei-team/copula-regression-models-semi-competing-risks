@@ -1,7 +1,11 @@
+################################################################################
 # Simulation study
+# original script by LS; edited and updated for paper2 by YW
 # YW: 22 July 2021  Data from Frank copula, analysis by Cox model
 # YW: 22 July 2021: 1. add running time tracker
 #                   2. rename variables, output results
+# YW: 30 Dec 2022: update results directory if on own PC
+################################################################################
 
 rm(list=ls())
 library(copula)
@@ -11,24 +15,21 @@ library(plyr)
 library(survival)
 library(numDeriv)
 
-# directory if on PC
-dir = "results"
-setwd(dir)
+# directory if on own PC
+dir_results <- "../../"
+dir = paste0(dir_results, "results/simulation_results")
+#setwd(dir)
+
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
-
 #directory if on cluster: current directory
-
-
-setwd(dir1)
+#setwd(dir1)
 
 out_file_summary <- "S1-summary-Cox model-data from Frank copula.csv"
 out_file_estimates <- "S1-estimates-Cox model-data from Frank copula.csv"
 start_time = Sys.time()
-
-
 
 ########################################################
 ####################### set up #########################
@@ -97,17 +98,14 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    
     theta1 <- true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
-    
     fc<- frankCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
@@ -137,7 +135,6 @@ for (i in 1:runs){
   
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
-  
 
   #############################################
   ###############    CPHM   ###################
@@ -159,7 +156,6 @@ for (i in 1:runs){
   hr_l1_upci_gen[i] <- sum_l1$conf.int[11]
   hr_l1_upci_donor[i] <- sum_l1$conf.int[12]
   
-  
   ## Terminal event ##
   cox_l2 <- coxph(Surv(Y, d2) ~ age.grp+gen+donor, data = df)
   sum_l2 <- summary(cox_l2)
@@ -175,18 +171,9 @@ for (i in 1:runs){
   hr_l2_upci_age[i] <- sum_l2$conf.int[10]
   hr_l2_upci_gen[i] <- sum_l2$conf.int[11]
   hr_l2_upci_donor[i] <- sum_l2$conf.int[12]
-
-  
-  #############################################
-  ############### REPORTING ###################
-  #############################################
   
   print(i)
 }
-
-
-
-
 
 #hrs#
 #bias: corrected
@@ -216,11 +203,9 @@ hr_l2_mse_gen <- mean((true_hr_l2_gen - hr_l2_gen)^2)
 hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
 
-
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
-
 
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
@@ -251,9 +236,7 @@ run_time = end_time - start_time
 
 run_time
 
-
-write.csv(Results, row.names=F,file= out_file_summary)
-
+write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
 
 Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age, hr.l1.age.uci=hr_l1_upci_age,
                        hr.l2.age.est = hr_l2_age, hr.l2.age.lci = hr_l2_lwci_age, hr.l2.age.uci=hr_l2_upci_age,
@@ -262,8 +245,4 @@ Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age
                        hr.l1.donor.est = hr_l1_donor, hr.l1.donor.lci = hr_l1_lwci_donor, hr.l1.gen.uci=hr_l1_upci_donor,
                        hr.l2.donor.est = hr_l2_donor, hr.l2.donor.lci = hr_l2_lwci_donor, hr.l2.gen.uci=hr_l2_upci_donor)
 
-
-write.csv(Estimates, row.names=F,file= out_file_estimates)
-
-
-
+write.csv(Estimates, row.names=F,file= paste0(dir_results,out_file_estimates))

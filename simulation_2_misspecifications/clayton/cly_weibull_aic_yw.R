@@ -622,8 +622,6 @@ for (i in 1:runs){
     # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
     # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
     # 
-    
-    
   } else if (index==2){#if Weibull is chosen
     
     fisher_info <- solve(-plcoptim_wei$hessian) #inverse -hess
@@ -865,7 +863,6 @@ end_time <- Sys.time()
 run_time = end_time - start_time
 
 run_time
-
 
 # output results
 write.csv(Results, row.names=F,file=out_file_summary)
