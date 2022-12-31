@@ -1,26 +1,31 @@
+##############################################################################################
 # Paper 2: Simulation 1
 # Gumbel copula exponential survival model with covariates for hazard rates
 # YW 25June 2021: added time counter, results to CSV file.
 # YW 25 June 2021: corrected variances
 # YW 25 June 2021: define save_hr
-
+# YW 31/12/2022 update: change starting values to be between lower and upper bounds
+##############################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(numDeriv)
-######################## age.grp #########################
+library(copula); library(mvtnorm);library(plyr); library(survival); library(numDeriv)
 
-########################################################
-####################### set up #########################
-########################################################
+#################################################################################
+# set up                                                                        #
+#################################################################################
+# directory if on PC
+dir_results = "../../results/simulation_results/"
+# dir = "results"
+# setwd(dir)
+# directory if working on cluster
+# dir = "/home/ywei/Simulation/Paper2/Gumbel"
+# setwd(dir)
+
 start_time <- Sys.time()
 set.seed(5333244)
 n <- 3000
-runs <- 1000
+runs <- 2
+#runs <- 1000
 
 #true values from KTX data
 true_b0 <- -2.30
@@ -202,7 +207,6 @@ for (i in 1:runs){
     c3 <- para[8]
     
     theta <- para[9]
- 
     
     lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
     lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
@@ -274,16 +278,25 @@ for (i in 1:runs){
   t_lw <- 1.01   #-7
   t_up <- 15    #-0.5
 
+
+  starting_values = c(-5, -2, -2, -2,   # a
+                      -5, -1, -2, -2,   # c
+                      7                 # b
+                      )
+  # plgoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3,
+  #                     true_b0), gpl, method="L-BFGS-B", 
+  #                   lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw),
+  #                   upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up), 
+  #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
+  #                   donor=df$donor, control=list(fnscale=-1),hessian=TRUE)
   
-  plgoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3,
-                      true_b0), gpl, method="L-BFGS-B", 
+  plgoptim <- optim(starting_values, gpl, method="L-BFGS-B", 
                     lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw),
                     upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
                     donor=df$donor, control=list(fnscale=-1),hessian=TRUE)
   
   plgoptim$par
-  
   
   #gpl(c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw,t_lw), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
   
@@ -358,9 +371,6 @@ for (i in 1:runs){
   uci_c3 <- c3_est + 1.96*se[8]
   lci_c3 <- c3_est - 1.96*se[8]
   
-  
-  ###HR###
-  
   var_a0 <- fisher_info[1,1]
   var_a1 <- fisher_info[2,2]
   var_a2 <- fisher_info[3,3]
@@ -371,6 +381,7 @@ for (i in 1:runs){
   var_c2 <- fisher_info[7,7]
   var_c3 <- fisher_info[8,8]
   
+  ###HR###
   var_hr_l1_age <- exp(a1_est)^2 * var_a1
   var_hr_l1_gen <- exp(a2_est)^2 * var_a2
   var_hr_l1_donor <- exp(a3_est)^2 * var_a3
@@ -634,7 +645,6 @@ MSE <- c(a0_mse,a1_mse,a2_mse,a3_mse,
          hr_l1_mse_age, hr_l1_mse_donor, hr_l1_mse_gen,
          hr_l2_mse_age, hr_l2_mse_donor, hr_l2_mse_gen)
 
-
 # YW: put results together
 items<-c("a0", "a1", "a2", "a3",
          "c0", "c1", "c2", "c3", 
@@ -646,8 +656,7 @@ Results[,2:4] <- round(Results[,2:4],4)
 
 rownames(Results)<-NULL
 
-setwd("C:/Users/Wei/University of Plymouth/Lexy Sorrell - Lexy's Work/R/NHSBT/Covariates/Simulations")
-
-write.csv(Results, row.names=F,file="Results/S1-gumbel-exponential-covariates-hazards.csv")
-
-
+# Output results---------------------------------------------------------------
+out_file_summary = "S1-gumbel-exponential-covariates-hazards.csv"
+write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
+print("Simulation 1 for gumbel exponential model is completed successfuly! ")

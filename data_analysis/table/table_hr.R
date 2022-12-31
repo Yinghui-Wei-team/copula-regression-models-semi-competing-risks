@@ -7,7 +7,6 @@ library(dplyr); library(formattable)
 dir_results <- "../../results/real_data_analysis/revision_1/"
 
 # Read in results from each copula regression model-------------------------------------------
-
 combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   # normal
   norm <- read.csv(file=paste0(dir_results, "table",table_ref ,"_normal_",survival_distribution, ".csv"))

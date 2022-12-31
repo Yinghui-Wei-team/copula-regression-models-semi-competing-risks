@@ -1,4 +1,7 @@
-# Simulation study: Paper 2 Copula model 2, normal copula exponential distribution, original code
+# Simulation study: Paper 2 Copula model 2, 
+# normal copula exponential distribution
+# YW 31/12/2022 update: change starting values to be between lower and upper bounds
+
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -7,14 +10,12 @@ library(plyr)
 library(survival)
 
 # directory if University PC
-dir = "results"
+dir_results = "../../results/simulation_results/"
 # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
 
-setwd(dir)
-
-out_file_estimates <- "t_l_full_norma_exp_original_part1(1-250).csv"
+out_file_estimates <- "s1_model2_t_l_full_normal_exp_part1(1-250).csv"
 start_time <- Sys.time()
 
 set.seed(235452333)
@@ -104,8 +105,6 @@ counter_b1_upper = 0
 counter_b2_upper = 0
 counter_b3_upper = 0
 
-
-
 ###############################################################
 ###################### run 'runs' times #######################
 ###############################################################
@@ -115,7 +114,6 @@ for (i in 1:runs){
   ###############################################################
   ######################## generate data ########################
   ###############################################################
-  
   #Step 1: generate age categories
   age.grp <- rbinom(n,1,0.40)         
   donor <- rbinom(n,1,0.30)
@@ -125,17 +123,14 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    
     theta1 <- (exp(2*(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]))-1)/(exp(2*(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]))+1)
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
-    
     fc<- normalCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
@@ -169,7 +164,6 @@ for (i in 1:runs){
   df$Y[df$Y==0] <- 0.1
   
   if (i < 251){
-    
     #########################################################
     ############### Normal pseudo likelihood ################
     #########################################################
@@ -246,7 +240,6 @@ for (i in 1:runs){
         part2 <- 0;
       }
       
-      
       #########################################################
       #################### Third Component ####################
       #########################################################
@@ -271,7 +264,6 @@ for (i in 1:runs){
       } else {
         part3 <- 0;
       }
-      
       
       #########################################################
       #################### Fourth Component ###################
@@ -313,53 +305,35 @@ for (i in 1:runs){
       return(loglik);
     }
     
+    a0_lw <- -10; a0_up <- -1
+    a1_lw <- -10; a1_up <- 0.5
+    a2_lw <- -10; a2_up <- 0.5
+    a3_lw <- -10; a3_up <- 0
     
-    a0_lw <- -10
-    a0_up <- -1
-    a1_lw <- -10
-    a1_up <- 0.5
-    a2_lw <- -10
-    a2_up <- 0.5
-    a3_lw <- -10
-    a3_up <- 0
+    c0_lw <- -10; c0_up <- -2.5
+    c1_lw <- -10; c1_up <- 2
+    c2_lw <- -10; c2_up <- 0.5
+    c3_lw <- -10; c3_up <- 0
     
-    c0_lw <- -10
-    c0_up <- -2.5
-    c1_lw <- -10
-    c1_up <- 2
-    c2_lw <- -10
-    c2_up <- 0.5
-    c3_lw <- -10
-    c3_up <- 0
-    
-    b0_lw <- 0
-    b0_up <- 0.9
-    b1_lw <- 0
-    b1_up <- 0.6
-    b2_lw <- -0.3
-    b2_up <- 0.3
-    b3_lw <- -0.3
-    b3_up <- 0.3
-    
+    b0_lw <- 0; b0_up <- 0.9
+    b1_lw <- 0; b1_up <- 0.6
+    b2_lw <- -0.3; b2_up <- 0.3
+    b3_lw <- -0.3;b3_up <- 0.3
     
     # YW 2/Sept/2021, changed starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
-    
-    starting_values = c(-2, 0, 0, 0,
-                        -2, 1, 0, 0,
+    starting_values = c(-2, -2, -2, -2,
+                        -4, -2, -2, -2,
                         0.2, 0.2, 0, 0)
-    plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, 
-                        true_c0, true_c1, true_c2, true_c3, 
-                        true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
-                      lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
-                      X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
-                      control=list(fnscale=-1),hessian=TRUE)
-    
-    # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3, true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
+    # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, 
+    #                     true_c0, true_c1, true_c2, true_c3, 
+    #                     true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
     #                   lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
     #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
     #                   control=list(fnscale=-1),hessian=TRUE)
-    # 
-    # npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
+    plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
+                      lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
+                      X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
+                      control=list(fnscale=-1),hessian=TRUE)
     
     plnoptim$par
     
@@ -390,7 +364,6 @@ for (i in 1:runs){
     if(plnoptim$par[12] == b3_lw) {counter_b3_low = counter_b3_low + 1}
     if(plnoptim$par[12] == b3_up) {counter_b3_upper = counter_b3_upper + 1}
     
-    
     ########################################################
     ################## Confidence Intervals ################
     ########################################################
@@ -398,8 +371,6 @@ for (i in 1:runs){
     fisher_info <- solve(-plnoptim$hessian) #inverse -hess
     #Standard error = sqrt(var/n)
     se <- sqrt(diag(fisher_info)) 
-    
-    
     save_a0[i] <- plnoptim$par[1]
     save_a1[i] <- plnoptim$par[2]
     save_a2[i] <- plnoptim$par[3]
@@ -436,77 +407,9 @@ for (i in 1:runs){
     save_var_b1[i] <- fisher_info[10,10]
     save_var_b2[i] <- fisher_info[11,11]
     save_var_b3[i] <- fisher_info[12,12]
-    
-    print(i)
   }
   print(i)
-  
-  
 }
-
-
-# print(paste("a0 estimates", save_a0))
-# print(paste("a0 se", save_se_a0))
-# print(paste("a0 var", save_var_a0))
-# print(paste("a1 estimates", save_a1))
-# print(paste("a1 se", save_se_a1))
-# print(paste("a1 var", save_var_a1))
-# print(paste("a2 estimates", save_a2))
-# print(paste("a2 se", save_se_a2))
-# print(paste("a2 var", save_var_a2))
-# print(paste("a3 estimates", save_a3))
-# print(paste("a3 se", save_se_a3))
-# print(paste("a3 var", save_var_a3))
-# print(paste("c0 estimates", save_c0))
-# print(paste("c0 se", save_se_c0))
-# print(paste("c0 var", save_var_c0))
-# print(paste("c1 estimates", save_c1))
-# print(paste("c1 se", save_se_c1))
-# print(paste("c1 var", save_var_c1))
-# print(paste("c2 estimates", save_c2))
-# print(paste("c2 se", save_se_c2))
-# print(paste("c2 var", save_var_c2))
-# print(paste("c3 estimates", save_c3))
-# print(paste("c3 se", save_se_c3))
-# print(paste("c3 var", save_var_c3))
-# print(paste("b0 estimates", save_c0))
-# print(paste("b0 se", save_se_c0))
-# print(paste("b0 var", save_var_c0))
-# print(paste("b1 estimates", save_c1))
-# print(paste("b1 se", save_se_c1))
-# print(paste("b1 var", save_var_c1))
-# print(paste("b2 estimates", save_c2))
-# print(paste("b2 se", save_se_c2))
-# print(paste("b2 var", save_var_c2))
-# print(paste("b3 estimates", save_c3))
-# print(paste("b3 se", save_se_c3))
-# print(paste("b3 var", save_var_c3))
-# 
-# print(paste("a0 low counter", counter_a0_low))
-# print(paste("a1 low counter", counter_a1_low))
-# print(paste("a2 low counter", counter_a2_low))
-# print(paste("a3 low counter", counter_a3_low))
-# print(paste("c0 low counter", counter_c0_low))
-# print(paste("c1 low counter", counter_c1_low))
-# print(paste("c2 low counter", counter_c2_low))
-# print(paste("c3 low counter", counter_c3_low))
-# print(paste("b0 low counter", counter_b0_low))
-# print(paste("b1 low counter", counter_b1_low))
-# print(paste("b2 low counter", counter_b2_low))
-# print(paste("b3 low counter", counter_b3_low))
-# print(paste("a0 upper counter", counter_a0_upper))
-# print(paste("a1 upper counter", counter_a1_upper))
-# print(paste("a2 upper counter", counter_a2_upper))
-# print(paste("a3 upper counter", counter_a3_upper))
-# print(paste("c0 upper counter", counter_c1_upper))
-# print(paste("c1 upper counter", counter_c1_upper))
-# print(paste("c2 upper counter", counter_c2_upper))
-# print(paste("c3 upper counter", counter_c3_upper))
-# print(paste("b0 upper counter", counter_b1_upper))
-# print(paste("b1 upper counter", counter_b1_upper))
-# print(paste("b2 upper counter", counter_b2_upper))
-# print(paste("b3 upper counter", counter_b3_upper))
-
 estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_a1, save_se_a1, save_var_a1,
                         save_a2, save_se_a2, save_var_a2,
@@ -519,11 +422,11 @@ estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_b1, save_se_b1, save_var_b1,
                         save_b2, save_se_b2, save_var_b2,
                         save_b3, save_se_b3, save_var_b3,)
-
-write.csv(estimates, file = outfile.estiamtes)
-
 end_time <- Sys.time()
 
 run_time = end_time - start_time
 
 run_time
+
+# Output results
+write.csv(estimates, file = paste0(dir_results,outfile.estiamtes))

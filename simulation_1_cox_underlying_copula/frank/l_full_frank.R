@@ -1,26 +1,23 @@
-################################################################################
+###############################################################################################
 # Paper 2: Simulation study 1
 # Frank copula survival model with covariates for hazard rates
 # YW 25/June/2021 updates:
 # 1. put together results and output to CSV file
 # 2. corrected variances post simulation study
 # 3. output running time
-################################################################################
+# YW 31/12/2022 update: change starting values to be between lower and upper bounds
+##############################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(numDeriv)
+library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
 ########################################################
 ####################### set up #########################
 ########################################################
 # directory if on PC
-dir = "results"
-setwd(dir)
+dir_results = "../../results/simulation_results/"
+# dir = "results"
+# setwd(dir)
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
@@ -28,7 +25,8 @@ start_time <- Sys.time()
 
 set.seed(73339023)
 n <- 3000
-runs <- 1000
+runs = 2
+#runs <- 1000
 
 #true values from KTX data
 true_b0 <- 3.06
@@ -257,7 +255,12 @@ for (i in 1:runs){
   t_lw <- 0.01
   t_up <- 10
   
-  plfoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3, true_b0),
+  starting_values = c(-5, -5, -5, -5,   # a
+                      -5, -5, -5, -5,   # c
+                      5                 # b
+                      )
+  
+  plfoptim <- optim(starting_values,
                     fpl, method="L-BFGS-B", 
                     lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw),
                     upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up), 
@@ -286,7 +289,6 @@ for (i in 1:runs){
   if(plfoptim$par[9] == t_lw) {counter_t_low = counter_t_low + 1}
   if(plfoptim$par[9] == t_up) {counter_t_upper = counter_t_upper + 1}
 
-  
   ########################################################
   ################## Confidence Intervals ################
   ########################################################
@@ -569,7 +571,6 @@ print(paste("counter c2 lower bound", counter_c2_low))
 print(paste("counter c3 lower bound", counter_c3_low))
 print(paste("counter t lower bound", counter_t_low))
 
-
 print(paste("counter a0 upper bound", counter_a0_upper))
 print(paste("counter a1 upper bound", counter_a1_upper))
 print(paste("counter a2 upper bound", counter_a2_upper))
@@ -583,7 +584,6 @@ print(paste("counter t upper bound", counter_t_upper))
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
-
 
 mean_bias <- c(a0_bias, a1_bias, a2_bias, a3_bias, 
                c0_bias, c1_bias, c2_bias, c3_bias,
@@ -620,5 +620,7 @@ run_time = end_time - start_time
 
 run_time
 
-setwd("C:/Users/ywei3/University of Plymouth/Lexy Sorrell - Lexy's Work/R/NHSBT/Covariates/Simulations/Results")
-write.csv(Results, row.names=F,file="S1-Frank-exponential-covariates-for-hazards.csv")
+# Output results---------------------------------------------------------------
+out_file_summary = "S1-Frank-exponential-covariates-for-hazards.csv"
+write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
+print("Simulation 1 for frank exponential model is completed successfuly! ")

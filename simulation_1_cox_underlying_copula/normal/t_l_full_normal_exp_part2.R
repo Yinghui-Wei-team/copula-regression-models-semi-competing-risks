@@ -12,17 +12,13 @@ dir = "results"
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
 
-
 setwd(dir)
-
 out_file_estimates <- "t_l_full_norma_exp_original_part2(251-500).csv"
 start_time <- Sys.time()
-
 
 set.seed(235452333)
 n <- 3000
 runs <- 1000
-
 #true values from KTX data
 true_b0 <- 0.35
 true_b1 <- 0.28
@@ -439,69 +435,6 @@ for (i in 1:runs){
   }
   
 }
-
-# print(paste("a0 estimates", save_a0))
-# print(paste("a0 se", save_se_a0))
-# print(paste("a0 var", save_var_a0))
-# print(paste("a1 estimates", save_a1))
-# print(paste("a1 se", save_se_a1))
-# print(paste("a1 var", save_var_a1))
-# print(paste("a2 estimates", save_a2))
-# print(paste("a2 se", save_se_a2))
-# print(paste("a2 var", save_var_a2))
-# print(paste("a3 estimates", save_a3))
-# print(paste("a3 se", save_se_a3))
-# print(paste("a3 var", save_var_a3))
-# print(paste("c0 estimates", save_c0))
-# print(paste("c0 se", save_se_c0))
-# print(paste("c0 var", save_var_c0))
-# print(paste("c1 estimates", save_c1))
-# print(paste("c1 se", save_se_c1))
-# print(paste("c1 var", save_var_c1))
-# print(paste("c2 estimates", save_c2))
-# print(paste("c2 se", save_se_c2))
-# print(paste("c2 var", save_var_c2))
-# print(paste("c3 estimates", save_c3))
-# print(paste("c3 se", save_se_c3))
-# print(paste("c3 var", save_var_c3))
-# print(paste("b0 estimates", save_c0))
-# print(paste("b0 se", save_se_c0))
-# print(paste("b0 var", save_var_c0))
-# print(paste("b1 estimates", save_c1))
-# print(paste("b1 se", save_se_c1))
-# print(paste("b1 var", save_var_c1))
-# print(paste("b2 estimates", save_c2))
-# print(paste("b2 se", save_se_c2))
-# print(paste("b2 var", save_var_c2))
-# print(paste("b3 estimates", save_c3))
-# print(paste("b3 se", save_se_c3))
-# print(paste("b3 var", save_var_c3))
-# 
-# print(paste("a0 low counter", counter_a0_low))
-# print(paste("a1 low counter", counter_a1_low))
-# print(paste("a2 low counter", counter_a2_low))
-# print(paste("a3 low counter", counter_a3_low))
-# print(paste("c0 low counter", counter_c0_low))
-# print(paste("c1 low counter", counter_c1_low))
-# print(paste("c2 low counter", counter_c2_low))
-# print(paste("c3 low counter", counter_c3_low))
-# print(paste("b0 low counter", counter_b0_low))
-# print(paste("b1 low counter", counter_b1_low))
-# print(paste("b2 low counter", counter_b2_low))
-# print(paste("b3 low counter", counter_b3_low))
-# print(paste("a0 upper counter", counter_a0_upper))
-# print(paste("a1 upper counter", counter_a1_upper))
-# print(paste("a2 upper counter", counter_a2_upper))
-# print(paste("a3 upper counter", counter_a3_upper))
-# print(paste("c0 upper counter", counter_c1_upper))
-# print(paste("c1 upper counter", counter_c1_upper))
-# print(paste("c2 upper counter", counter_c2_upper))
-# print(paste("c3 upper counter", counter_c3_upper))
-# print(paste("b0 upper counter", counter_b1_upper))
-# print(paste("b1 upper counter", counter_b1_upper))
-# print(paste("b2 upper counter", counter_b2_upper))
-# print(paste("b3 upper counter", counter_b3_upper))
-
 
 estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_a1, save_se_a1, save_var_a1,
