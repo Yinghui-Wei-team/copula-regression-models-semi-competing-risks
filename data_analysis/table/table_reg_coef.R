@@ -1,7 +1,8 @@
-################################################################################
+###################################################################################
 # Programmed by YW, 30 December 2022
 # Purpose: to combine results for regression coefficients together for paper2
-###############################################################################
+# Output: table in a format that can be included to LaTeX file directly
+##################################################################################
 
 dir_results <- "../../results/real_data_analysis/revision_1/"
 

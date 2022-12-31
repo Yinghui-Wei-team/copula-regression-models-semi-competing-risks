@@ -2,12 +2,15 @@
 # Purpose: create contour plots and hazard function plots for paper2
 # Programmed by Malgorzata Wojtys and Yinghui Wei
 # First created on 25/08/2021
+# YW updated 31/12/2022: use latest regression coefficients after re-running th analyses
 ################################################################################
 library(copula)
 
-output_dir <- "../../results/real_data_analysis/"
+output_dir <- "../../results/real_data_analysis/figures/"
 
-source("data_analysis/source_model_parameter.R")
+#source("data_analysis/source_model_parameter.R")
+
+source("data_analysis/figure/source_model_parameter_r1.R")
 
 #Hazard function--------------------------------------------------------
 h = function(t,alpha,beta){
