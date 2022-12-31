@@ -266,7 +266,8 @@ plnoptim <- optim(c(0.01,                # gamma1: parameter for Gompertz distri
                           0.2,     
                           -1,2,2,1   
                           ,0.6,0.6,0.5,0.5), 
-                  X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
+                  X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, 
+                  donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
 
@@ -506,7 +507,6 @@ print(aic)
 print(bic)
 
 results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run.time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 
 results
@@ -514,7 +514,7 @@ end.time = Sys.time()
 
 run.time = end.time - start.time
 run.time
-
+results$run_time= c(round(run.time,2), "NA", "NA")
 print("normal copula gompertz survival models fitted succesfully!")
 
 ################################################################################
@@ -544,13 +544,13 @@ reg_coef <- c(est_g1, lwci_g1, upci_g1,
               )  
 reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
 reg_coef <- round(reg_coef, 3)
-reg_coef
 data.frame(reg_coef, row.names=NULL)
 row.names(reg_coef) <-c("gamma1","gamma2",      # parameters in Gompertz distributions
                         "a0", "a1","a2","a3",   # regression coefficients for hazard 1 (graft failure)
                         "c0","c1","c2","c3",    # regression coefficients for hazard 2 (death)
                         "b0","b1","b2","b3"     # regression coefficients for association parameter
                         )
+reg_coef
 ################################################################################
 # Output results                                                               #
 ################################################################################
