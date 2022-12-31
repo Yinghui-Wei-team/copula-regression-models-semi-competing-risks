@@ -71,9 +71,21 @@ cpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   return(logpl)
 }
 
-plcoptim <- optim(c(0.02, -1,-0.01,-0.01,-0.01,  0.02,-1,-0.01,-0.01,-0.01,  2,0.1,0.1,0.1), cpl, method="L-BFGS-B",
-                  lower=c(-0.2,-10,-10,-10,-10,  -0.2,-10,-10,-10,-10,  0.01,-1,-1,-1),
-                  upper=c(1,-1,1,1,1, 1,-2,2,1,0.01  ,10,6,3,3), 
+plcoptim <- optim(c(0.02,      # alpha1
+                    -1,-0.01,-0.01,-0.01,  # a: regression coefficients for hazard 1 (graft failure)
+                    0.02,      # alpha2
+                    -1,-0.01,-0.01,-0.01,  # c: regression coefficients for hazard 2 (death)
+                    2,0.1,0.1,0.1), cpl, method="L-BFGS-B",
+                  lower=c(-0.2,
+                          -10,-10,-10,-10,  
+                          -0.2,
+                          -10,-10,-10,-10,  
+                          0.01,-1,-1,-1),
+                  upper=c(1,
+                          -1,1,1,1, 
+                          1,
+                          -2,2,1,0.01,
+                          10,6,3,3), 
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
@@ -165,7 +177,6 @@ var_hr_l2_age <- exp(est_c1)^2 * var_c1
 var_hr_l2_gen <- exp(est_c2)^2 * var_c2
 var_hr_l2_donor <- exp(est_c3)^2 * var_c3
 
-
 hr_l1_lwci_age <- esthr_l1_age - 1.96*sqrt(var_hr_l1_age)
 hr_l1_upci_age <- esthr_l1_age + 1.96*sqrt(var_hr_l1_age)
 
@@ -184,29 +195,27 @@ hr_l2_upci_gen <- esthr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 hr_l2_lwci_donor <- esthr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- esthr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
-
 # Results --------------------------------------------------------------------
-# YW data needed for paper 2: age
+# recipient age
 hr_gf_age <-c(esthr_l1_age,hr_l1_lwci_age, hr_l1_upci_age)
 hr_gf_age
 hr_d_age <-c(esthr_l2_age,hr_l2_lwci_age, hr_l2_upci_age)
 hr_d_age
 
-# YW data needed for paper 2: gender
+# recipient gender
 hr_gf_gender <-c(esthr_l1_gen,hr_l1_lwci_gen, hr_l1_upci_gen)
 hr_gf_gender
 hr_d_gender <-c(esthr_l2_gen,hr_l2_lwci_gen, hr_l2_upci_gen)
 hr_d_gender
 
-# YW data needed for paper 2: donor
+# donor type
 hr_gf_donor <-c(esthr_l1_donor,hr_l1_lwci_donor, hr_l1_upci_donor)
 hr_gf_donor
 
 hr_d_donor <-c(esthr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-
-# YW data needed for paper 2: regression coefficients on association
+# regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
 association_donor<- c(est_b3, lwci_b3, upci_b3)
@@ -225,12 +234,15 @@ results <- round(results, 3)
 results
 # Results --------------------------------------------------------------------
 
-
 ##AIC BIC
-para <- c(est_a1, est_a0,est_a1, est_a2, est_a3, est_a2, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
+para <- c(est_alp1, 
+          est_a0,est_a1, est_a2, est_a3, 
+          est_alp2, 
+          est_c0, est_c1, est_c2, est_c3, 
+          est_b0, est_b1, est_b2, est_b3)
 loglik <- cpl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
-n<-length(X)
+n<-length(df$X)
 aic<- -2*loglik+2*k
 bic<- -2*loglik+log(n)*k
 loglik

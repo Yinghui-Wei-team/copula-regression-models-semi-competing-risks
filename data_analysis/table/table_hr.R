@@ -17,7 +17,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   row.one$X = paste0("Normal copula ", survival_distribution, " survival model")
   row.one[2:(ncol(row.one)-2)] = ""
   norm <- rbind(row.one, norm)
-  norm$aic <- comma(norm$aic, digits = 1) 
   norm$aic[2:4] = norm$run_time[2:4] = ""
   norm
   
@@ -29,7 +28,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   row.one$X = paste0("Clayton copula ", survival_distribution, " survival model")
   row.one[2:(ncol(row.one)-2)] = ""
   cly <- rbind(row.one, cly)
-  cly$aic <- comma(norm$aic, digits = 1) 
   cly$aic[2:4] = cly$run_time[2:4] = ""
   cly
   
@@ -42,7 +40,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   row.one$X = paste0("Frank copula ", survival_distribution, " survival model")
   row.one[2:(ncol(row.one)-2)] = ""
   frank <- rbind(row.one, frank)
-  frank$aic <- comma(norm$aic, digits = 1) 
   frank$aic[2:4] = frank$run_time[2:4] = ""
   frank
   
@@ -55,7 +52,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   row.one$X = paste0("Gumbel copula ", survival_distribution, " survival model")
   row.one[2:(ncol(row.one)-2)] = ""
   gum <- rbind(row.one, gum)
-  gum$aic <- comma(norm$aic, digits = 1) 
   gum$aic[2:4] = gum$run_time[2:4] = ""
   gum
   
@@ -81,7 +77,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
     mutate(l_theta = paste0(" (", l_theta,", " )) %>%
     mutate(u_theta = paste0(u_theta, ") &")) %>%
     mutate(run_time = paste0(run_time, "\\\\")) %>%
-    mutate(aic= formatC(aic, big.mark=",")) %>%
     mutate(aic= paste0(aic, "&"))
   
   index <- which(grepl("copula", df[,1], fixed = TRUE)==T)
@@ -89,7 +84,7 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   
   df[index,2:(ncol(df)-2)]=""
   
-  df[index,1] <- paste0("\\multicolumn{3}{|l}{", df[index,1], "} & &")
+  df[index,1] <- paste0("\\hline\\multicolumn{3}{|l}{", df[index,1], "} & &")
   df
   
   # Output table to a CSV file-----------------------------------------------------------------

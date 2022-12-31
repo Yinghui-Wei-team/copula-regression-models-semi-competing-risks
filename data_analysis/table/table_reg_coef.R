@@ -61,10 +61,11 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
             file=paste0(dir_results, "table_reg_coef_", survival_distribution,".csv"), 
             row.names=F)
   
-  print(paste0("Results for regression coefficients for ", survival_distribution, " models have been saved!"))
+  print(paste0("Results for regression coefficients for ", survival_distribution, 
+               " models have been saved!"))
   
-  # tbl2 <- gsub("-","$-$",tbl)
-  # tbl2
+  #tbl2 <- gsub("-","[$]-[$]",tbl)
+  #print(tbl2)
   
   return(tbl)
 }
@@ -89,7 +90,6 @@ parameters <- c("$a_0$", "$a_1$", "$a_2$", "$a_3$",
                 "$c_0$", "$c_1$",  "$c_2$", "$c_3$" )
 
 table_weibull <- combined_table_reg_coef(dir_results, survival_distribution, parameters)
-
 
 # Gompertz survival distribution -------------------------------------------------------------
 

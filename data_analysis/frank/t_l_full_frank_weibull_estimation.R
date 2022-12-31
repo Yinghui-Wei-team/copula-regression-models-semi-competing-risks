@@ -137,12 +137,12 @@ upci_b2 <- est_b2 + 1.96*se[13]
 upci_b3 <- est_b3 + 1.96*se[14] 
 
 #alpha ci: shape parameters in Weibull distributions#
-est_ala1 <- plfoptim$par[1]
-est_ala2 <- plfoptim$par[6]
-lwci_ala1 <- est_ala1 - 1.96*se[1]
-lwci_ala2 <- est_ala2 - 1.96*se[6]     
-upci_ala1 <- est_ala1 + 1.96*se[1] 
-upci_ala2 <- est_ala2 + 1.96*se[6]
+est_alp1 <- plfoptim$par[1]
+est_alp2 <- plfoptim$par[6]
+lwci_alp1 <- est_alp1 - 1.96*se[1]
+lwci_alp2 <- est_alp2 - 1.96*se[6]     
+upci_alp1 <- est_alp1 + 1.96*se[1] 
+upci_alp2 <- est_alp2 + 1.96*se[6]
 
 #a ci: regression parameters for hazard 1 (graft failure)#
 est_a0 <- plfoptim$par[2]
@@ -254,12 +254,14 @@ results
 
 # Results --------------------------------------------------------------------
 ##AIC BIC
-para <- c(est_a1, est_a0,est_a1, est_a2, est_a3, 
-          est_a2, est_c0, est_c1, est_c2, est_c3, 
+para <- c(est_alp1, 
+          est_a0,est_a1, est_a2, est_a3, 
+          est_alp2, 
+          est_c0, est_c1, est_c2, est_c3, 
           est_b0, est_b1, est_b2, est_b3)
 loglik <- fpl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
-n<-length(X)
+n<-length(df$X)
 aic<- -2*loglik+2*k
 bic<- -2*loglik+log(n)*k
 loglik
@@ -277,11 +279,11 @@ row.names(results) <- c("age.gl50", "gender.female","donor.living")
 # regression coefficients in hazard 1:  est_a0, est_a1, est_a2, est_a3
 # regression coefficients in hazard 2:  est_c0, est_c1, est_c2, est_c3
 # regression coefficients in association parameter: est_b0, est_b1, est_b2, est_b3, 
-# Weibull parameter: ala1 = alpha1, ala2 = alpha2, 
+# Weibull parameter: alp1 = alpha1, alp2 = alpha2, 
 # Weibull parameter: beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor), here p are est_x
 # Weibull parameter: beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor), here q are est_y
-reg_coef <- c(est_ala1, lwci_ala1, upci_ala1,
-              est_ala2, lwci_ala2, upci_ala2, 
+reg_coef <- c(est_alp1, lwci_alp1, upci_alp1,
+              est_alp2, lwci_alp2, upci_alp2, 
               
               est_a0, lwci_a0, upci_a0, 
               est_a1, lwci_a1, upci_a1, 
