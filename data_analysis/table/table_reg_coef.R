@@ -1,12 +1,12 @@
 ################################################################################
 # Programmed by YW, 30 December 2022
 # Purpose: to combine results for regression coefficients together for paper2
-# gompertz surviavl distribution
 ###############################################################################
 
 dir_results <- "../../results/real_data_analysis/revision_1/"
 
 combined_table_reg_coef <- function(dir_results, survival_distribution, parameters){
+  # Read in results from each copula regression model-------------------------------------------
   # normal
   norm <- read.csv(file=paste0(dir_results, "parameters_normal_",survival_distribution, ".csv"))
   names(norm) <- c("para", "norm", "norm.lower", "norm.upper")
@@ -23,19 +23,22 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
   gum <- read.csv(file=paste0(dir_results, "parameters_gumbel_",survival_distribution,".csv"))
   names(gum) <- c("para", "gum", "gum.lower", "gum.upper")
   
+  # combine results into one data frame--------------------------------------------------------------
   df <- merge(norm, cly, by.x = "para")
   
   df <- merge(df, frank, by.x = "para")
   
   df <- merge(df, gum, by.x = "para")
   
+  # organise a table to be included in the LaTeX file for paper2--------------------------------------
   tbl <- data.frame(para = as.character(),
                     norm = as.character(),
                     clayton = as.character(),
                     frank = as.character())
   
   tbl <- as.data.frame(matrix(nrow=nrow(df),ncol=5))
-  names(tbl) <- c("Parameter", "Normal-gompertz", "Clayton-gompertz", "Frank-gompertz", "Gumbel-gompertz")
+  names(tbl) <- c("Parameter", "Normal-gompertz", "Clayton-gompertz", 
+                  "Frank-gompertz", "Gumbel-gompertz")
   tbl$Parameter <- df$para
   tbl$`Normal-gompertz` <- paste0("&",format(round(df$norm,2),nsmall=2), 
                                  " (", format(round(df$norm.lower,2), nsmall=2), ", ", 
@@ -52,6 +55,7 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
   
   tbl$Parameter <- parameters
   
+  # Output table to a CSV file-----------------------------------------------------------------
   write.csv(tbl, 
             file=paste0(dir_results, "table_reg_coef_", survival_distribution,".csv"), 
             row.names=F)
@@ -59,23 +63,22 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
   print(paste0("Results for regression coefficients for ", survival_distribution, " models have been saved!"))
   
   # tbl2 <- gsub("-","$-$",tbl)
-  # 
   # tbl2
   
   return(tbl)
 }
 
-# exponential survival distribution ------------------------------------------------
+# Exponential survival distribution ----------------------------------------------------------
 
 survival_distribution = "exp"
 
 parameters <- c("$a_0$", "$a_1$", "$a_2$", "$a_3$",     
-                "$b_0$", "$b_1$",  "$b_2$", "$b_3$",
-                "$c_0$", "$c_1$",  "$c_2$", "$c_3$" )
+                "$c_0$", "$c_1$",  "$c_2$", "$c_3$",
+                "$b_0$", "$b_1$",  "$b_2$", "$b_3$")
 
 table_exp <- combined_table_reg_coef(dir_results, survival_distribution, parameters)
 
-# Weibull survival distribution ------------------------------------------------
+# Weibull survival distribution ----------------------------------------------------------
 
 survival_distribution = "weibull"
 
@@ -87,7 +90,7 @@ parameters <- c("$a_0$", "$a_1$", "$a_2$", "$a_3$",
 table_weibull <- combined_table_reg_coef(dir_results, survival_distribution, parameters)
 
 
-# Gompertz survival distribution ------------------------------------------------
+# Gompertz survival distribution -------------------------------------------------------------
 
 # normal gompertz results are updating at the moment
 survival_distribution = "gompertz"
