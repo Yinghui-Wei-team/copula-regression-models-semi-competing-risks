@@ -2,18 +2,17 @@
 # Simulation study: evaluation of misspecification of survival distributions   
 # Data are simulated from Clayton copula exponential distribution
 # Original code by LS; reviewed, edited and updated by YW for paper2
-# YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
+# YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loops
 #                   2. rename variables and define vectors to save to estimates
 #                   3. set up working directory, save output to estimates and summary, 
 #                      debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-# YW, 1/1/2023:     update output directory
+# YW, 1/1/2023:     update output directory and tidy up
 #########################################################################################
 
 rm(list=ls())
-library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
-
+library(copula); library(mvtnorm); library(numDeriv)
 start_time = Sys.time()
 
 #####################################################################################
@@ -29,15 +28,15 @@ dir_results = "../../results/simulation_results/"
 # likelihood functions
 #source("Functions/paper2_functions.R")
 
-out_file_summary <- "S2-misspecification - underlying clayton exponential - summary.csv"
-out_file_estimates <-"S2-misspecification - underlying clayton exponential - estimates.csv"
+out_file_summary <- "S2_misspec_underlying_clayton_exp_summary.csv"
+out_file_estimates <-"S2_misspec_underlying_clayton_exp_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from exp chose with aic ########################
 #####################################################################################
 set.seed(12345)
 n <- 3000
-runs <- 1000
+runs <- 3
 
 true_b0 <- 0.62
 true_b1 <- 1.04
@@ -94,12 +93,31 @@ counter_gom = 0
 counter_exp_low <- counter_exp_upper <- rep(0, n_parameters)
 counter_wei_low <- counter_wei_upper <- rep(0, n_parameters+2)
 counter_gom_low <- counter_gom_upper <- rep(0, n_parameters+2)
-#------------------------------------------------------------------------------#
-#                 likelihood functions                                         #
-########################################################
-############### Clayton pseudo likelihood ##############
-##################### Exponential ######################
-########################################################
+
+#################################################################################
+# Specification of starting values for optim                                    #
+#################################################################################
+# boundaries used for parameters in optim for clayton exponential likelihood 
+# Clayton exponential
+clayton_exp_optim_lower = c(-10, -10, -10, -10, -1, -5.5)  # lower bound for a0, a1, c0, c1, b0, b1
+clayton_exp_optim_upper = c(-1,  1, -1,  2,  3,  3)        # upper bound for a0, a1, c0, c1, b0, b1
+clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values for a0, a1, c0, c1, b0, b1
+
+# clayton weibull 
+clayton_wei_optim_lower = c(0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.00, -15.00)   # lower bound for a0, a1, c0, c1, b0, b1
+clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  3.0)                  # upper bound for a0, a1, c0, c1, b0, b1
+# clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, true_b0, true_b1) # starting values for a0, a1, c0, c1, b0, b1
+clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.5, 1) # starting values for a0, a1, c0, c1, b0, b1
+
+# boundaries and starting values for g1, p0, p1, g2, q0, q1, b0, b1
+clayton_gom_optim_lower = c(-0.2,-5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound 
+clayton_gom_optim_upper = c(0.1,-2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound 
+clayton_gom_optim_starting_values =  c(-0.1,-4.0, -3.0, -0.1, -5.0, -3.0, -1.0, -1.0) # starting values 
+
+##################################################################################
+# likelihood function specification                                              #
+##################################################################################
+
 # clayton copula exponential distribution: one covariates
 cpl_exp <- function(para, X, Y, d1, d2, age){
   
@@ -209,11 +227,11 @@ cpl_gom <- function(para, X, Y, d1, d2, age){
   logpl <- sum(part1+part2+part3+part4) 
   return(logpl)
 }
-#-------------END of Specifying likelihood functions --------------------------#
 
-###############################################################
-###################### run 'runs' times #######################
-###############################################################
+
+################################################################################
+# run 'runs' times                                                             #
+################################################################################
 
 for (i in 1:runs){
   
@@ -272,12 +290,6 @@ for (i in 1:runs){
   ##################### Exponential ######################
   ########################################################
   
-  # boundaries used for parameters in optim for clayton exponential likelihood 
-  # YW: start of rewrite: as vectors
-  clayton_exp_optim_lower = c(-10, -10, -10, -10, -1, -5.5) # lower bound for a0, a1, c0, c1, b0, b1
-  clayton_exp_optim_upper = c(-1,  1, -1,  2,  3,  3) # upper bound for a0, a1, c0, c1, b0, b1
-  clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values for a0, a1, c0, c1, b0, b1
-  
   plcoptim_exp <- optim(clayton_exp_optim_starting_values, cpl_exp, method="L-BFGS-B",
                         lower=clayton_exp_optim_lower,upper=clayton_exp_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
@@ -302,11 +314,6 @@ for (i in 1:runs){
   ############### Clayton pseudo likelihood ##############
   ####################### Weibull ########################
   ########################################################
-  
-  #-----YW start of rewrite for clayton weibull ------------------------------
-  clayton_wei_optim_lower = c(0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.00, -15.00) # lower bound for a0, a1, c0, c1, b0, b1
-  clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  3.0) # upper bound for a0, a1, c0, c1, b0, b1
-  clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, true_b0, true_b1) # starting values for a0, a1, c0, c1, b0, b1
   
   plcoptim_wei <- optim(clayton_wei_optim_starting_values, cpl_wei, method="L-BFGS-B",
                         lower=clayton_wei_optim_lower,
@@ -333,11 +340,6 @@ for (i in 1:runs){
   ############### Clayton pseudo likelihood ##############
   ####################### Gompertz #######################
   ########################################################
-  
-  # boundaries and starting values for g1, p0, p1, g2, q0, q1, b0, b1
-  clayton_gom_optim_lower = c(-0.2,-5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound 
-  clayton_gom_optim_upper = c(0.1,-2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound 
-  clayton_gom_optim_starting_values =  c(-0.1,-4.0, -3.0, -0.1, -5.0, -3.0, -1.0, -1.0) # starting values 
   
   plcoptim_gom <- optim(clayton_gom_optim_starting_values, cpl_gom, method="L-BFGS-B",
                         lower=clayton_gom_optim_lower,
@@ -661,11 +663,8 @@ for (i in 1:runs){
   Results
   
   rownames(Results)<-NULL
-  
   end_time <- Sys.time()
-  
   run_time = end_time - start_time
-  
   run_time
   
   Estimates = data.frame(hr.l1= save_hr_l1, hr.l1.low= hr_l1_lwci, hr.l1.up = hr_l1_upci,
@@ -677,3 +676,4 @@ for (i in 1:runs){
   write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
   write.csv(Estimates, row.names=F,file=paste0(dir_results,out_file_estimates))
   print("Simulation 2 for clayton exponential model completed successfully!")
+  

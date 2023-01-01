@@ -14,20 +14,21 @@ rm(list=ls())
 library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
 
 start_time = Sys.time()
-
+#####################################################################################
+#Output directory and output files                                                  #
+#####################################################################################
 ## directory if on own PC
 dir_results = "../../results/simulation_results/"
-setwd(dir)
 
 # # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
-# likelihood functions
+## likelihood functions
 #source("Functions/paper2_functions.R")
 
-out_file_summary <- "S2-misspecification - underlying clayton weibull - summary.csv"
-out_file_estimates <-"S2-misspecification - underlying clayton weibull - estimates.csv"
+out_file_summary <- "S2_misspec_underlying_clayton_weibull_summary.csv"
+out_file_estimates <-"S2_misspec_underlying_clayton_weibull_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from wei chose with aic ########################
@@ -36,7 +37,7 @@ out_file_estimates <-"S2-misspecification - underlying clayton weibull - estimat
 #set.seed(9772002)
 set.seed(12345)
 n <- 3000
-runs <- 1000
+runs <- 3
 
 true_b0 <- 0.55
 true_b1 <- 0.74
@@ -249,7 +250,6 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
@@ -259,7 +259,6 @@ for (i in 1:runs){
     true_beta2[k] <- exp(true_y0 + true_y1 * age[k]) 
     
     #Step 4: Conditional distribution method
-    
     fc<- claytonCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
@@ -288,7 +287,6 @@ for (i in 1:runs){
   
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age)
-  
   
   ########################################################
   ############### Clayton pseudo likelihood ##############
@@ -320,38 +318,6 @@ for (i in 1:runs){
     break
   }
   
-  # a0_lw <- -10
-  # a0_up <- -1
-  # a1_lw <- -10
-  # a1_up <- 1
-  # c0_lw <- -10
-  # c0_up <- -1
-  # c1_lw <- -10
-  # c1_up <- 2
-  # b0_lw <- -1
-  # b0_up <- 3
-  # b1_lw <- -5.5
-  # b1_up <- 3
-  # 
-  # plcoptim_exp <- optim(c(-3,0.01,-3,0.01,3,0), cpl_exp, method="L-BFGS-B",
-  #                       lower=c(a0_lw,a1_lw,c0_lw,c1_lw,b0_lw,b1_lw),upper=c(a0_up,a1_up,c0_up,c1_up,b0_up,b1_up), 
-  #                       X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
-  #                       control=list(fnscale=-1),hessian=TRUE)
-  # 
-  # 
-  # if(plcoptim_exp$par[1] == a0_lw) {break}
-  # if(plcoptim_exp$par[1] == a0_up) {break}
-  # if(plcoptim_exp$par[2] == a1_lw) {break}
-  # if(plcoptim_exp$par[2] == a1_up) {break}
-  # if(plcoptim_exp$par[3] == c0_lw) {break}
-  # if(plcoptim_exp$par[3] == c0_up) {break}
-  # if(plcoptim_exp$par[4] == c1_lw) {break}
-  # if(plcoptim_exp$par[4] == c1_up) {break}
-  # if(plcoptim_exp$par[5] == b0_lw) {break}
-  # if(plcoptim_exp$par[5] == b0_up) {break}
-  # if(plcoptim_exp$par[6] == b1_lw) {break}
-  # if(plcoptim_exp$par[6] == b1_up) {break}
-  
   ########################################################
   ############### Clayton pseudo likelihood ##############
   ####################### Weibull ########################
@@ -381,32 +347,11 @@ for (i in 1:runs){
     break
   }
   
-    # a1_lw <- 0.01
-  # a1_up <- 1.5
-  # a2_lw <- 0.01
-  # a2_up <- 1.5
-  # 
-  # x1_lw <- -10
-  # x1_up <- -1
-  # x2_lw <- -10
-  # x2_up <- 1
-  # 
-  # y1_lw <- -10
-  # y1_up <- -1
-  # y2_lw <- -10
-  # y2_up <- 3
-  # 
-  # b0_lw <- -10
-  # b0_up <- 1.2
-  # b1_lw <- -15
-  # b1_up <- 1.7
-
   ########################################################
   ############### Clayton pseudo likelihood ##############
   ####################### Gompertz #######################
   ########################################################
   # YW: likelihood function (cpl_gom) has been moved out of the loop
-
   # for g1,p0,p1,g2,q0, q1, b0,b1
   clayton_gom_optim_lower = c(-0.2, -5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound
   clayton_gom_optim_upper = c(0.1, -2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound
@@ -515,7 +460,6 @@ for (i in 1:runs){
     varc1 <- fisher_info[4,4] 
     cov_c0c1 <- fisher_info[3,4] 
     
-    
     est_hr_l1 <- exp(est_a1)
     est_hr_l2 <- exp(est_c1)
     save_hr_l1[i] <- est_hr_l1
@@ -528,20 +472,6 @@ for (i in 1:runs){
     hr_l1_upci[i] <- est_hr_l1 + 1.96*sqrt(var_hr_l1)
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
-    
-    ############### REPORTING ###################
-    # Commented out by YW 23 July 2021
-    # if(true_hr_l1 <= hr_l1_upci && true_hr_l1 >= hr_l1_lwci) {counter_hr_l1=counter_hr_l1+1}
-    # if(true_hr_l2 <= hr_l2_upci && true_hr_l2 >= hr_l2_lwci) {counter_hr_l2=counter_hr_l2+1}
-    # 
-    # if(true_rho_d0 <= rho_d0_upci && true_rho_d0 >= rho_d0_lwci) {counter_rho_d0=counter_rho_d0+1}
-    # if(true_rho_d1 <= rho_d1_upci && true_rho_d1 >= rho_d1_lwci) {counter_rho_d1=counter_rho_d1+1}
-    # 
-    # bias_l1_hr[i] <- true_hr_l1 - est_hr_l1
-    # bias_l2_hr[i] <- true_hr_l2 - est_hr_l2
-    # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
-    # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
-    # 
   } else if (index==2){#if Weibull is chosen
     
     fisher_info <- solve(-plcoptim_wei$hessian) #inverse -hess
@@ -604,21 +534,7 @@ for (i in 1:runs){
     hr_l1_upci[i] <- est_hr_l1 + 1.96*sqrt(var_hr_l1)
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
-    
-    ############### REPORTING ###################
-    # commented out by YW 23 July 2021
-    # if(true_hr_l1 <= hr_l1_upci && true_hr_l1 >= hr_l1_lwci) {counter_hr_l1=counter_hr_l1+1}
-    # if(true_hr_l2 <= hr_l2_upci && true_hr_l2 >= hr_l2_lwci) {counter_hr_l2=counter_hr_l2+1}
-    # 
-    # if(true_rho_d0 <= rho_d0_upci && true_rho_d0 >= rho_d0_lwci) {counter_rho_d0=counter_rho_d0+1}
-    # if(true_rho_d1 <= rho_d1_upci && true_rho_d1 >= rho_d1_lwci) {counter_rho_d1=counter_rho_d1+1}
-    # 
-    # bias_l1_hr[i] <- true_hr_l1 - est_hr_l1
-    # bias_l2_hr[i] <- true_hr_l2 - est_hr_l2
-    # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
-    # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
-    
-    
+
   } else{# Gompertz is chosen
     #hessian
     hessian <- hessian(cpl_gom, plcoptim_gom$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
@@ -683,18 +599,6 @@ for (i in 1:runs){
     hr_l1_upci[i] <- est_hr_l1 + 1.96*sqrt(var_hr_l1)
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
-    
-    # commented out by YW
-    # if(true_hr_l1 <= hr_l1_upci && true_hr_l1 >= hr_l1_lwci) {counter_hr_l1=counter_hr_l1+1}
-    # if(true_hr_l2 <= hr_l2_upci && true_hr_l2 >= hr_l2_lwci) {counter_hr_l2=counter_hr_l2+1}
-    # 
-    # if(true_rho_d0 <= rho_d0_upci && true_rho_d0 >= rho_d0_lwci) {counter_rho_d0=counter_rho_d0+1}
-    # if(true_rho_d1 <= rho_d1_upci && true_rho_d1 >= rho_d1_lwci) {counter_rho_d1=counter_rho_d1+1}
-    # 
-    # bias_l1_hr[i] <- true_hr_l1 - est_hr_l1
-    # bias_l2_hr[i] <- true_hr_l2 - est_hr_l2
-    # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
-    # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
     
   }
   
@@ -773,15 +677,11 @@ items<-c("hr_nt", "hr_t", "rho_reference", "rho_covariates", "theta_reference", 
 Results <- cbind.data.frame(items, bias, CP, MSE, percentage_chosen)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
 
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
 
 Estimates = data.frame(hr.l1= save_hr_l1, hr.l1.low= hr_l1_lwci, hr.l1.up = hr_l1_upci,

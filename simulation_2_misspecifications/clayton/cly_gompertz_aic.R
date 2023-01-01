@@ -1,5 +1,5 @@
-################################################################################
-# Simulation study: evaluation of misspecification of survival distributions  #
+#######################################################################################################
+# Simulation study: evaluation of misspecification of survival distributions  
 # Data are simulated from Clayton copula exponential distribution
 # Original code by LS; reviewed, edited and updated by YW for paper2
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
@@ -7,16 +7,18 @@
 #                   3. set up working directory, save output to estimates and summary, debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-################################################################################
-
+# YW, 1 January 2023: update output directory and tidy up
+#######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
 
 start_time = Sys.time()
 
+#####################################################################################
+#Output directory and output files                                                  #
+#####################################################################################
 # directory if on own PC
 dir_results = "../../results/simulation_results/"
-setwd(dir)
 
 # # directory if on cluster
 #dir = "/home/ywei/Simulation/Paper2/Clayton"
@@ -25,8 +27,8 @@ setwd(dir)
 # likelihood functions
 #source("Functions/paper2_functions.R")
 
-out_file_summary <- "S2-misspecification - underlying clayton gompertz - summary.csv"
-out_file_estimates <-"S2-misspecification - underlying clayton gompertz - estimates.csv"
+out_file_summary <- "S2_misspec_underlying_clayton_gompertz_summary.csv"
+out_file_estimates <-"S2_misspec_underlying_clayton_gompertz_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from gom chose with aic ######################
@@ -34,7 +36,7 @@ out_file_estimates <-"S2-misspecification - underlying clayton gompertz - estima
 
 set.seed(9006465)
 n <- 3000
-runs <- 10
+runs <- 3
 
 true_b0 <- 0.58
 true_b1 <- 0.90
@@ -309,8 +311,8 @@ for (i in 1:runs){
   # YW rewrote
   #exponential initial values and bounds for a0, a1, c0, c1, b0, b1
   clayton_exp_optim_lower = c(-10.0, -10.0, -10.0, -10.0,  -1.0,  -5.5) # upper bound 
-  clayton_exp_optim_upper = c(-1,  1, -1,  2,  3,  3)# lower bound 
-  clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values 
+  clayton_exp_optim_upper = c(-1,  1, -1,  2,  3,  3)                   # lower bound 
+  clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0)            # starting values 
   # checking lower == clayton_exp_optim_lower
   plcoptim_exp <- optim(clayton_exp_optim_starting_values, cpl_exp, method="L-BFGS-B",
                         lower=clayton_exp_optim_lower,upper=clayton_exp_optim_upper, 
@@ -384,8 +386,9 @@ for (i in 1:runs){
   # for a1,a2,x1,x2,y1, y2, b0,b1
   clayton_wei_optim_lower = c(0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.00, -15.00) # lower bound 
   clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  3.0) # upper bound 
-  # change the last two elements from true_b0 and true_b1 to 0.50 and 0.80
-  clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, true_b0, true_b1) # starting values 
+  # change the last two elements from true_b0 and true_b1 to 0.50 and 0.90
+ # clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, true_b0, true_b1) # starting values 
+  clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.50, 0.90) # starting values
   
   plcoptim_wei <- optim(clayton_wei_optim_starting_values, cpl_wei, method="L-BFGS-B",
                         lower=clayton_wei_optim_lower,upper=clayton_wei_optim_upper, 
@@ -498,69 +501,6 @@ for (i in 1:runs){
     counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
     break
   }
-  
-
-  
-  # g1_lw <- -0.2
-  # g1_up <- 0.1
-  # 
-  # p0_lw <- -5
-  # p0_up <- -2
-  # p1_lw <- -4
-  # p1_up <- 2
-  # 
-  # g2_lw <- -0.2
-  # g2_up <- 0.1
-  # 
-  # q0_lw <- -6
-  # q0_up <- -2
-  # q1_lw <- -4
-  # q1_up <- 3
-  # 
-  # b0_lw <- -2
-  # b0_up <- 1.2
-  # b1_lw <- -2
-  # b1_up <- 1.7
-  # 
-  # plcoptim_gom <- optim(c(g1_lw,p0_lw,p1_lw,g2_lw,q0_lw, q1_lw, b0_lw,b1_lw), cpl_gom, method="L-BFGS-B",
-  #                       lower=c(g1_lw,p0_lw,p1_lw,g2_lw,q0_lw, q1_lw, b0_lw,b1_lw),
-  #                       upper=c(g1_up,p0_up,p1_up,g2_up,q0_up, q1_up, b0_up,b1_up), 
-  #                       X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
-  #                       control=list(fnscale=-1),hessian=TRUE)
-  # 
-  # if(plcoptim_gom$par[1] == g1_lw) {counter_g1_low <<- counter_g1_low + 1}
-  # if(plcoptim_gom$par[1] == g1_up) {counter_g1_upper <<- counter_g1_upper + 1}
-  # if(plcoptim_gom$par[2] == p0_lw) {counter_p0_low <<- counter_p0_low + 1}
-  # if(plcoptim_gom$par[2] == p0_up) {counter_p0_upper <<- counter_p0_upper + 1}
-  # if(plcoptim_gom$par[3] == p1_lw) {counter_p1_low <<- counter_p1_low + 1}
-  # if(plcoptim_gom$par[3] == p1_up) {counter_p1_upper <<- counter_p1_upper + 1}
-  # if(plcoptim_gom$par[4] == g2_lw) {counter_g2_low <<- counter_g2_low + 1}
-  # if(plcoptim_gom$par[4] == g2_up) {counter_g2_upper <<- counter_g2_upper + 1}
-  # if(plcoptim_gom$par[5] == q0_lw) {counter_q0_low <<- counter_q0_low + 1}
-  # if(plcoptim_gom$par[5] == q0_up) {counter_q0_upper <<- counter_q0_upper + 1}
-  # if(plcoptim_gom$par[6] == q1_lw) {counter_q1_low <<- counter_q1_low + 1}
-  # if(plcoptim_gom$par[6] == q1_up) {counter_q1_upper <<- counter_q1_upper + 1}
-  # if(plcoptim_gom$par[7] == b0_lw) {counter_b0_low <<- counter_b0_low + 1}
-  # if(plcoptim_gom$par[7] == b0_up) {counter_b0_upper <<- counter_b0_upper + 1}
-  # if(plcoptim_gom$par[8] == b1_lw) {counter_b1_low <<- counter_b1_low + 1}
-  # if(plcoptim_gom$par[8] == b1_up) {counter_b1_upper <<- counter_b1_upper + 1}
-  # 
-  # if(plcoptim_gom$par[1] == g1_lw) {break}
-  # if(plcoptim_gom$par[1] == g1_up) {break}
-  # if(plcoptim_gom$par[2] == p0_lw) {break}
-  # if(plcoptim_gom$par[2] == p0_up) {break}
-  # if(plcoptim_gom$par[3] == p1_lw) {break}
-  # if(plcoptim_gom$par[3] == p1_up) {break}
-  # if(plcoptim_gom$par[4] == g2_lw) {break}
-  # if(plcoptim_gom$par[4] == g2_up) {break}
-  # if(plcoptim_gom$par[5] == q0_lw) {break}
-  # if(plcoptim_gom$par[5] == q0_up) {break}
-  # if(plcoptim_gom$par[6] == q1_lw) {break}
-  # if(plcoptim_gom$par[6] == q1_up) {break}
-  # if(plcoptim_gom$par[7] == b0_lw) {break}
-  # if(plcoptim_gom$par[7] == b0_up) {break}
-  # if(plcoptim_gom$par[8] == b1_lw) {break}
-  # if(plcoptim_gom$par[8] == b1_up) {break}
   
   ########################################################
   ######################### AICS #########################
@@ -736,20 +676,6 @@ for (i in 1:runs){
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
     
-    ############### REPORTING ###################
-    # commented out by YW 23 July 2021
-    # if(true_hr_l1 <= hr_l1_upci && true_hr_l1 >= hr_l1_lwci) {counter_hr_l1=counter_hr_l1+1}
-    # if(true_hr_l2 <= hr_l2_upci && true_hr_l2 >= hr_l2_lwci) {counter_hr_l2=counter_hr_l2+1}
-    # 
-    # if(true_rho_d0 <= rho_d0_upci && true_rho_d0 >= rho_d0_lwci) {counter_rho_d0=counter_rho_d0+1}
-    # if(true_rho_d1 <= rho_d1_upci && true_rho_d1 >= rho_d1_lwci) {counter_rho_d1=counter_rho_d1+1}
-    # 
-    # bias_l1_hr[i] <- true_hr_l1 - est_hr_l1
-    # bias_l2_hr[i] <- true_hr_l2 - est_hr_l2
-    # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
-    # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
-    
-    
   } else{# Gompertz is chosen
     #hessian
     hessian <- hessian(cpl_gom, plcoptim_gom$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
@@ -815,18 +741,6 @@ for (i in 1:runs){
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
     
-    # commented out by YW
-    # if(true_hr_l1 <= hr_l1_upci && true_hr_l1 >= hr_l1_lwci) {counter_hr_l1=counter_hr_l1+1}
-    # if(true_hr_l2 <= hr_l2_upci && true_hr_l2 >= hr_l2_lwci) {counter_hr_l2=counter_hr_l2+1}
-    # 
-    # if(true_rho_d0 <= rho_d0_upci && true_rho_d0 >= rho_d0_lwci) {counter_rho_d0=counter_rho_d0+1}
-    # if(true_rho_d1 <= rho_d1_upci && true_rho_d1 >= rho_d1_lwci) {counter_rho_d1=counter_rho_d1+1}
-    # 
-    # bias_l1_hr[i] <- true_hr_l1 - est_hr_l1
-    # bias_l2_hr[i] <- true_hr_l2 - est_hr_l2
-    # bias_rho_d0[i] <- true_rho_d0 - est_rho_d0
-    # bias_rho_d1[i] <- true_rho_d1 - est_rho_d1
-    
   }
   
   if (hr_l1_lwci[i] <1 & hr_l1_upci[i]  <1) {hr_1_lw=hr_1_lw+1
@@ -841,8 +755,7 @@ for (i in 1:runs){
 } # end of loop
 
 #hrs#
-# OUTPUT by YW
-#bias: corrected by YW
+#bias: 
 hr_l1_bias <- mean(save_hr_l1 -true_hr_l1)
 hr_l2_bias <- mean(save_hr_l2 -true_hr_l2)
 
@@ -852,7 +765,7 @@ rho_d1_bias <- mean(save_rho_d1 - true_rho_d1)
 theta_d0_bias <- mean(theta_d0 - true_theta_d0)
 theta_d1_bias <- mean(theta_d1 - true_theta_d1)
 
-#coverage: re-written by YW
+#coverage:
 hr_l1_cov <- 100* sum(true_hr_l1 <= hr_l1_upci & true_hr_l1 >= hr_l1_lwci)/runs
 hr_l2_cov <- 100* sum(true_hr_l2 <= hr_l2_upci & true_hr_l2 >= hr_l2_lwci)/runs
 
@@ -862,7 +775,7 @@ rho_d1_cov <- 100* sum(true_rho_d1 <= rho_d1_upci & true_rho_d1 >= rho_d1_lwci)/
 theta_d0_cov <- 100*sum(true_theta_d0 <= theta_d0_upci & true_theta_d0 >= theta_d0_lwci)/runs
 theta_d1_cov <- 100*sum(true_theta_d1 <= theta_d1_upci & true_theta_d1 >= theta_d1_lwci)/runs
 
-#mse: corrected by YW
+#mse:
 hr_l1_mse <- mean((save_hr_l1 -true_hr_l1)^2)
 hr_l2_mse <- mean((save_hr_l2 -true_hr_l2)^2)
 
@@ -887,7 +800,7 @@ end_time = Sys.time()
 run_time = end_time - start_time
 run_time
 
-# YW 23 July 2021: put results together and write to CSV file
+# put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
 bias <- c(hr_l1_bias, hr_l2_bias, rho_d0_bias, rho_d1_bias, theta_d0_bias, theta_d1_bias)
@@ -900,7 +813,7 @@ MSE <- c(hr_l1_mse, hr_l2_mse, rho_d0_mse, rho_d1_mse,theta_d0_mse, theta_d1_mse
 # in the order of exponential, weibull, gompertz.
 percentage_chosen = c(exp_perc, wei_perc, gom_perc, "na", "na", "na")
 
-# YW: put results together
+# put results together
 items<-c("hr_nt", "hr_t", "rho_reference", "rho_covariates", "theta_reference", "theta_covariates")
 Results <- cbind.data.frame(items, bias, CP, MSE, percentage_chosen)
 
