@@ -20,7 +20,7 @@ start_time <- Sys.time()
 
 set.seed(235452333)
 n <- 3000
-runs <- 1
+runs <- 1000
 
 #true values from KTX data
 true_b0 <- 0.35
@@ -421,7 +421,7 @@ estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_b0, save_se_b0, save_var_b0,
                         save_b1, save_se_b1, save_var_b1,
                         save_b2, save_se_b2, save_var_b2,
-                        save_b3, save_se_b3, save_var_b3,)
+                        save_b3, save_se_b3, save_var_b3)
 end_time <- Sys.time()
 
 run_time = end_time - start_time
@@ -429,4 +429,4 @@ run_time = end_time - start_time
 run_time
 
 # Output results
-write.csv(estimates, file = paste0(dir_results,outfile.estiamtes))
+write.csv(estimates, file = paste0(dir_results, out_file_estimates))

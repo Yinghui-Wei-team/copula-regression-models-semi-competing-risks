@@ -1,27 +1,16 @@
+###################################################################################################
 # Simulation study: Paper 2 Copula model 2, 
 # normal copula exponential distribution
-# YW 31/12/2022 update: change starting values to be between lower and upper bounds
+# YW 31/12/2022 update: 
+#    1. change starting values to be between lower and upper bounds
+#    2. create a source file to be called by 4 parts of simulation (1-250, 251-500, 501-750, 751-1000)
+###################################################################################################
 
-rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-
-# directory if University PC
-dir_results = "../../results/simulation_results/"
-
-# directory if on cluster
-# dir = "/home/ywei/Simulation/Paper2/Normal"
-# setwd(dir)
-
-out_file_estimates <- "s1_model2_t_l_full_norma_exp_original_part2(251-500).csv"
 start_time <- Sys.time()
-
 set.seed(235452333)
 n <- 3000
 runs <- 1
+
 #true values from KTX data
 true_b0 <- 0.35
 true_b1 <- 0.28
@@ -114,7 +103,6 @@ for (i in 1:runs){
   ###############################################################
   ######################## generate data ########################
   ###############################################################
-  
   #Step 1: generate age categories
   age.grp <- rbinom(n,1,0.40)         
   donor <- rbinom(n,1,0.30)
@@ -124,17 +112,14 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    
     theta1 <- (exp(2*(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]))-1)/(exp(2*(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]))+1)
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
-    
     fc<- normalCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
@@ -167,9 +152,8 @@ for (i in 1:runs){
   df$X[df$X==0] <- 0.1
   df$Y[df$Y==0] <- 0.1
   
-  if (i < 251) {print(i)}
-  if (i > 250 & i < 501){ #251 to 500
-    
+  if (i < rep_start) {print(i)}
+  if (i >= rep_start & i <= rep_end){
     #########################################################
     ############### Normal pseudo likelihood ################
     #########################################################
@@ -246,7 +230,6 @@ for (i in 1:runs){
         part2 <- 0;
       }
       
-      
       #########################################################
       #################### Third Component ####################
       #########################################################
@@ -271,7 +254,6 @@ for (i in 1:runs){
       } else {
         part3 <- 0;
       }
-      
       
       #########################################################
       #################### Fourth Component ###################
@@ -313,48 +295,31 @@ for (i in 1:runs){
       return(loglik);
     }
     
+    a0_lw <- -10; a0_up <- -1
+    a1_lw <- -10; a1_up <- 0.5
+    a2_lw <- -10; a2_up <- 0.5
+    a3_lw <- -10; a3_up <- 0
     
-    a0_lw <- -10
-    a0_up <- -1
-    a1_lw <- -10
-    a1_up <- 0.5
-    a2_lw <- -10
-    a2_up <- 0.5
-    a3_lw <- -10
-    a3_up <- 0
+    c0_lw <- -10; c0_up <- -2.5
+    c1_lw <- -10; c1_up <- 2
+    c2_lw <- -10; c2_up <- 0.5
+    c3_lw <- -10; c3_up <- 0
     
-    c0_lw <- -10
-    c0_up <- -2.5
-    c1_lw <- -10
-    c1_up <- 2
-    c2_lw <- -10
-    c2_up <- 0.5
-    c3_lw <- -10
-    c3_up <- 0
-    
-    b0_lw <- 0
-    b0_up <- 0.9
-    b1_lw <- 0
-    b1_up <- 0.6
-    b2_lw <- -0.3
-    b2_up <- 0.3
-    b3_lw <- -0.3
-    b3_up <- 0.3
+    b0_lw <- 0; b0_up <- 0.9
+    b1_lw <- 0; b1_up <- 0.6
+    b2_lw <- -0.3; b2_up <- 0.3
+    b3_lw <- -0.3;b3_up <- 0.3
     
     # YW 2/Sept/2021, changed starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
     starting_values = c(-2, -2, -2, -2,
                         -4, -2, -2, -2,
                         0.2, 0.2, 0, 0)
-    # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, 
-    #                     true_c0, true_c1, true_c2, true_c3, 
-    #                     true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
-    #                   lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
-    #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
-    #                   control=list(fnscale=-1),hessian=TRUE)
+ 
     plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
                       lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
                       X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
                       control=list(fnscale=-1),hessian=TRUE)
+    
     plnoptim$par
     
     if(plnoptim$par[1] == a0_lw) {counter_a0_low = counter_a0_low + 1}
@@ -383,7 +348,6 @@ for (i in 1:runs){
     if(plnoptim$par[11] == b2_up) {counter_b2_upper = counter_b2_upper + 1}
     if(plnoptim$par[12] == b3_lw) {counter_b3_low = counter_b3_low + 1}
     if(plnoptim$par[12] == b3_up) {counter_b3_upper = counter_b3_upper + 1}
-    
     
     ########################################################
     ################## Confidence Intervals ################
@@ -428,12 +392,9 @@ for (i in 1:runs){
     save_var_b1[i] <- fisher_info[10,10]
     save_var_b2[i] <- fisher_info[11,11]
     save_var_b3[i] <- fisher_info[12,12]
-    
-    print(i)
   }
-  
+  print(i)
 }
-
 estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_a1, save_se_a1, save_var_a1,
                         save_a2, save_se_a2, save_var_a2,
@@ -446,7 +407,6 @@ estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_b1, save_se_b1, save_var_b1,
                         save_b2, save_se_b2, save_var_b2,
                         save_b3, save_se_b3, save_var_b3)
-
 end_time <- Sys.time()
 
 run_time = end_time - start_time
@@ -454,4 +414,6 @@ run_time = end_time - start_time
 run_time
 
 # Output results
+out_file_estimates <- paste0("s1_model2_t_l_full_normal_exp (", rep_start,"-", rep_end, ").csv")
+# if on own PC
 write.csv(estimates, file = paste0(dir_results, out_file_estimates))

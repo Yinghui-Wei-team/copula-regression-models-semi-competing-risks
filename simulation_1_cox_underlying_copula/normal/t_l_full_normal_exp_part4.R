@@ -1,4 +1,7 @@
-# Simulation study: Paper 2 Copula model 2, normal copula exponential distribution, original code
+# Simulation study: Paper 2 Copula model 2, 
+# normal copula exponential distribution
+# YW 31/12/2022 update: change starting values to be between lower and upper bounds
+
 rm(list=ls())
 library(copula)
 library(mvtnorm)
@@ -341,25 +344,20 @@ for (i in 1:runs){
     b3_lw <- -0.3
     b3_up <- 0.3
     
-    
     # YW 2/Sept/2021, changed starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
-    
-    starting_values = c(-2, 0, 0, 0,
-                        -2, 1, 0, 0,
+    starting_values = c(-2, -2, -2, -2,
+                        -4, -2, -2, -2,
                         0.2, 0.2, 0, 0)
-    plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, 
-                        true_c0, true_c1, true_c2, true_c3, 
-                        true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
-                      lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
-                      X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
-                      control=list(fnscale=-1),hessian=TRUE)
-    
-    # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3, true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
+    # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, 
+    #                     true_c0, true_c1, true_c2, true_c3, 
+    #                     true_b0, true_b1, true_b2,true_b3), npl, method="L-BFGS-B",
     #                   lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
     #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
     #                   control=list(fnscale=-1),hessian=TRUE)
-    # 
-    # npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
+    plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
+                      lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw,c3_lw,b0_lw,b1_lw,b2_lw,b3_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,b0_up,b1_up,b2_up,b3_up), 
+                      X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
+                      control=list(fnscale=-1),hessian=TRUE)
     
     plnoptim$par
     
@@ -441,69 +439,6 @@ for (i in 1:runs){
   }
   
 }
-
-# print(paste("a0 estimates", save_a0))
-# print(paste("a0 se", save_se_a0))
-# print(paste("a0 var", save_var_a0))
-# print(paste("a1 estimates", save_a1))
-# print(paste("a1 se", save_se_a1))
-# print(paste("a1 var", save_var_a1))
-# print(paste("a2 estimates", save_a2))
-# print(paste("a2 se", save_se_a2))
-# print(paste("a2 var", save_var_a2))
-# print(paste("a3 estimates", save_a3))
-# print(paste("a3 se", save_se_a3))
-# print(paste("a3 var", save_var_a3))
-# print(paste("c0 estimates", save_c0))
-# print(paste("c0 se", save_se_c0))
-# print(paste("c0 var", save_var_c0))
-# print(paste("c1 estimates", save_c1))
-# print(paste("c1 se", save_se_c1))
-# print(paste("c1 var", save_var_c1))
-# print(paste("c2 estimates", save_c2))
-# print(paste("c2 se", save_se_c2))
-# print(paste("c2 var", save_var_c2))
-# print(paste("c3 estimates", save_c3))
-# print(paste("c3 se", save_se_c3))
-# print(paste("c3 var", save_var_c3))
-# print(paste("b0 estimates", save_c0))
-# print(paste("b0 se", save_se_c0))
-# print(paste("b0 var", save_var_c0))
-# print(paste("b1 estimates", save_c1))
-# print(paste("b1 se", save_se_c1))
-# print(paste("b1 var", save_var_c1))
-# print(paste("b2 estimates", save_c2))
-# print(paste("b2 se", save_se_c2))
-# print(paste("b2 var", save_var_c2))
-# print(paste("b3 estimates", save_c3))
-# print(paste("b3 se", save_se_c3))
-# print(paste("b3 var", save_var_c3))
-# 
-# print(paste("a0 low counter", counter_a0_low))
-# print(paste("a1 low counter", counter_a1_low))
-# print(paste("a2 low counter", counter_a2_low))
-# print(paste("a3 low counter", counter_a3_low))
-# print(paste("c0 low counter", counter_c0_low))
-# print(paste("c1 low counter", counter_c1_low))
-# print(paste("c2 low counter", counter_c2_low))
-# print(paste("c3 low counter", counter_c3_low))
-# print(paste("b0 low counter", counter_b0_low))
-# print(paste("b1 low counter", counter_b1_low))
-# print(paste("b2 low counter", counter_b2_low))
-# print(paste("b3 low counter", counter_b3_low))
-# print(paste("a0 upper counter", counter_a0_upper))
-# print(paste("a1 upper counter", counter_a1_upper))
-# print(paste("a2 upper counter", counter_a2_upper))
-# print(paste("a3 upper counter", counter_a3_upper))
-# print(paste("c0 upper counter", counter_c1_upper))
-# print(paste("c1 upper counter", counter_c1_upper))
-# print(paste("c2 upper counter", counter_c2_upper))
-# print(paste("c3 upper counter", counter_c3_upper))
-# print(paste("b0 upper counter", counter_b1_upper))
-# print(paste("b1 upper counter", counter_b1_upper))
-# print(paste("b2 upper counter", counter_b2_upper))
-# print(paste("b3 upper counter", counter_b3_upper))
-
 
 estimates <- data.frame(save_a0, save_se_a0, save_var_a0,
                         save_a1, save_se_a1, save_var_a1,
