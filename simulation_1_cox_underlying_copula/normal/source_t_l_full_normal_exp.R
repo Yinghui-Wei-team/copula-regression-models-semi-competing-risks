@@ -1,5 +1,5 @@
 ###################################################################################################
-# Simulation study: Paper 2 Copula model 2, 
+# Simulation study: Paper 2 Copula model 2
 # normal copula exponential distribution
 # YW 31/12/2022 update: 
 #    1. change starting values to be between lower and upper bounds

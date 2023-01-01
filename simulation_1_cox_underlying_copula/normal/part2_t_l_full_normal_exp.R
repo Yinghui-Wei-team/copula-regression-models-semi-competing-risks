@@ -1,3 +1,6 @@
+################################################################################
+# Run the second quarter of the replication: normal - exponential model        #
+################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival)
 rep_start = 251
