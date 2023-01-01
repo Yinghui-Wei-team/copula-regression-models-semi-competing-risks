@@ -455,14 +455,14 @@ print(bic)
 
 
 results$aic = c(round(aic,1), "NA", "NA")
-results$run_time= c(round(run_time,2), "NA", "NA")
-results
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
 
 end_time <- Sys.time()
 run_time = end_time - start_time
 run_time
 
+results$run_time= c(round(run_time,2), "NA", "NA")
+results
 ################################################################################
 # Create a data frame for regression coefficients                              #
 ################################################################################

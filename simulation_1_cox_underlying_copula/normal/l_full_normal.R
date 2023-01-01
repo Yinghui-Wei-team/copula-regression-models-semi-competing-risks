@@ -1,9 +1,11 @@
+################################################################################
 # Paper 2: Simulation 1
 # Normal copula exponential survival model - covairates on hazard rates
 # YW 24June 2021: added time counter, results to CSV file.
 # YW 24 June 2021: corrected variances and MSE
 # YW 24 June 2021: specified save_hr within the loop of simulation, previously not defined.
 # YW 11 Sept 2021: changed starting values
+################################################################################
 
 rm(list=ls())
 library(copula)
