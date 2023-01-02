@@ -7,12 +7,14 @@
 #    2. create a source file to be called by 4 parts of simulation (1-250, 251-500, 501-750, 751-1000)
 #    3. put some scalars into vectors and tidy up
 #    4. take likelihood function out of the loop
+# YW 2/01/2023 update:
+#    1. Move starting values out of the loop
 ######################################################################################################
-
+library(copula); library(mvtnorm); library(plyr); library(survival)
 start_time <- Sys.time()
 set.seed(235452333)
 n <- 3000
-runs <- 1
+runs <- 1000
 
 #true values from KTX data
 true_b0 <- 0.35; true_b1 <- 0.28; true_b2 <- 0; true_b3 <- 0
@@ -164,6 +166,11 @@ likelihood_t_l_full_normal<-function(para, X, Y, d1, d2, age.grp, gen, donor){
   return(loglik);
 }
 
+# starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
+starting_values = c(-2, -2, -2, -2,      -4, -2, -2, -2,       0.2,  0.2, 0, 0)
+coef_lw      = c(-10, -10, -10, -10,    -10, -10, -10, -10,    0,    0, -0.3, -0.3)
+coef_up      = c(-1, 0.5, 0.5, 0,       -2.5,  2, 0.5, 0,      0.9, 0.6, 0.3, 0.3)
+
 #################################################################################
 # replicate 'runs' times                                                        #
 ################################################################################
@@ -224,10 +231,6 @@ for (i in 1:runs){
   
   if (i < rep_start) {print(i)}
   if (i >= rep_start & i <= rep_end){
-    # starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
-    starting_values = c(-2, -2, -2, -2,      -4, -2, -2, -2,       0.2,  0.2, 0, 0)
-    coef_lw      = c(-10, -10, -10, -10,    -10, -10, -10, -10,    0,    0, -0.3, -0.3)
-    coef_up      = c(-1, 0.5, 0.5, 0,       -2.5,  2, 0.5, 0,      0.9, 0.6, 0.3, 0.3)
     plnoptim <- optim(starting_values, likelihood_t_l_full_normal, method="L-BFGS-B",
                       lower = coef_lw,
                       upper = coef_up, 

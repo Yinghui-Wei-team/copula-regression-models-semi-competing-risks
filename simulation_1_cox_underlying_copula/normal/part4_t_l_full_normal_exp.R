@@ -2,7 +2,6 @@
 # Run the fourth quarter of the replication: normal - exponential model        #
 ################################################################################
 rm(list=ls())
-library(copula); library(mvtnorm); library(plyr); library(survival)
 rep_start = 751
 rep_end = 1000
 
