@@ -163,20 +163,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
-  index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
-  
+  # index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
+  # index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
+
  # a0_lw <- -10
  #  a0_up <- -1
  #  a1_lw <- -10
@@ -239,20 +239,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
-  index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_wei_low[index_lower] = counter_wei_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
-    break
-  }
-  
+  # index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
+  # index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_wei_low[index_lower] = counter_wei_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
+  #   break
+  # }
+
   
  # a1_lw <- 0.01
  #  a1_up <- 1.5
@@ -296,22 +296,22 @@ for (i in 1:runs){
  #  if(plcoptim_wei$par[8] == b1_lw) {counter_b1_low <<- counter_b1_low + 1}
  #  if(plcoptim_wei$par[8] == b1_up) {counter_b1_upper <<- counter_b1_upper + 1}
  #  
- #  if(plcoptim_wei$par[1] == a1_lw) {break}
- #  if(plcoptim_wei$par[1] == a1_up) {break}
- #  if(plcoptim_wei$par[2] == x1_lw) {break}
- #  if(plcoptim_wei$par[2] == x1_up) {break}
- #  if(plcoptim_wei$par[3] == x2_lw) {break}
- #  if(plcoptim_wei$par[3] == x2_up) {break}
- #  if(plcoptim_wei$par[4] == a2_lw) {break}
- #  if(plcoptim_wei$par[4] == a2_up) {break}
- #  if(plcoptim_wei$par[5] == y1_lw) {break}
- #  if(plcoptim_wei$par[5] == y1_up) {break}
- #  if(plcoptim_wei$par[6] == y2_lw) {break}
- #  if(plcoptim_wei$par[6] == y2_up) {break}
- #  if(plcoptim_wei$par[7] == b0_lw) {break}
- #  if(plcoptim_wei$par[7] == b0_up) {break}
- #  if(plcoptim_wei$par[8] == b1_lw) {break}
- #  if(plcoptim_wei$par[8] == b1_up) {break}
+  # if(plcoptim_wei$par[1] == a1_lw) {break}
+  # if(plcoptim_wei$par[1] == a1_up) {break}
+  # if(plcoptim_wei$par[2] == x1_lw) {break}
+  # if(plcoptim_wei$par[2] == x1_up) {break}
+  # if(plcoptim_wei$par[3] == x2_lw) {break}
+  # if(plcoptim_wei$par[3] == x2_up) {break}
+  # if(plcoptim_wei$par[4] == a2_lw) {break}
+  # if(plcoptim_wei$par[4] == a2_up) {break}
+  # if(plcoptim_wei$par[5] == y1_lw) {break}
+  # if(plcoptim_wei$par[5] == y1_up) {break}
+  # if(plcoptim_wei$par[6] == y2_lw) {break}
+  # if(plcoptim_wei$par[6] == y2_up) {break}
+  # if(plcoptim_wei$par[7] == b0_lw) {break}
+  # if(plcoptim_wei$par[7] == b0_up) {break}
+  # if(plcoptim_wei$par[8] == b1_lw) {break}
+  # if(plcoptim_wei$par[8] == b1_up) {break}
   
   ########################################################
   ############### Clayton pseudo likelihood ##############
@@ -332,19 +332,19 @@ for (i in 1:runs){
                         control=list(fnscale=-1),hessian=TRUE)
   
   
-  index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
-  index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
-    break
-  }
+  # index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
+  # index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
+  #   break
+  # }
   
   ########################################################
   ######################### AICS #########################

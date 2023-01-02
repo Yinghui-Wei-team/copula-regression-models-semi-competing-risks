@@ -11,6 +11,7 @@
 # YW, 1/1/2023:     1. update output directory and tidy up
 #                   2. put starting values out of the loops
 #                   3. move likelihood functions from this script to a generic functions folder
+#                   4. comment out "next"
 #######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(numDeriv)
@@ -167,19 +168,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
-  index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    next
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    next
-  }
+  # index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
+  # index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   next
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   next
+  # }
   
   ########################################################
   ################ Gumbel pseudo likelihood ##############
@@ -192,19 +193,19 @@ for (i in 1:runs){
                         control=list(fnscale=-1),hessian=TRUE)
   
   
-  index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
-  index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    next
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    next
-  }
+  # index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
+  # index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   next
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   next
+  # }
   
   ########################################################
   ############### Gumbel pseudo likelihood ###############
@@ -215,20 +216,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  
-  index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
-  index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    next
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    next
-  }
+  # index_lower = which(plgoptim_exp$par == gumbel_exp_optim_lower)
+  # index_upper = which(plgoptim_exp$par == gumbel_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   next
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   next
+  # }
   
   ########################################################
   ######################### AICS #########################

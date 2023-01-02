@@ -28,7 +28,7 @@ out_file_estimates <- paste0("S2_misspec_underlying_normal_weibull_", part, ".cs
 
 set.seed(45766764)
 n <- 3000
-runs <- 1
+runs <- 1000
 
 true_b0 <- 0.45
 true_b1 <- 0.28
@@ -588,7 +588,7 @@ print(paste("counter_gom", counter_gom))
 df2 <- data.frame(bias_l1_hr,bias_l2_hr,bias_rho_d0,bias_rho_d1,counter_hr_l1,counter_hr_l2,counter_rho_d0,counter_rho_d1,
                   save_hr_l1,save_hr_l2,save_rho_d0,save_rho_d1,counter_exp,counter_wei,counter_gom)
 
-write.csv(df2, file = out_file_estimates)
+write.csv(df2, file = paste0(dir_results, out_file_estimates))
 end_time = Sys.time()
 run_time = end_time - start_time
 print(paste0("Simulation2 for normal-weibull model completed successfully for ", part, "!"))

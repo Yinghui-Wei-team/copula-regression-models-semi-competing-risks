@@ -39,8 +39,6 @@ true_p1 <- 0.14 #gomp lambda1
 true_q0 <- -4.79 #gomp lambda2
 true_q1 <- 1.49 #gomp lambda2
 
-
-
 true_theta_d0 <- (exp(2*true_b0)-1)/(exp(2*true_b0)+1)
 true_theta_d1 <- (exp(2*(true_b0+true_b1))-1)/(exp(2*(true_b0+true_b1))+1)
 
@@ -62,7 +60,6 @@ true_t <- rep(0,n)
 true_r <- rep(0,n)
 U1 <- rep(0,n)
 V1 <- rep(0,n)
-
 
 ## stuff for later ##
 save_hr_l1 <- rep(0,100)
@@ -310,19 +307,18 @@ for (i in 1:runs){
     
     plnoptim_exp$par
     
-    
-    if(plnoptim_exp$par[1] == a0_lw) {break}
-    if(plnoptim_exp$par[1] == a0_up) {break}
-    if(plnoptim_exp$par[2] == a1_lw) {break}
-    if(plnoptim_exp$par[2] == a1_up) {break}
-    if(plnoptim_exp$par[3] == c0_lw) {break}
-    if(plnoptim_exp$par[3] == c0_up) {break}
-    if(plnoptim_exp$par[4] == c1_lw) {break}
-    if(plnoptim_exp$par[4] == c1_up) {break}
-    if(plnoptim_exp$par[5] == b0_lw) {break}
-    if(plnoptim_exp$par[5] == b0_up) {break}
-    if(plnoptim_exp$par[6] == b1_lw) {break}
-    if(plnoptim_exp$par[6] == b1_up) {break}
+    # if(plnoptim_exp$par[1] == a0_lw) {break}
+    # if(plnoptim_exp$par[1] == a0_up) {break}
+    # if(plnoptim_exp$par[2] == a1_lw) {break}
+    # if(plnoptim_exp$par[2] == a1_up) {break}
+    # if(plnoptim_exp$par[3] == c0_lw) {break}
+    # if(plnoptim_exp$par[3] == c0_up) {break}
+    # if(plnoptim_exp$par[4] == c1_lw) {break}
+    # if(plnoptim_exp$par[4] == c1_up) {break}
+    # if(plnoptim_exp$par[5] == b0_lw) {break}
+    # if(plnoptim_exp$par[5] == b0_up) {break}
+    # if(plnoptim_exp$par[6] == b1_lw) {break}
+    # if(plnoptim_exp$par[6] == b1_up) {break}
     
     ########################################################
     ############### Normal pseudo likelihood ##############
@@ -523,26 +519,23 @@ for (i in 1:runs){
                           X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age, control=list(fnscale=-1), hessian=TRUE)
     plnoptim_wei$par
     
-    
-    
-    
-    if(plnoptim_wei$par[1] == a1_lw) {break}
-    if(plnoptim_wei$par[1] == a1_up) {break}
-    if(plnoptim_wei$par[2] == x0_lw) {break}
-    if(plnoptim_wei$par[2] == x0_up) {break}
-    if(plnoptim_wei$par[3] == x1_lw) {break}
-    if(plnoptim_wei$par[3] == x1_up) {break}
-    if(plnoptim_wei$par[4] == a2_lw) {break}
-    if(plnoptim_wei$par[4] == a2_up) {break}
-    if(plnoptim_wei$par[5] == y0_lw) {break}
-    if(plnoptim_wei$par[5] == y0_up) {break}
-    if(plnoptim_wei$par[6] == y1_lw) {break}
-    if(plnoptim_wei$par[6] == y1_up) {break}
-    if(plnoptim_wei$par[7] == b0_lw) {break}
-    if(plnoptim_wei$par[7] == b0_up) {break}
-    if(plnoptim_wei$par[8] == b1_lw) {break}
-    if(plnoptim_wei$par[8] == b1_up) {break}
-    
+    # if(plnoptim_wei$par[1] == a1_lw) {break}
+    # if(plnoptim_wei$par[1] == a1_up) {break}
+    # if(plnoptim_wei$par[2] == x0_lw) {break}
+    # if(plnoptim_wei$par[2] == x0_up) {break}
+    # if(plnoptim_wei$par[3] == x1_lw) {break}
+    # if(plnoptim_wei$par[3] == x1_up) {break}
+    # if(plnoptim_wei$par[4] == a2_lw) {break}
+    # if(plnoptim_wei$par[4] == a2_up) {break}
+    # if(plnoptim_wei$par[5] == y0_lw) {break}
+    # if(plnoptim_wei$par[5] == y0_up) {break}
+    # if(plnoptim_wei$par[6] == y1_lw) {break}
+    # if(plnoptim_wei$par[6] == y1_up) {break}
+    # if(plnoptim_wei$par[7] == b0_lw) {break}
+    # if(plnoptim_wei$par[7] == b0_up) {break}
+    # if(plnoptim_wei$par[8] == b1_lw) {break}
+    # if(plnoptim_wei$par[8] == b1_up) {break}
+    # 
     ########################################################
     ############### Normal pseudo likelihood ##############
     ####################### Gompertz #######################
@@ -753,24 +746,23 @@ for (i in 1:runs){
     
     plnoptim_gom$par
     
-    
-    if(plnoptim_gom$par[1] == g1_lw) {break}
-    if(plnoptim_gom$par[1] == g1_up) {break}
-    if(plnoptim_gom$par[2] == p0_lw) {break}
-    if(plnoptim_gom$par[2] == p0_up) {break}
-    if(plnoptim_gom$par[3] == p1_lw) {break}
-    if(plnoptim_gom$par[3] == p1_up) {break}
-    if(plnoptim_gom$par[4] == g2_lw) {break}
-    if(plnoptim_gom$par[4] == g2_up) {break}
-    if(plnoptim_gom$par[5] == q0_lw) {break}
-    if(plnoptim_gom$par[5] == q0_up) {break}
-    if(plnoptim_gom$par[6] == q1_lw) {break}
-    if(plnoptim_gom$par[6] == q1_up) {break}
-    if(plnoptim_gom$par[7] == b0_lw) {break}
-    if(plnoptim_gom$par[7] == b0_up) {break}
-    if(plnoptim_gom$par[8] == b1_lw) {break}
-    if(plnoptim_gom$par[8] == b1_up) {break}
-    
+    # if(plnoptim_gom$par[1] == g1_lw) {break}
+    # if(plnoptim_gom$par[1] == g1_up) {break}
+    # if(plnoptim_gom$par[2] == p0_lw) {break}
+    # if(plnoptim_gom$par[2] == p0_up) {break}
+    # if(plnoptim_gom$par[3] == p1_lw) {break}
+    # if(plnoptim_gom$par[3] == p1_up) {break}
+    # if(plnoptim_gom$par[4] == g2_lw) {break}
+    # if(plnoptim_gom$par[4] == g2_up) {break}
+    # if(plnoptim_gom$par[5] == q0_lw) {break}
+    # if(plnoptim_gom$par[5] == q0_up) {break}
+    # if(plnoptim_gom$par[6] == q1_lw) {break}
+    # if(plnoptim_gom$par[6] == q1_up) {break}
+    # if(plnoptim_gom$par[7] == b0_lw) {break}
+    # if(plnoptim_gom$par[7] == b0_up) {break}
+    # if(plnoptim_gom$par[8] == b1_lw) {break}
+    # if(plnoptim_gom$par[8] == b1_up) {break}
+    # 
     ########################################################
     ######################### AICS #########################
     ########################################################
@@ -1070,7 +1062,7 @@ print(paste("counter_gom", counter_gom))
 df2 <- data.frame(bias_l1_hr,bias_l2_hr,bias_rho_d0,bias_rho_d1,counter_hr_l1,counter_hr_l2,counter_rho_d0,counter_rho_d1,
                   save_hr_l1,save_hr_l2,save_rho_d0,save_rho_d1,counter_exp,counter_wei,counter_gom)
 
-write.csv(df2, file = out_file_estimates)
+write.csv(df2, file = paste0(dir_results, out_file_estimates))
 end_time = Sys.time()
 run_time = end_time - start_time
 print(paste0("Simulation2 for normal-gompertz model completed successfully for ", part, "!"))

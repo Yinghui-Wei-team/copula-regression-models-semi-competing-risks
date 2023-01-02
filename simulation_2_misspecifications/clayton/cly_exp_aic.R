@@ -11,6 +11,7 @@
 #                   5. rewrite some calculations by using vectors to improve efficiency
 # YW, 1/1/2023:     1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
+#                   3. why "break" when hitting boundaries?
 ##################################################################################################
 
 rm(list=ls())
@@ -182,21 +183,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
-  index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
-  #-------------------YW end of re-write for clayton exponential-------------------
-  
+  # index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
+  # index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
+
   ########################################################
   ############### Clayton pseudo likelihood ##############
   ####################### Weibull ########################
@@ -209,19 +209,19 @@ for (i in 1:runs){
   
   index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
   index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
-  
-  
-  if(length(index_lower)>0)
-  {
-    counter_wei_low[index_lower] = counter__wei_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
-    break
-  }
-  
+
+
+  # if(length(index_lower)>0)
+  # {
+  #   counter_wei_low[index_lower] = counter__wei_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
+  #   break
+  # }
+
   
   ########################################################
   ############### Clayton pseudo likelihood ##############
@@ -234,20 +234,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
-  index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
-    break
-  }
-  
+  # index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
+  # index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
+  #   break
+  # }
+
   ########################################################
   ######################### AIC  #########################
   ########################################################
