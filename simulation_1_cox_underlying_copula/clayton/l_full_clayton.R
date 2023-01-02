@@ -372,7 +372,6 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
   # mse
   b0_mse <- mean((log(save_theta) - true_b0)^2)
   
-  
   #cs#
   #bias
   c0_bias <- mean(save_c0) - true_c0
@@ -431,28 +430,22 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
   counter_t_low <- sum(save_theta == t_lw) 
   counter_t_upper <- sum(save_theta == t_up)
   
-  # ### REPORT ###
-  # print(paste("counter a0 lower bound", counter_a0_low))
-  # print(paste("counter a1 lower bound", counter_a1_low))
-  # print(paste("counter a2 lower bound", counter_a2_low))
-  # print(paste("counter a3 lower bound", counter_a3_low))
-  # print(paste("counter c0 lower bound", counter_c0_low))
-  # print(paste("counter c1 lower bound", counter_c1_low))
-  # print(paste("counter c2 lower bound", counter_c2_low))
-  # print(paste("counter c3 lower bound", counter_c3_low))
-  # print(paste("counter t lower bound", counter_t_low))
-  # 
-  # print(paste("counter a0 upper bound", counter_a0_upper))
-  # print(paste("counter a1 upper bound", counter_a1_upper))
-  # print(paste("counter a2 upper bound", counter_a2_upper))
-  # print(paste("counter a3 upper bound", counter_a3_upper))
-  # print(paste("counter c0 upper bound", counter_c0_upper))
-  # print(paste("counter c1 upper bound", counter_c1_upper))
-  # print(paste("counter c2 upper bound", counter_c2_upper))
-  # print(paste("counter c3 upper bound", counter_c3_upper))
-  # print(paste("counter t upper bound", counter_t_upper))
-  # 
-  # YW 23 June 2021: put results together and write to CSV file
+  counter_low <- c(counter_a0_low, counter_a1_low, counter_a2_low, counter_a3_low,
+                   counter_c0_low, counter_c1_low, counter_c2_low, counter_c3_upper, 
+                   counter_t_low)
+  
+  counter_upper <- c(counter_a0_upper, counter_a1_upper, counter_a2_upper, counter_a3_upper,
+                     counter_c0_upper, counter_c1_upper, counter_c2_upper, counter_c3_upper, 
+                     counter_t_upper)
+  
+  counter_hit_boundaries <- data.frame(rbind(counter_low, counter_upper))
+  names(counter_hit_boundaries) <- c("a0", "a1", "a2", "a3",
+                                     "c0", "c1", "c2", "c3", "t")
+  row.names(counter_hit_boundaries) <- c("lower", "upper")
+  
+  print(counter_hit_boundaries)
+  
+  # put results together and write to CSV file
   # mean of bias
   # hr_l1 represents non-terminal event; hr_l2 represents terminal event
   mean_bias <- c(a0_bias, a1_bias, a2_bias, a3_bias, 
