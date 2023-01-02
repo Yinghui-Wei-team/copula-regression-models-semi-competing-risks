@@ -6,12 +6,13 @@
 #    1. change starting values to be between lower and upper bounds
 #    2. create a source file to be called by 4 parts of simulation (1-250, 251-500, 501-750, 751-1000)
 #    3. put some scalars into vectors and tidy up
+#    4. take likelihood function out of the loop
 ######################################################################################################
 
 start_time <- Sys.time()
 set.seed(235452333)
 n <- 3000
-runs <- 1000
+runs <- 1
 
 #true values from KTX data
 true_b0 <- 0.35; true_b1 <- 0.28; true_b2 <- 0; true_b3 <- 0
@@ -33,6 +34,135 @@ save_var_b0 <- save_var_b1 <- save_var_b2 <- save_var_b3 <- rep(0,runs)
 
 # counting number of times the estimation hit the lower or upper bounds specified for the parameter
 # counter_coef_lw <- counter_coef_up <- rep(0,12)
+
+#############################################################################
+# Normal pseudo likelihood                                                  #
+#############################################################################
+likelihood_t_l_full_normal<-function(para, X, Y, d1, d2, age.grp, gen, donor){
+  a0 <- para[1]; a1 <- para[2]; a2 <- para[3]; a3 <- para[4]   # regression coefficients for hazard 1 (graft failure)
+  c0 <- para[5]; c1 <- para[6]; c2 <- para[7];c3 <- para[8]    # regression coefficients for hazard 2 (death)
+  b0 <- para[9]; b1 <- para[10];b2 <- para[11];b3 <- para[12]  # regression coefficients for association parameter
+  
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  rho <- (exp(2*(b0+b1*age.grp+b2*gen+b3*donor))-1)/(exp(2*(b0+b1*age.grp+b2*gen+b3*donor))+1)
+  
+  df.1 <- d1 & d2     #case part 1  
+  df.2 <- d1 & (!d2)  #case part 2
+  df.3 <- (!d1)&d2;   #case part 3 
+  df.4 <- (!d1)&(!d2) #case part 4
+  
+  ###########################################################################
+  # First Component                                                         #
+  ###########################################################################
+  
+  if(sum(df.1)>0){
+    
+    X.1 <- df[df.1,1]
+    Y.1 <- df[df.1,2]
+    lambda1.1 <- lambda1[df.1]
+    lambda2.1 <- lambda2[df.1]
+    S1.1 <- pexp(X.1, rate=lambda1.1) 
+    S2.1 <- pexp(Y.1, rate=lambda2.1)
+    
+    rho.1 <- rho[df.1]
+    
+    part1 <- sum(-0.5*log(1-rho.1^2)+(((2*rho.1*qnorm(S1.1)*qnorm(S2.1)-
+                                          rho.1^2*(qnorm(S1.1)^2 + qnorm(S2.1)^2)))/((2*(1-rho.1^2))))+
+                   log(lambda1.1)-lambda1.1*X.1 +log(lambda2.1)-lambda2.1*Y.1)
+  } else {
+    part1 <- 0;
+  }
+  
+  ##########################################################################
+  #Second Component                                                        #
+  ##########################################################################
+  
+  if(sum(df.2)>0){
+    
+    X.2 <- df[df.2,1]
+    Y.2 <- df[df.2,2]
+    
+    lambda1.2 <- lambda1[df.2]
+    lambda2.2 <- lambda2[df.2]
+    
+    S1.2 <- pexp(X.2, rate=lambda1.2) 
+    S2.2 <- pexp(Y.2, rate=lambda2.2) 
+    
+    rho.2 <- rho[df.2]
+    
+    part2.1 <- pnorm(qnorm(S2.2), mean=rho.2*qnorm(S1.2),sd=sqrt(1-rho.2^2), lower.tail=F)
+    part2.1[which(part2.1<0.1^(10))]=0.1^(10)
+    part2 <- sum(log(part2.1*lambda1.2*exp(-lambda1.2*X.2)))
+    
+  } else {
+    part2 <- 0;
+  }
+  
+  ###########################################################################
+  # Third Component                                                         #
+  ###########################################################################
+  
+  if(sum(df.3) >0 ){
+    
+    X.3 <- df[df.3,1]
+    Y.3 <- df[df.3,2]
+    
+    lambda1.3 <- lambda1[df.3]
+    lambda2.3 <- lambda2[df.3]
+    
+    S1.3 <- pexp(X.3, rate=lambda1.3) 
+    S2.3 <- pexp(Y.3, rate=lambda2.3) 
+    
+    rho.3 <- rho[df.3]
+    
+    part3.1 <- pnorm(qnorm(S1.3), mean=rho.3*qnorm(S2.3),   sd=sqrt(1-rho.3^2), lower.tail=F)
+    part3.1[which(part3.1<0.1^(10))]=0.1^(10)
+    part3 <- sum(log(part3.1*lambda2.3*exp(-lambda2.3*Y.3)))
+    
+  } else {
+    part3 <- 0;
+  }
+  
+  ###########################################################################
+  # Fourth Component                                                        #
+  ###########################################################################
+  
+  if(sum(df.4)>0){
+    
+    X.4 <- df[df.4,1]
+    Y.4 <- df[df.4,2]
+    
+    lambda1.4 <- lambda1[df.4]
+    lambda2.4 <- lambda2[df.4]
+    
+    S1.4 <- pexp(X.4, rate=lambda1.4) 
+    S2.4 <- pexp(Y.4, rate=lambda2.4) 
+    
+    rho.4 <- rho[df.4]
+    
+    over.all <- rep(0, length(S1.4))
+    for(i in 1:length(over.all)){
+      sigma <- matrix(c(1,rho.4[i],rho.4[i],1),nrow=2);
+      CDF <- function(V,sigma){
+        return(pmvnorm(lower = V,upper=Inf, sigma=sigma,mean=c(0,0))[1])
+      }
+      over.all[i] <- log(apply(qnorm(cbind(S1.4[i],S2.4[i])),1,CDF,sigma));
+    }
+    
+    part4 <- sum(over.all);
+  } else {
+    part4 <- 0;
+  }
+  #print(part4)
+  
+  ##########################################################################
+  # All Components                                                         #
+  ##########################################################################
+  
+  loglik <- (part1+part2+part3+part4); 
+  return(loglik);
+}
 
 #################################################################################
 # replicate 'runs' times                                                        #
@@ -94,140 +224,11 @@ for (i in 1:runs){
   
   if (i < rep_start) {print(i)}
   if (i >= rep_start & i <= rep_end){
-    #############################################################################
-    # Normal pseudo likelihood                                                  #
-    #############################################################################
-    npl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
-      a0 <- para[1]; a1 <- para[2]; a2 <- para[3]; a3 <- para[4]   # regression coefficients for hazard 1 (graft failure)
-      c0 <- para[5]; c1 <- para[6]; c2 <- para[7];c3 <- para[8]    # regression coefficients for hazard 2 (death)
-      b0 <- para[9]; b1 <- para[10];b2 <- para[11];b3 <- para[12]  # regression coefficients for association parameter
-      
-      lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-      lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
-      rho <- (exp(2*(b0+b1*age.grp+b2*gen+b3*donor))-1)/(exp(2*(b0+b1*age.grp+b2*gen+b3*donor))+1)
-      
-      df.1 <- d1 & d2     #case part 1  
-      df.2 <- d1 & (!d2)  #case part 2
-      df.3 <- (!d1)&d2;   #case part 3 
-      df.4 <- (!d1)&(!d2) #case part 4
-      
-      ###########################################################################
-      # First Component                                                         #
-      ###########################################################################
-      
-      if(sum(df.1)>0){
-        
-        X.1 <- df[df.1,1]
-        Y.1 <- df[df.1,2]
-        lambda1.1 <- lambda1[df.1]
-        lambda2.1 <- lambda2[df.1]
-        S1.1 <- pexp(X.1, rate=lambda1.1) 
-        S2.1 <- pexp(Y.1, rate=lambda2.1)
-        
-        rho.1 <- rho[df.1]
-        
-        part1 <- sum(-0.5*log(1-rho.1^2)+(((2*rho.1*qnorm(S1.1)*qnorm(S2.1)-
-                                              rho.1^2*(qnorm(S1.1)^2 + qnorm(S2.1)^2)))/((2*(1-rho.1^2))))+
-                       log(lambda1.1)-lambda1.1*X.1 +log(lambda2.1)-lambda2.1*Y.1)
-      } else {
-        part1 <- 0;
-      }
-      
-      ##########################################################################
-      #Second Component                                                        #
-      ##########################################################################
-      
-      if(sum(df.2)>0){
-        
-        X.2 <- df[df.2,1]
-        Y.2 <- df[df.2,2]
-        
-        lambda1.2 <- lambda1[df.2]
-        lambda2.2 <- lambda2[df.2]
-        
-        S1.2 <- pexp(X.2, rate=lambda1.2) 
-        S2.2 <- pexp(Y.2, rate=lambda2.2) 
-        
-        rho.2 <- rho[df.2]
-        
-        part2.1 <- pnorm(qnorm(S2.2), mean=rho.2*qnorm(S1.2),sd=sqrt(1-rho.2^2), lower.tail=F)
-        part2.1[which(part2.1<0.1^(10))]=0.1^(10)
-        part2 <- sum(log(part2.1*lambda1.2*exp(-lambda1.2*X.2)))
-        
-      } else {
-        part2 <- 0;
-      }
-      
-      ###########################################################################
-      # Third Component                                                         #
-      ###########################################################################
-      
-      if(sum(df.3) >0 ){
-        
-        X.3 <- df[df.3,1]
-        Y.3 <- df[df.3,2]
-        
-        lambda1.3 <- lambda1[df.3]
-        lambda2.3 <- lambda2[df.3]
-        
-        S1.3 <- pexp(X.3, rate=lambda1.3) 
-        S2.3 <- pexp(Y.3, rate=lambda2.3) 
-        
-        rho.3 <- rho[df.3]
-        
-        part3.1 <- pnorm(qnorm(S1.3), mean=rho.3*qnorm(S2.3),   sd=sqrt(1-rho.3^2), lower.tail=F)
-        part3.1[which(part3.1<0.1^(10))]=0.1^(10)
-        part3 <- sum(log(part3.1*lambda2.3*exp(-lambda2.3*Y.3)))
-        
-      } else {
-        part3 <- 0;
-      }
-      
-      ###########################################################################
-      # Fourth Component                                                        #
-      ###########################################################################
-      
-      if(sum(df.4)>0){
-        
-        X.4 <- df[df.4,1]
-        Y.4 <- df[df.4,2]
-        
-        lambda1.4 <- lambda1[df.4]
-        lambda2.4 <- lambda2[df.4]
-        
-        S1.4 <- pexp(X.4, rate=lambda1.4) 
-        S2.4 <- pexp(Y.4, rate=lambda2.4) 
-        
-        rho.4 <- rho[df.4]
-        
-        over.all <- rep(0, length(S1.4))
-        for(i in 1:length(over.all)){
-          sigma <- matrix(c(1,rho.4[i],rho.4[i],1),nrow=2);
-          CDF <- function(V,sigma){
-            return(pmvnorm(lower = V,upper=Inf, sigma=sigma,mean=c(0,0))[1])
-          }
-          over.all[i] <- log(apply(qnorm(cbind(S1.4[i],S2.4[i])),1,CDF,sigma));
-        }
-        
-        part4 <- sum(over.all);
-      } else {
-        part4 <- 0;
-      }
-      #print(part4)
-      
-      ##########################################################################
-      # All Components                                                         #
-      ##########################################################################
-      
-      loglik <- (part1+part2+part3+part4); 
-      return(loglik);
-    }
-    
     # starting values for a0, a1, a2, a3, c0, c1,c2, c3, b0, b1, b2, b3
     starting_values = c(-2, -2, -2, -2,      -4, -2, -2, -2,       0.2,  0.2, 0, 0)
     coef_lw      = c(-10, -10, -10, -10,    -10, -10, -10, -10,    0,    0, -0.3, -0.3)
     coef_up      = c(-1, 0.5, 0.5, 0,       -2.5,  2, 0.5, 0,      0.9, 0.6, 0.3, 0.3)
-    plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
+    plnoptim <- optim(starting_values, likelihood_t_l_full_normal, method="L-BFGS-B",
                       lower = coef_lw,
                       upper = coef_up, 
                       X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,

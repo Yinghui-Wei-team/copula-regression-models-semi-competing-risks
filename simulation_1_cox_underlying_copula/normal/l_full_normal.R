@@ -5,6 +5,7 @@
 # YW 24 June 2021: corrected variances and MSE
 # YW 24 June 2021: specified save_hr within the loop of simulation, previously not defined.
 # YW 11 Sept 2021: changed starting values
+# YW 1 January 2022: take likelihood function out of the loop
 ################################################################################
 
 rm(list=ls())
@@ -131,10 +132,143 @@ counter_c2_upper = 0
 counter_c3_upper = 0 
 counter_t_upper = 0
 
+# starting values for optim
+starting_values = c(-2.74,0.32,0.004,-0.535,  
+                    -3.41,1.35,-0.06,-0.61,  
+                    0.1)
 
-###############################################################
-###################### run 'runs' times #######################
-###############################################################
+##########################################################
+############### Normal pseudo likelihood ################
+##########################################################
+
+likelihood_l_full_normal <- function(para, X,Y,d1,d2,age.grp,gen,donor){
+  
+  a0 <- para[1]
+  a1 <- para[2]
+  a2 <- para[3]
+  a3 <- para[4]
+  c0 <- para[5]
+  c1 <- para[6]
+  c2 <- para[7]
+  c3 <- para[8]
+  rho <- para[9]
+  
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  
+  df.1 <- d1 & d2     #case part 1  
+  df.2 <- d1 & (!d2)  #case part 2
+  df.3 <- (!d1)&d2;   #case part 3 
+  df.4 <- (!d1)&(!d2) #case part 4
+  
+  #########################################################
+  #################### First Component ####################
+  #########################################################
+  
+  if(sum(df.1)>0){
+    
+    X.1 <- df[df.1,1]
+    Y.1 <- df[df.1,2]
+    lambda1.1 <- lambda1[df.1]
+    lambda2.1 <- lambda2[df.1]
+    S1.1 <- pexp(X.1, rate=lambda1.1) 
+    S2.1 <- pexp(Y.1, rate=lambda2.1)
+    
+    
+    #qnorm(S1)=-qnorm(F1) therefore when squaring and multiplying they equal out in part 1
+    
+    part1 <- sum(-0.5*log(1-rho^2)+(((2*rho*qnorm(S1.1)*qnorm(S2.1)-
+                                        rho^2*(qnorm(S1.1)^2 + qnorm(S2.1)^2)))/((2*(1-rho^2))))+
+                   log(lambda1.1)-lambda1.1*X.1 +log(lambda2.1)-lambda2.1*Y.1)
+  } else {
+    part1 <- 0;
+  }
+  #print(lambda2.1)
+  
+  #########################################################
+  ################### Second Component ####################
+  #########################################################
+  
+  if(sum(df.2)>0){
+    
+    X.2 <- df[df.2,1]
+    Y.2 <- df[df.2,2]
+    
+    lambda1.2 <- lambda1[df.2]
+    lambda2.2 <- lambda2[df.2]
+    
+    S1.2 <- pexp(X.2, rate=lambda1.2) 
+    S2.2 <- pexp(Y.2, rate=lambda2.2) 
+    
+    part2.1 <- pnorm(qnorm(S2.2), mean=rho*qnorm(S1.2),sd=sqrt(1-rho^2), lower.tail=F)
+    part2.1[which(part2.1<0.1^(10))]=0.1^(10)
+    
+    
+    part2 <- sum(log(part2.1*lambda1.2*exp(-lambda1.2*X.2)))
+  } else {
+    part2 <- 0;
+  }
+  
+  
+  #########################################################
+  #################### Third Component ####################
+  #########################################################
+  
+  if(sum(df.3) >0 ){
+    
+    X.3 <- df[df.3,1]
+    Y.3 <- df[df.3,2]
+    
+    lambda1.3 <- lambda1[df.3]
+    lambda2.3 <- lambda2[df.3]
+    
+    S1.3 <- pexp(X.3, rate=lambda1.3) 
+    S2.3 <- pexp(Y.3, rate=lambda2.3) 
+    
+    
+    part3 <- sum(log(pnorm(qnorm(S1.3), mean=rho*qnorm(S2.3),
+                           sd=sqrt(1-rho^2), lower.tail=F)*lambda2.3*exp(-lambda2.3*Y.3)))
+  } else {
+    part3 <- 0;
+  }
+  
+  
+  #########################################################
+  #################### Fourth Component ###################
+  #########################################################
+  
+  if(sum(df.4)>0){
+    
+    X.4 <- df[df.4,1]
+    Y.4 <- df[df.4,2]
+    
+    lambda1.4 <- lambda1[df.4]
+    lambda2.4 <- lambda2[df.4]
+    
+    S1.4 <- pexp(X.4, rate=lambda1.4) 
+    S2.4 <- pexp(Y.4, rate=lambda2.4) 
+    
+    
+    
+    sigma <- matrix(c(1,rho,rho,1),nrow=2);
+    CDF <- function(V,sigma){
+      return(pmvnorm(lower = V,upper=Inf, sigma=sigma,mean=c(0,0))[1])
+    }
+    
+    part4 <- sum(log(apply(qnorm(cbind(S1.4,S2.4)),1,CDF,sigma)));
+  } else {
+    part4 <- 0;
+  }
+  #print(qnorm(S2.4))
+  
+  #########################################################
+  #################### All Components #####################
+  ######################################################### 
+  loglik <- (part1+part2+part3+part4); 
+  return(loglik);
+}
+
+# replicate run 'runs' times 
 
 for (i in 1:runs){
   
@@ -194,146 +328,6 @@ for (i in 1:runs){
   df$X[df$X==0] <- 0.1
   df$Y[df$Y==0] <- 0.1
   
-  #Step 11: Find true rho for each person
-  #for(j in 1:(n)){
-  #  fcop <- normalCopula(true_t[j]) #convert theta to rho
-  #  frho <- rho(fcop)
-  #  true_r[j]<-frho
-  #}
-  
-  ##########################################################
-  ############### Normal pseudo likelihood ################
-  ##########################################################
-  
-  npl <- function(para, X,Y,d1,d2,age.grp,gen,donor){
-    
-    a0 <- para[1]
-    a1 <- para[2]
-    a2 <- para[3]
-    a3 <- para[4]
-    c0 <- para[5]
-    c1 <- para[6]
-    c2 <- para[7]
-    c3 <- para[8]
-    rho <- para[9]
-    
-    lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-    lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
-    
-    df.1 <- d1 & d2     #case part 1  
-    df.2 <- d1 & (!d2)  #case part 2
-    df.3 <- (!d1)&d2;   #case part 3 
-    df.4 <- (!d1)&(!d2) #case part 4
-    
-    #########################################################
-    #################### First Component ####################
-    #########################################################
-    
-    if(sum(df.1)>0){
-      
-      X.1 <- df[df.1,1]
-      Y.1 <- df[df.1,2]
-      lambda1.1 <- lambda1[df.1]
-      lambda2.1 <- lambda2[df.1]
-      S1.1 <- pexp(X.1, rate=lambda1.1) 
-      S2.1 <- pexp(Y.1, rate=lambda2.1)
-      
-      
-      #qnorm(S1)=-qnorm(F1) therefore when squaring and multiplying they equal out in part 1
-      
-      part1 <- sum(-0.5*log(1-rho^2)+(((2*rho*qnorm(S1.1)*qnorm(S2.1)-
-                                          rho^2*(qnorm(S1.1)^2 + qnorm(S2.1)^2)))/((2*(1-rho^2))))+
-                     log(lambda1.1)-lambda1.1*X.1 +log(lambda2.1)-lambda2.1*Y.1)
-    } else {
-      part1 <- 0;
-    }
-    #print(lambda2.1)
-    
-    #########################################################
-    ################### Second Component ####################
-    #########################################################
-    
-    if(sum(df.2)>0){
-      
-      X.2 <- df[df.2,1]
-      Y.2 <- df[df.2,2]
-      
-      lambda1.2 <- lambda1[df.2]
-      lambda2.2 <- lambda2[df.2]
-      
-      S1.2 <- pexp(X.2, rate=lambda1.2) 
-      S2.2 <- pexp(Y.2, rate=lambda2.2) 
-      
-      part2.1 <- pnorm(qnorm(S2.2), mean=rho*qnorm(S1.2),sd=sqrt(1-rho^2), lower.tail=F)
-      part2.1[which(part2.1<0.1^(10))]=0.1^(10)
-      
-      
-      part2 <- sum(log(part2.1*lambda1.2*exp(-lambda1.2*X.2)))
-    } else {
-      part2 <- 0;
-    }
-    
-    
-    #########################################################
-    #################### Third Component ####################
-    #########################################################
-    
-    if(sum(df.3) >0 ){
-      
-      X.3 <- df[df.3,1]
-      Y.3 <- df[df.3,2]
-      
-      lambda1.3 <- lambda1[df.3]
-      lambda2.3 <- lambda2[df.3]
-      
-      S1.3 <- pexp(X.3, rate=lambda1.3) 
-      S2.3 <- pexp(Y.3, rate=lambda2.3) 
-      
-      
-      part3 <- sum(log(pnorm(qnorm(S1.3), mean=rho*qnorm(S2.3),
-                             sd=sqrt(1-rho^2), lower.tail=F)*lambda2.3*exp(-lambda2.3*Y.3)))
-    } else {
-      part3 <- 0;
-    }
-    
-    
-    #########################################################
-    #################### Fourth Component ###################
-    #########################################################
-    
-    if(sum(df.4)>0){
-      
-      X.4 <- df[df.4,1]
-      Y.4 <- df[df.4,2]
-      
-      lambda1.4 <- lambda1[df.4]
-      lambda2.4 <- lambda2[df.4]
-      
-      S1.4 <- pexp(X.4, rate=lambda1.4) 
-      S2.4 <- pexp(Y.4, rate=lambda2.4) 
-      
-      
-      
-      sigma <- matrix(c(1,rho,rho,1),nrow=2);
-      CDF <- function(V,sigma){
-        return(pmvnorm(lower = V,upper=Inf, sigma=sigma,mean=c(0,0))[1])
-      }
-      
-      part4 <- sum(log(apply(qnorm(cbind(S1.4,S2.4)),1,CDF,sigma)));
-    } else {
-      part4 <- 0;
-    }
-    #print(qnorm(S2.4))
-    
-    #########################################################
-    #################### All Components #####################
-    ######################################################### 
-    loglik <- (part1+part2+part3+part4); 
-    return(loglik);
-  }
-  
-  #npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
-  
   a0_lw <- -10
   a0_up <- -1
   a1_lw <- -10
@@ -355,23 +349,10 @@ for (i in 1:runs){
   t_lw <- 0
   t_up <- 0.9
   
-  # defined by YW 11/Sept/2021
-  starting_values = c(-2.74,0.32,0.004,-0.535,  
-                      -3.41,1.35,-0.06,-0.61,  
-                      0.1)
-  plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
+  plnoptim <- optim(starting_values, likelihood_l_full_normal, method="L-BFGS-B",
                     lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw, c3_lw,t_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
                     control=list(fnscale=-1),hessian=TRUE)
-  
-  
-  # commented out by YW 11/Sept/2021
-  # plnoptim <- optim(c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3, true_b0), npl, method="L-BFGS-B",
-  #                   lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw, c3_lw,t_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), 
-  #                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
-  #                   control=list(fnscale=-1),hessian=TRUE)
-  
- # npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
   
   plnoptim$par
   

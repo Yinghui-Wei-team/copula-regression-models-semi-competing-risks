@@ -1,44 +1,54 @@
-###############################################################################################
-# Paper 2: Simulation study 1
-# Frank copula survival model with covariates for hazard rates
-# YW 25/June/2021 updates:
-# 1. put together results and output to CSV file
-# 2. corrected variances post simulation study
-# 3. output running time
-# YW 31/12/2022 update: change starting values to be between lower and upper bounds
-##############################################################################################
-
+################################################################################
+# Paper 2: Simulation 1
+# Data simulated from: Clayton copula exponential survival model with 
+#                      covariates on hazard rates
+# Fitted model:        The underlying clayton copula exponential survival model
+# Purpose:             Evaluating performance when the true model is specified
+################################################################################
+# original script by LS; edited and updated for paper2 by YW
+# YW 25 June 2021 updates: 
+# 1.corrected variance post simulation
+# 2.add code to output results into a CSV file
+# 3.output simulation time
+# 4.Try starting values differ from the true values but within the specified 
+#   restricted lower and upper bounds
+################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
 ########################################################
 ####################### set up #########################
 ########################################################
-# directory if on PC
-dir_results = "../../results/simulation_results/"
+# results directory
+# directory if on own PC
+dir_results <- "../../"
+dir = paste0(dir_results, "results/simulation_results")
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
-start_time <- Sys.time()
 
-set.seed(73339023)
+# set outfile name
+out_file_estimates <- "S1-Table4-clayton-exponential-covariates-hazards.csv"
+
+start_time <- Sys.time()
+set.seed(98452221)
+#set.seed(123)
 n <- 3000
-runs = 2
-#runs <- 1000
+runs <- 1
 
 #true values from KTX data
-true_b0 <- 3.06
-true_b1 <- 5.07
-true_b2 <- 0
-true_b3 <- 0.86
+true_b0 <- 0.39
+true_b1 <- 1.09
+true_b2 <- 0.14
+true_b3 <- 0.53
 
-true_a0 <- -3.27
-true_a1 <- 0.31
+true_a0 <- -3.28
+true_a1 <- 0.32
 true_a2 <- 0
 true_a3 <- -0.53
 
-true_c0 <- -4.08
+true_c0 <- -4.09
 true_c1 <- 1.35
 true_c2 <- -0.07
 true_c3 <- -0.62
@@ -59,56 +69,25 @@ true_hr_l2_gen <- exp(true_c2)
 true_hr_l2_donor <- exp(true_c3)
 
 ## stuff for later ##
-save_a0 <- rep(0,runs)
-save_a1 <- rep(0,runs)
-save_a2 <- rep(0,runs)
-save_a3 <- rep(0,runs)
-save_c0 <- rep(0,runs)
-save_c1 <- rep(0,runs)
-save_c2 <- rep(0,runs)
-save_c3 <- rep(0,runs)
-save_hr_l1_age <- rep(0,runs)
-save_hr_l2_age <- rep(0,runs)
-save_hr_l1_gen <- rep(0,runs)
-save_hr_l2_gen <- rep(0,runs)
-save_hr_l1_donor <- rep(0,runs)
-save_hr_l2_donor <- rep(0,runs)
+save_a0 <- save_a1 <- save_a2 <- save_a3 <- rep(0,runs)
+save_c0 <- save_c1 <- save_c2 <- save_c3 <- rep(0,runs)
+save_hr_l1_age <- save_hr_l2_age <- rep(0,runs)
+save_hr_l1_gen <- save_hr_l2_gen <- rep(0,runs)
+save_hr_l1_donor <- save_hr_l2_donor <- rep(0,runs)
 
-bias_a0 <- rep(0,runs)
-bias_a1 <- rep(0,runs)
-bias_a2 <- rep(0,runs)
-bias_a3 <- rep(0,runs)
-bias_c0 <- rep(0,runs)
-bias_c1 <- rep(0,runs)
-bias_c2 <- rep(0,runs)
-bias_c3 <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
+bias_a0 <- bias_a1 <- bias_a2 <- bias_a3 <- rep(0,runs)
+bias_c0 <- bias_c1 <- bias_c2 <- bias_c3 <- rep(0,runs)
+bias_l1_hr_age <- bias_l1_hr_age <- rep(0,runs)
+bias_l1_hr_gen <- bias_l1_hr_gen <- rep(0,runs)
+bias_l1_hr_donor <- bias_l1_hr_donor <- rep(0,runs)
+bias_l2_hr_age <- bias_l2_hr_age <-rep(0,runs)
+bias_l2_hr_gen <- bias_l2_hr_gen <-rep(0,runs)
+bias_l2_hr_donor <- bias_l2_hr_donor <- rep(0,runs)
 
-counter_a0 = 0
-counter_a1 = 0
-counter_a2 = 0
-counter_a3 = 0
-counter_c0 = 0
-counter_c1 = 0
-counter_c2 = 0
-counter_c3 = 0
-counter_hr_l1_age = 0
-counter_hr_l1_gen = 0
-counter_hr_l1_donor = 0
-counter_hr_l2_age = 0
-counter_hr_l2_gen = 0
-counter_hr_l2_donor = 0 
+counter_a0 <- counter_a1 <- counter_a2 <- counter_a3 <- 0
+counter_c0 <- counter_c1 <- counter_c2 <- counter_c3 <- 0
+counter_hr_l1_age <- counter_hr_l1_gen <- counter_hr_l1_donor <- 0
+counter_hr_l2_age <- counter_hr_l2_gen <- counter_hr_l2_donor <- 0
 
 counter_a0_low = 0
 counter_a1_low = 0
@@ -129,11 +108,59 @@ counter_c2_upper = 0
 counter_c3_upper = 0 
 counter_t_upper = 0
 
-for (i in 1:runs){
-  ###############################################################
-  ######################## generate data ########################
-  ###############################################################
+################################################################################
+# Clayton pseudo likelihood                                                    #
+################################################################################
+
+likelihood_l_full_clayton<-function(para, X, Y, d1, d2, age.grp, gen, donor){
+  a0 <- para[1]
+  a1 <- para[2]
+  a2 <- para[3]
+  a3 <- para[4]
   
+  c0 <- para[5]
+  c1 <- para[6]
+  c2 <- para[7]
+  c3 <- para[8]
+  
+  theta <- para[9]
+  
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  
+  S1 <- exp(-lambda1*X)
+  S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
+  f1 <- lambda1*exp(-lambda1*X)
+  f2 <- lambda2*exp(-lambda2*Y)
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  
+  C[which(C<0.1^(8))]=0.1^(8)
+  S1[which(S1 < 0.1^(8))]=0.1^(8)
+  S2[which(S2 < 0.1^(8))]=0.1^(8)
+  
+  part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
+  part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
+  part4<-((1-d1)*(1-d2))*log(C)    
+  
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
+# Specify starting values for optim--------------------------------------------
+# a0,a1,a2, a3,c0,c1,c2,c3,t
+starting_values <- c(-3, 0.2, 0, -0.53, -3, 1, 0, -0.5, 0.30)
+reg_coef_lw <- c(-10.00, -10.00, -10.00, -10.00, -10.00, -10.00, -10.00, -10.00, 0.01)
+reg_coef_up <- c(-2,1,1, 1, -2,  3,  1,  1, 12)
+
+#replicate 'runs' times 
+
+for (i in 1:runs){
+  
+  ###############################################################
+  # generate data                                               #
+  ###############################################################
   #Step 1: generate age categories
   age.grp <- rbinom(n,1,0.40)          #40% are in the older age group in NHSBT data
   donor <- rbinom(n,1,0.30)
@@ -143,16 +170,17 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
+    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    theta1 <- true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]
+    
+    theta1 <- exp(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k])
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
-    
-    fc<- frankCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
+    fc<- claytonCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
     u<-uv[,1]  #split u and v from the results of cdm
@@ -181,123 +209,31 @@ for (i in 1:runs){
   
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
-  
-  ########################################################
-  ############### Frank pseudo likelihood ################
-  ########################################################
-  fpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
-    a0 <- para[1]
-    a1 <- para[2]
-    a2 <- para[3]
-    a3 <- para[4]
-    
-    c0 <- para[5]
-    c1 <- para[6]
-    c2 <- para[7]
-    c3 <- para[8]
-    
-    theta <- para[9]
-    
-    lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-    lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
-    
-    S1 <- exp(-lambda1*X)
-    S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
-    f1 <- lambda1*exp(-lambda1*X)
-    f2 <- lambda2*exp(-lambda2*Y)
-    
-    C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
-
-    C[which(C<0.1^(8))]=0.1^(8)
-    S1[which(S1 < 0.1^(8))]=0.1^(8)
-    S2[which(S2 < 0.1^(8))]=0.1^(8)
-    
-    #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
-    part1 <- d1*d2*log((theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)/((exp(theta*S1)-1)*(exp(theta*S2)-1)))
-    
-    #part2 <- d1*(1-d2)*log(((1-exp(theta*C))/(1-exp(theta*S1)))*lambda1*exp(-lambda1*X))
-    part2 <- d1*(1-d2)*log(((1-exp(theta*C))*f1)/(1-exp(theta*S1)))
-    
-    #part3 <- (1-d1)*d2*log(((1-exp(theta*C))/(1-exp(theta*S2)))*lambda2*exp(-lambda2*Y))
-    part3 <- (1-d1)*d2*log(((1-exp(theta*C))*f2)/(1-exp(theta*S2)))
-
-    part4<-((1-d1)*(1-d2))*log(C)
-    #print(theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)=0
-
-   # print(S1)
-    logpl<-sum(part1+part2+part3+part4) 
-    return(logpl)
-  }
-  
-  a0_lw <- -10
-  a0_up <- -2
-  a1_lw <- -10
-  a1_up <- 1
-  a2_lw <- -10
-  a2_up <- 1
-  a3_lw <- -10
-  a3_up <- 1
-  c0_lw <- -10
-  c0_up <- -2
-  c1_lw <- -10
-  c1_up <- 3
-  c2_lw <- -10
-  c2_up <- 1
-  c3_lw <- -10
-  c3_up <- 1
-  
-  t_lw <- 0.01
-  t_up <- 10
-  
-  starting_values = c(-5, -5, -5, -5,   # a
-                      -5, -5, -5, -5,   # c
-                      5                 # b
-                      )
-  
-  plfoptim <- optim(starting_values,
-                    fpl, method="L-BFGS-B", 
-                    lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw),
-                    upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up), 
+  plcoptim <- optim(starting_values, likelihood_l_full_clayton, method="L-BFGS-B", 
+                    lower=reg_coef_lw,
+                    upper=reg_coef_up, 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
                     donor=df$donor, control=list(fnscale=-1),hessian=TRUE)
   
-  plfoptim$par
-  if(plfoptim$par[1] == a0_lw) {counter_a0_low = counter_a0_low + 1}
-  if(plfoptim$par[1] == a0_up) {counter_a0_upper = counter_a0_upper + 1}
-  if(plfoptim$par[2] == a1_lw) {counter_a1_low = counter_a1_low + 1}
-  if(plfoptim$par[2] == a1_up) {counter_a1_upper = counter_a1_upper + 1}
-  if(plfoptim$par[3] == a2_lw) {counter_a2_low = counter_a2_low + 1}
-  if(plfoptim$par[3] == a2_up) {counter_a2_upper = counter_a2_upper + 1}
-  if(plfoptim$par[4] == a3_lw) {counter_a3_low = counter_a3_low + 1}
-  if(plfoptim$par[4] == a3_up) {counter_a3_upper = counter_a3_upper + 1}
-  
-  if(plfoptim$par[5] == c0_lw) {counter_c0_low = counter_c0_low + 1}
-  if(plfoptim$par[5] == c0_up) {counter_c0_upper = counter_c0_upper + 1}
-  if(plfoptim$par[6] == c1_lw) {counter_c1_low = counter_c1_low + 1}
-  if(plfoptim$par[6] == c1_up) {counter_c1_upper = counter_c1_upper + 1}
-  if(plfoptim$par[7] == c2_lw) {counter_c2_low = counter_c2_low + 1}
-  if(plfoptim$par[7] == c2_up) {counter_c2_upper = counter_c2_upper + 1}
-  if(plfoptim$par[8] == c3_lw) {counter_c3_low = counter_c3_low + 1}
-  if(plfoptim$par[8] == c3_up) {counter_c3_upper = counter_c3_upper + 1}
-  
-  if(plfoptim$par[9] == t_lw) {counter_t_low = counter_t_low + 1}
-  if(plfoptim$par[9] == t_up) {counter_t_upper = counter_t_upper + 1}
-
+  plcoptim$par
+ 
   ########################################################
   ################## Confidence Intervals ################
   ########################################################
-  hess <- hessian(fpl, plfoptim$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
- 
+  hess <- hessian(likelihood_l_full_clayton, plcoptim$par, 
+                  X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, 
+                  age.grp=df$age.grp, gen=df$gen, donor=df$donor)
+  
   fisher_info <- solve(-hess)
-  #fisher_info <- solve(-plfoptim$hessian) #inverse -hess
+  #fisher_info <- solve(-plcoptim$hessian) #inverse -hess
   #Standard error = sqrt(var/n)
   se<-sqrt(diag(fisher_info)) 
   
   #a ci
-  a0_est <- plfoptim$par[1]
-  a1_est <- plfoptim$par[2]
-  a2_est <- plfoptim$par[3]
-  a3_est <- plfoptim$par[4]
+  a0_est <- plcoptim$par[1]
+  a1_est <- plcoptim$par[2]
+  a2_est <- plcoptim$par[3]
+  a3_est <- plcoptim$par[4]
   save_a0[i] <- a0_est
   save_a1[i] <- a1_est
   save_a2[i] <- a2_est
@@ -312,10 +248,10 @@ for (i in 1:runs){
   lci_a3 <- a3_est - 1.96*se[4]
   
   #c ci
-  c0_est <- plfoptim$par[5]
-  c1_est <- plfoptim$par[6]
-  c2_est <- plfoptim$par[7]
-  c3_est <- plfoptim$par[8]
+  c0_est <- plcoptim$par[5]
+  c1_est <- plcoptim$par[6]
+  c2_est <- plcoptim$par[7]
+  c3_est <- plcoptim$par[8]
   save_c0[i] <- c0_est
   save_c1[i] <- c1_est
   save_c2[i] <- c2_est
@@ -389,7 +325,7 @@ for (i in 1:runs){
   if(true_a1 <= uci_a1   && true_a1 >= lci_a1)   {counter_a1 = counter_a1+1}
   if(true_a2 <= uci_a2   && true_a2 >= lci_a2)   {counter_a2 = counter_a2+1}
   if(true_a3 <= uci_a3   && true_a3 >= lci_a3)   {counter_a3 = counter_a3+1}
-
+  
   if(true_c0 <= uci_c0   && true_c0 >= lci_c0)   {counter_c0 = counter_c0+1}
   if(true_c1 <= uci_c1   && true_c1 >= lci_c1)   {counter_c1 = counter_c1+1}
   if(true_c2 <= uci_c2   && true_c2 >= lci_c2)   {counter_c2 = counter_c2+1}
@@ -439,14 +375,15 @@ hr_l2_cov_gen <- (counter_hr_l2_gen / runs) * 100
 hr_l1_cov_donor <- (counter_hr_l1_donor / runs) * 100
 hr_l2_cov_donor <- (counter_hr_l2_donor / runs) * 100
 
-#variance: corrected by YW
+# variance
 hr_l1_var_age <- var(save_hr_l1_age)
 hr_l2_var_age <- var(save_hr_l2_age)
 hr_l1_var_gen <- var(save_hr_l1_gen)
 hr_l2_var_gen <- var(save_hr_l2_gen)
 hr_l1_var_donor <- var(save_hr_l1_donor)
 hr_l2_var_donor <- var(save_hr_l2_donor)
-#mse
+
+# mse
 hr_l1_mse_age <- hr_l1_bias_age^2+hr_l1_var_age
 hr_l2_mse_age <- hr_l2_bias_age^2+hr_l2_var_age
 hr_l1_mse_gen <- hr_l1_bias_gen^2+hr_l1_var_gen
@@ -467,11 +404,12 @@ a1_cov <- (counter_a1 / runs) * 100
 a2_cov <- (counter_a2 / runs) * 100
 a3_cov <- (counter_a3 / runs) * 100
 
-#variance
+# variance
 a0_var <- var(save_a0)
 a1_var <- var(save_a1)
 a2_var <- var(save_a2)
 a3_var <- var(save_a3)
+
 #mse
 a0_mse <- a0_bias^2+a0_var
 a1_mse <- a1_bias^2+a1_var
@@ -484,13 +422,14 @@ c0_bias <- mean(abs(bias_c0))
 c1_bias <- mean(abs(bias_c1))
 c2_bias <- mean(abs(bias_c2))
 c3_bias <- mean(abs(bias_c3))
+
 #coverage
 c0_cov <- (counter_c0 / runs) * 100
 c1_cov <- (counter_c1 / runs) * 100
 c2_cov <- (counter_c2 / runs) * 100
 c3_cov <- (counter_c3 / runs) * 100
 
-#variance
+#Variance
 c0_var <- var(save_c0)
 c1_var <- var(save_c1)
 c2_var <- var(save_c2)
@@ -502,7 +441,6 @@ c1_mse <- c1_bias^2+c1_var
 c2_mse <- c2_bias^2+c2_var
 c3_mse <- c3_bias^2+c3_var
 
-#------------------------------------------------------------------------------
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
@@ -522,21 +460,17 @@ MSE <- c(a0_mse,a1_mse,a2_mse,a3_mse,
          hr_l1_mse_age, hr_l1_mse_donor, hr_l1_mse_gen,
          hr_l2_mse_age, hr_l2_mse_donor, hr_l2_mse_gen)
 
-# YW: put results together
+# put results together
 items<-c("a0", "a1", "a2", "a3",
-         "c0", "c1", "c2", "c3", 
-         "NT_age", "NT_donor", "NT_gen",
-         "T_age", "T_donor", "T_gen")
+          "c0", "c1", "c2", "c3", 
+          "NT_age", "NT_donor", "NT_gen",
+          "T_age", "T_donor", "T_gen")
 Results <- cbind.data.frame(items, mean_bias, CP, MSE)
 Results[,2:4] <- round(Results[,2:4],3)
-
-rownames(Results)<-NULL
 Results
+rownames(Results)<-NULL
 end_time <- Sys.time()
 run_time = end_time - start_time
-run_time
 
-# Output results---------------------------------------------------------------
-out_file_summary = "S1-Frank-exponential-covariates-for-hazards.csv"
-write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
-print("Simulation 1 for frank exponential model is completed successfuly! ")
+run_time
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_estimates))

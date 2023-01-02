@@ -749,6 +749,6 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
 
-write.csv(Results, row.names=F,file=paste0(dir_results, out_file_estimates))
+write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
 
 #write.csv(Estimates, row.names=F,file="Results/S2-Clayton-exponential-covariates-for-hazards-estimates.csv")
