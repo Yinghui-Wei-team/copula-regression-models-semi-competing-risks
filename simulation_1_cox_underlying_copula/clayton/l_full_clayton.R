@@ -1,6 +1,7 @@
+################################################################################
 # Paper 2: Simulation 1
 # Clayton copula exponential survival model with covariates on hazard rates
-# YW 25 June 2021 updates: ###################
+# YW 25 June 2021 updates: 
 # 1.corrected variance post simulation
 # 2.add code to output results into a CSV file
 # 3.output simulation time
@@ -17,7 +18,10 @@
 # 4. Renamed b0 to theta for estimation.
 # YW 2 January 2023 updates
 # 1. Move likelihood function out of the loop
-################################################
+# 2. Move lower and upper bounds out of the loop
+# 3. reset results directory, 
+#    specify out files, n and runs nearer to the front of the script
+###############################################################################
 
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
@@ -25,6 +29,7 @@ library(copula); library(mvtnorm); library(plyr); library(survival); library(num
 ########################################################
 ####################### set up #########################
 ########################################################
+
 # results directory
 # directory if on own PC
 dir_results <- "../../"
@@ -34,12 +39,15 @@ dir = paste0(dir_results, "results/simulation_results")
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
+# Number of participants and number of replications of the simulation
+n = 3000    # number of participants
+runs = 1000    # number of replications
+
 # set outfile name
 out_file_estimates <- "S1-Table4-clayton-exponential-covariates-hazards.csv"
 out_file_summary <- "S1-Clayton-exponential-covariates-hazards.csv"
 
 # Starting values for parameter estimation for optim():
-
 start_a0 <- 0.5; start_a1 <- 0.5; start_a2 <- 0.5; start_a3 <- 0.5;
 start_c0 <- 0.5; start_c1 <- 0.5; start_c2 <- 0.5; start_c3 <- 0.5;
 start_t <- 0.5;
@@ -47,6 +55,14 @@ starting_values <- c(start_a0, start_a1, start_a2, start_a3,
                      start_c0, start_c1, start_c2, start_c3, 
                      start_t)
 # The last parameter renamed to t (theta), and not b0.
+
+# Lower and upper bounds for regression coefficients
+# a0,a1,a2, a3,c0,c1,c2,c3,t
+a0_lw <- -10; a0_up <- -2; a1_lw <- -10; a1_up <- 1; a2_lw <- -10; a2_up <- 1; a3_lw <- -10; a3_up <- 1
+c0_lw <- -10; c0_up <- -2; c1_lw <- -10; c1_up <- 3;c2_lw <- -10; c2_up <- 1;c3_lw <- -10; c3_up <- 1
+t_lw <- 0.01; t_up <- 12
+reg_coef_lw <- c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw)
+reg_coef_up <- c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up)
 
 # Note: True values are set again inside the function simulation.
 true_a0 <- -3.28; true_a1 <- 0.32; true_a2 <- 0; true_a3 <- -0.53; 
@@ -92,14 +108,11 @@ cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
 
 simulation <- function(runs, n, starting_values, out_file_summary, out_file_estimates){
   
-  ########################################################
-  ####################### set up #########################
-  ########################################################
-  
+  # set up ---------------------------------------------------------------------
   start_time <- Sys.time()
   set.seed(98452221)
   
-  #true values from KTX data
+  #true values from KTX data --------------------------------------------------
   true_b0 <- 0.39
   true_b1 <- 1.09
   true_b2 <- 0.14
@@ -135,19 +148,7 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
   save_theta <- rep(0, runs)     # This renamed to save_theta from save_b0
   save_se_theta <- rep(0, runs)  
   
-  a0_lw <- -10; a0_up <- -2
-  a1_lw <- -10; a1_up <- 1
-  a2_lw <- -10; a2_up <- 1
-  a3_lw <- -10; a3_up <- 1
-  c0_lw <- -10; c0_up <- -2
-  c1_lw <- -10; c1_up <- 3
-  c2_lw <- -10; c2_up <- 1
-  c3_lw <- -10; c3_up <- 1
-  t_lw <- 0.01; t_up <- 12
-  
-  ###############################################################
-  ###################### run 'runs' times #######################
-  ###############################################################
+  #replicate run 'runs' times -------------------------------------------------
   
   for (i in 1:runs){
     
@@ -204,14 +205,14 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
     
     
     plcoptim <- optim(starting_values, cpl, method="L-BFGS-B", 
-                      lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, t_lw),
-                      upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, t_up), 
+                      lower=reg_coef_lw,
+                      upper=reg_coef_up, 
                       X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
                       donor=df$donor, control=list(fnscale=-1), hessian=TRUE)
   
-    ########################################################
+    #############################################################
     ################## Estimates and std errors ################
-    ########################################################
+    ############################################################
     
     hess <- hessian(cpl, plcoptim$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
     
@@ -515,6 +516,7 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
   write.csv(Estimates, row.names = F, file=out_file_estimates)
 } # END OF FUNCTION simulation
 
-simulation(runs = 3, n= 3000, starting_values = starting_values, 
+simulation(runs = runs, n= n, starting_values = starting_values, 
            out_file_summary = out_file_summary,
            out_file_estimates = out_file_estimates)
+print("Simulation 1 for clayton exponential model completed successfully!")
