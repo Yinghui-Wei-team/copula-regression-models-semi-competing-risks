@@ -29,7 +29,7 @@ library(copula); library(mvtnorm);library(numDeriv)
 ################################################################################
 # directory if on own PC
 dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results")
+dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"

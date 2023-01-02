@@ -16,8 +16,8 @@ library(survival)
 library(numDeriv)
 
 # directory if on own PC
-dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results")
+dir_results <- "../../results/simulation_results/simulation1/"
+
 #setwd(dir)
 
 # directory if working on cluster
@@ -36,7 +36,7 @@ start_time = Sys.time()
 ########################################################
 set.seed(684675755)
 n <- 3000
-runs <- 1000
+runs <- 1
 
 #true values from KTX data
 true_b0 <- 3.06
@@ -203,9 +203,6 @@ hr_l2_mse_gen <- mean((true_hr_l2_gen - hr_l2_gen)^2)
 hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
 
-end_time = Sys.time()
-run_time = end_time - start_time
-run_time
 
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
@@ -231,12 +228,8 @@ Results
 rownames(Results)<-NULL
 
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
-
-write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
 
 Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age, hr.l1.age.uci=hr_l1_upci_age,
                        hr.l2.age.est = hr_l2_age, hr.l2.age.lci = hr_l2_lwci_age, hr.l2.age.uci=hr_l2_upci_age,
@@ -245,4 +238,8 @@ Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age
                        hr.l1.donor.est = hr_l1_donor, hr.l1.donor.lci = hr_l1_lwci_donor, hr.l1.gen.uci=hr_l1_upci_donor,
                        hr.l2.donor.est = hr_l2_donor, hr.l2.donor.lci = hr_l2_lwci_donor, hr.l2.gen.uci=hr_l2_upci_donor)
 
-write.csv(Estimates, row.names=F,file= paste0(dir_results,out_file_estimates))
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
+write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
+print(run_time)
+print("Simulation1 cox model for frank exponential data completed successfully!")

@@ -7,8 +7,9 @@
 #                   3. set up working directory, save output to estimates and summary, debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-# YW, 1 January 2023: update output directory and tidy up
+# YW, 1 Jan 2023:   1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
+#                   3. comment out break
 #######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
@@ -36,7 +37,7 @@ out_file_estimates <-"S2_misspec_underlying_clayton_gompertz_estimates.csv"
 
 set.seed(9006465)
 n <- 3000
-runs <- 3
+runs <- 1000
 
 true_b0 <- 0.58
 true_b1 <- 0.90

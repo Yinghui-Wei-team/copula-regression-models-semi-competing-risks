@@ -3,33 +3,36 @@
 # YW: 23 July 2021: 1. add running time tracker
 #                   2. rename variables (to vectors instead of scalars), output results
 
-
+# YW: 2 Jan 2023:   1. reset results directory and tidy up
+##################################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
+library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
+########################################################
+####################### set up #########################
+########################################################
 
-# directory if University PC
-dir = "results"
+# results directory
+# directory if on own PC
+dir_results <- "../../"
+dir_results = paste0(dir_results, "results/simulation_results/simulation1")
 
 # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
 
-out_file_summary <- "S1- Cox model-data from Normal copula - summary.csv"
-out_file_estimates <- "S1- Cox model-data from Normal copula - estimates.csv"
+out_file_summary <- "S1-Cox model-data from Normal copula-summary.csv"
+out_file_estimates <- "S1-Cox model-data from Normal copula-estimates.csv"
 start_time = Sys.time()
 
 ########################################################
 ####################### set up #########################
 ########################################################
-set.seed(5345233334)
+#set.seed(5345233334)
+set.seed(123456)
 n <- 3000
-runs <- 1
+runs <- 1000
 
 #true values from KTX data
 true_b0 <- 0.35
@@ -197,12 +200,6 @@ hr_l2_mse_gen <- mean((true_hr_l2_gen - hr_l2_gen)^2)
 hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
 
-
-end_time = Sys.time()
-run_time = end_time - start_time
-run_time
-
-
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 bias <- c(hr_l1_bias_age, hr_l1_bias_donor, hr_l1_bias_gen,
@@ -221,20 +218,11 @@ items<-c("NT_age", "NT_donor", "NT_gen",
 Results <- cbind.data.frame(items, bias, CP, MSE)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
-
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
-
-
-write.csv(Results, row.names=F,file= out_file_summary)
-
 
 Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age, hr.l1.age.uci=hr_l1_upci_age,
                        hr.l2.age.est = hr_l2_age, hr.l2.age.lci = hr_l2_lwci_age, hr.l2.age.uci=hr_l2_upci_age,
@@ -243,8 +231,8 @@ Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age
                        hr.l1.donor.est = hr_l1_donor, hr.l1.donor.lci = hr_l1_lwci_donor, hr.l1.gen.uci=hr_l1_upci_donor,
                        hr.l2.donor.est = hr_l2_donor, hr.l2.donor.lci = hr_l2_lwci_donor, hr.l2.gen.uci=hr_l2_upci_donor)
 
-
-write.csv(Estimates, row.names=F,file= out_file_estimates)
-
-
+write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
+write.csv(Estimates, row.names=F,file= paste0(dir_results,out_file_estimates))
+print(run_time)
+print("Simulation1 cox model - data from normal exponential- completed successfully!")
 

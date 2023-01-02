@@ -35,7 +35,7 @@ library(copula); library(mvtnorm); library(plyr); library(survival); library(num
 # results directory
 # directory if on own PC
 dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results")
+dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
@@ -43,7 +43,7 @@ dir = paste0(dir_results, "results/simulation_results")
 
 # Number of participants and number of replications of the simulation
 n = 3000    # number of participants
-runs = 1000    # number of replications
+runs = 1  # number of replications
 
 # set outfile name
 out_file_estimates <- "S1-Table4-clayton-exponential-covariates-hazards.csv"
@@ -107,8 +107,8 @@ cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
   return(logpl)
 }
 
-
-simulation <- function(runs, n, starting_values, reg_coef_lw, reg_coef_up, out_file_summary, out_file_estimates){
+simulation <- function(runs, n, starting_values, reg_coef_lw, reg_coef_up, 
+                       dir_results, out_file_summary, out_file_estimates){
   
   # set up ---------------------------------------------------------------------
   start_time <- Sys.time()
@@ -504,15 +504,16 @@ simulation <- function(runs, n, starting_values, reg_coef_lw, reg_coef_up, out_f
                          hr.l1.donor.est = save_hr_l1_donor, se.hr.l1.donor.est = save_se_hr_l1_donor,
                          hr.l2.donor.est = save_hr_l2_donor, se.hr.l2.donor.est = save_se_hr_l2_donor)
   
-  write.csv(Results, row.names = F, file = out_file_summary)
+  write.csv(Results, row.names = F, file = paste0(dir_results,out_file_summary))
   cat("\n\n", file = out_file_summary, append = TRUE)
   cat("Run time\n", file = out_file_summary, append = TRUE)
   cat(run_time, file = out_file_summary, append = TRUE)
-  write.csv(Estimates, row.names = F, file=out_file_estimates)
+  write.csv(Estimates, row.names = F, file=paste0(dir_results,out_file_estimates))
 } # END OF FUNCTION simulation
 
 simulation(runs = runs, n= n, starting_values = starting_values, 
            reg_coef_lw = reg_coef_lw, reg_coef_up = reg_coef_up,
+           dir_results = dir_results,
            out_file_summary = out_file_summary,
            out_file_estimates = out_file_estimates)
 print("Simulation1 model1 for clayton exponential model completed successfully!")

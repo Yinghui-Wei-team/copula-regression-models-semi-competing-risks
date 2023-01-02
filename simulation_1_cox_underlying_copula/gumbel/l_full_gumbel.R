@@ -14,12 +14,14 @@ library(copula); library(mvtnorm);library(plyr); library(survival); library(numD
 # set up                                                                        #
 #################################################################################
 # directory if on PC
-dir_results = "../../results/simulation_results/"
+dir_results = "../../results/simulation_results/simulation1/"
 # dir = "results"
 # setwd(dir)
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Gumbel"
 # setwd(dir)
+
+out_file_summary = "S1-gumbel-exponential-covariates-hazards.csv"
 
 start_time <- Sys.time()
 set.seed(5333244)
@@ -657,6 +659,5 @@ Results[,2:4] <- round(Results[,2:4],4)
 rownames(Results)<-NULL
 
 # Output results---------------------------------------------------------------
-out_file_summary = "S1-gumbel-exponential-covariates-hazards.csv"
 write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
 print("Simulation 1 for gumbel exponential model is completed successfuly! ")

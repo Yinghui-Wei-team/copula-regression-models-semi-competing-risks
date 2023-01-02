@@ -1,31 +1,34 @@
-################################################################################
+###########################################################################################
 # Paper 2: Simulation 1
 # Normal copula exponential survival model - covairates on hazard rates
+# Original code by LS
 # YW 24June 2021: added time counter, results to CSV file.
 # YW 24 June 2021: corrected variances and MSE
 # YW 24 June 2021: specified save_hr within the loop of simulation, previously not defined.
 # YW 11 Sept 2021: changed starting values
-# YW 1 January 2022: take likelihood function out of the loop
-################################################################################
+# YW 1 January 2022: take likelihood function out of the loop; reset results directory
+###########################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-
-# directory if University PC
-dir = "results"
-
-# directory if on cluster
-# dir = "/home/ywei/Simulation/Paper2/Normal"
-# setwd(dir)
-######################## Full #########################
+library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
 ########################################################
 ####################### set up #########################
 ########################################################
+
+# results directory
+# directory if on own PC
+dir_results <- "../../"
+dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
+
+# directory if on cluster
+# dir = "/home/ywei/Simulation/Paper2/Normal"
+# setwd(dir)
+
+out_file_estimates = "S1-normal-exponential-covariates-for-hazards-estimates1.csv"
+out_file_summary = "S1-Table4-normal-exponential-covariates-hazards1.csv"
+
+
 start_time <- Sys.time()
 set.seed(55552324)
 n <- 3000
@@ -560,6 +563,7 @@ a0_bias <- mean(save_a0) - true_a0
 a1_bias <- mean(save_a1) - true_a1
 a2_bias <- mean(save_a2) - true_a2
 a3_bias <- mean(save_a3) - true_a3
+
 #coverage
 a0_cov <- (counter_a0 / runs) * 100
 a1_cov <- (counter_a1 / runs) * 100
@@ -591,13 +595,13 @@ c1_cov <- (counter_c1 / runs) * 100
 c2_cov <- (counter_c2 / runs) * 100
 c3_cov <- (counter_c3 / runs) * 100
 
-#Variance: YW commented to
+#Variance: YW corrected to
 c0_var <- var(save_c0)
 c1_var <- var(save_c1)
 c2_var <- var(save_c2)
 c3_var <- var(save_c3)
 
-#mse: corrected 
+#mse: corrected by YW
 c0_mse <- mean((save_c0 - true_c0)^2)
 c1_mse <- mean((save_c1 - true_c1)^2)
 c2_mse <- mean((save_c2 - true_c2)^2)
@@ -699,9 +703,7 @@ items<-c("a0", "a1", "a2", "a3",
          "T_age", "T_donor", "T_gen")
 
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 Run_Time <- rep(run_time, length(MSE))
 Results <- cbind.data.frame(items, mean_bias, CP, MSE, Run_Time)
 
@@ -713,8 +715,6 @@ print(Results)
 
 print(paste("Run time", run_time))
 
-write.csv(Results, row.names=F,file="S1-Table4-normal-exponential-covariates-hazards1.csv")
-
 Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.est = save_a3, 
                        c0.est = save_c0, c1.est = save_c1, c2.est = save_c2, c3.est = save_c3, 
                        b0.est = save_b0, 
@@ -722,4 +722,8 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
 
-write.csv(Estimates, row.names=F,file="S1-normal-exponential-covariates-for-hazards-estimates1.csv")
+# Output results---------------------------------------------------------------
+
+write.csv(Results, row.names=F,file=out_file_summary)
+write.csv(Estimates, row.names=F,file=out_file_estimates)
+print("Simulation 1 for normal exponential model is completed successfuly! ")

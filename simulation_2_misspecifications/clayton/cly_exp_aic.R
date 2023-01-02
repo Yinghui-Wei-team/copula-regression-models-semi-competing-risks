@@ -11,7 +11,7 @@
 #                   5. rewrite some calculations by using vectors to improve efficiency
 # YW, 1/1/2023:     1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
-#                   3. why "break" when hitting boundaries?
+#                   3. comment out "break"
 ##################################################################################################
 
 rm(list=ls())
@@ -39,7 +39,7 @@ out_file_estimates <-"S2_misspec_underlying_clayton_exp_estimates.csv"
 #####################################################################################
 set.seed(12345)
 n <- 3000
-runs <- 3
+runs <- 1000
 
 true_b0 <- 0.62
 true_b1 <- 1.04

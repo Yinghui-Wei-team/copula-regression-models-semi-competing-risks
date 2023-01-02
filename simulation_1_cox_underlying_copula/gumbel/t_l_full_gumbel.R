@@ -24,7 +24,7 @@ library(copula); library(mvtnorm);library(numDeriv)
 ################################################################################
 # directory if on own PC
 dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results")
+dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Gumbel"
@@ -36,7 +36,7 @@ out_file_estimates <- "S2-M2-estimates-gumbel-exponential-covariates-hazards-ass
 start_time <- Sys.time()
 set.seed(65147222)
 n <- 3000
-runs <- 10
+runs <- 1000
 
 #true values from KTX data
 true_a0 <- -3.33; true_a1 <- 0.13; true_a2 <- 0; true_a3 <- -0.51
@@ -653,7 +653,7 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
 
-write.csv(Results, row.names=F,file= out_file_summary)
-write.csv(Estimates, row.names=F,file= out_file_estimates)
+write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
+write.csv(Estimates, row.names=F,file= paste0(dir_results,out_file_estimates))
 print(run_time)
 print("Simulation1 model2 for gumbel exponential model completed successfully!")

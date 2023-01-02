@@ -11,6 +11,7 @@
 # YW, 1 Jan 2023:   1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. Put starting values, lower and upper bounds outside the loop
+#                   4. comment out break
 ##################################################################################################
 
 rm(list=ls())

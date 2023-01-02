@@ -2,6 +2,7 @@
 # Simulation study: evaluation of misspecification of survival distributions  #
 # Data are simulated from Clayton copula exponential distribution
 # Original script by LS; edited and updated by YW
+#######################################################################################################
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
 #                   2. rename variables and define vectors to save to estimates
 #                   3. set up working directory, save output to estimates and summary, debug the code

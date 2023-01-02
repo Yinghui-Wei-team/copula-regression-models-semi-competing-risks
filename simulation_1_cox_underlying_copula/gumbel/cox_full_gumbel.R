@@ -1,32 +1,31 @@
-# Paper 2: Simulation study
-# YW: 23 July 2021  Data from Gumbel copula, analysis by Cox model
-# YW: 23 July 2021: 1. add running time tracker
-#                   2. rename variables (to vectors instead of scalars), output results
-
-
+################################################################################
+# Paper 2: Simulation 1
+# Data simulated from: Gumbel copula exponential survival model 
+#                      with covariates on hazard rates and association parameter
+# Analysis:            Cox model is fitted
+# Purpose:             Evaluation for misspecification
+################################################################################
+# original script by LS; edited and updated for paper2 by YW
+# YW: 22 July 2021:  Data from Clayton copula, analysis by Cox model
+# YW: 22 July 2021: 1. add running time tracker
+#                   2. rename variables, output results
+# YW: 30 Dec 2022: Tidy up
+# YW: 2 Jan 2023:  change results directory
+################################################################################
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(numDeriv)
+library(copula);library(mvtnorm); library(plyr);library(survival);library(numDeriv)
 
+# directory if on own PC
+dir_results <- "../../results/simulation_results/simulation1/"
 
+# # directory if on cluster
+# dir2 = "home/ywei/Simulation/Paper2/Gumbel"
+# 
+# # set working directory
+# setwd(dir2)
 
-# directory if University PC
-dir1 = "C:/Users/ywei3/University of Plymouth/Lexy Sorrell - Lexy's Work/R/NHSBT/Covariates/Simulations/Results"
-
-
-# directory if on cluster
-dir2 = "home/ywei/Simulation/Paper2/Gumbel"
-
-
-# set working directory
-setwd(dir2)
-
-out_file_summary <- "S1- Cox model-data from Gumbel copula - summary.csv"
-out_file_estimates <- "S1- Cox model-data from Gumbel copula - estimates.csv"
+out_file_summary <- "S1-Cox model-data from Gumbel copula-summary.csv"
+out_file_estimates <- "S1-Cox model-data from Gumbel copula-estimates.csv"
 start_time = Sys.time()
 
 ########################################################
@@ -215,7 +214,6 @@ end_time = Sys.time()
 run_time = end_time - start_time
 run_time
 
-
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 bias <- c(hr_l1_bias_age, hr_l1_bias_donor, hr_l1_bias_gen,
@@ -234,20 +232,12 @@ items<-c("NT_age", "NT_donor", "NT_gen",
 Results <- cbind.data.frame(items, bias, CP, MSE)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
 
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
-
-
-write.csv(Results, row.names=F,file= out_file_summary)
-
 
 Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age, hr.l1.age.uci=hr_l1_upci_age,
                        hr.l2.age.est = hr_l2_age, hr.l2.age.lci = hr_l2_lwci_age, hr.l2.age.uci=hr_l2_upci_age,
@@ -257,6 +247,9 @@ Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l1.age.lci = hr_l1_lwci_age
                        hr.l2.donor.est = hr_l2_donor, hr.l2.donor.lci = hr_l2_lwci_donor, hr.l2.gen.uci=hr_l2_upci_donor)
 
 
-write.csv(Estimates, row.names=F,file= out_file_estimates)
-
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
+write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
+print(run_time)
+print("Simulation1 cox model for gumbel exponential data completed successfully!")
 

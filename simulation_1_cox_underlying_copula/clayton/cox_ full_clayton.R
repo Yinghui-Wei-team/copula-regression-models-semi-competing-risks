@@ -1,4 +1,4 @@
-##########################################################
+################################################################################
 # Paper 2: Simulation 1
 # Data simulated from: Clayton copula exponential survival model 
 #                      with covariates on hazard rates and association parameter
@@ -15,10 +15,8 @@
 rm(list=ls())
 library(copula);library(mvtnorm); library(plyr);library(survival);library(numDeriv)
 
-######################## age.grp #########################
 # directory if on own PC
-dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results")
+dir_results <- "../../results/simulation_results/simulation1/"
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
@@ -202,10 +200,6 @@ hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
 #################################
 
-end_time = Sys.time()
-run_time = end_time - start_time
-run_time
-
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
@@ -223,23 +217,21 @@ MSE <- c(hr_l1_mse_age, hr_l1_mse_donor, hr_l1_mse_gen,
 items<-c("NT_age", "NT_donor", "NT_gen",
          "T_age", "T_donor", "T_gen")
 Results <- cbind.data.frame(items, bias, CP, MSE)
-
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
 
 rownames(Results)<-NULL
 
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
 
-# output results
-write.csv(Results, row.names=F,file= paste0(dir_results,out_file_summary))
 Estimates = data.frame(hr.l1.age.est = hr_l1_age, hr.l2.age.est = hr_l2_age,
                        hr.l1.gen.est = hr_l1_gen, hr.l2.gen.est = hr_l2_gen,
                        hr.l1.donor.est = hr_l1_donor, hr.l2.donor.est = hr_l2_donor)
 
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
 write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
+print(run_time)
+print("Simulation1 cox model for clayton exponential data completed successfully!")

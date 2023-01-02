@@ -12,6 +12,7 @@
 # YW, 1 Jan 2023:   1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. Put starting values, lower and upper bounds outside the loop
+#                   4. comment out break
 ##################################################################################################
 
 rm(list=ls())
@@ -41,7 +42,7 @@ out_file_estimates <-"S2_misspec_underlying_clayton_weibull_estimates.csv"
 #set.seed(9772002)
 set.seed(12345)
 n <- 3000
-runs <- 3
+runs <- 1000
 
 #exponential initial values and bounds for a0, a1, c0, c1, b0, b1
 clayton_exp_optim_lower = c(-10.0, -10.0, -10.0, -10.0,  -1.0,  -5.5) # lower bound 
