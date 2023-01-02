@@ -1,6 +1,7 @@
-################################################################################
+#####################################################################################
 # Paper 2: Simulation 1 Model 1
 # Model 1 - Clayton copula exponential survival model with covariates on hazard rates
+#####################################################################################
 # Original code by LS, reviewed and updated by MW and YW
 # YW 25 June 2021 updates: 
 # 1.correction for the variance post simulation

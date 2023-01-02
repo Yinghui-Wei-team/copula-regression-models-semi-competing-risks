@@ -1,7 +1,6 @@
-###################################################################################################
-# Simulation study 2: evaluation of misspecification of survival distributions   
+#########################################################################################
+# Simulation study: evaluation of misspecification of survival distributions   
 # Data are simulated from Clayton copula exponential distribution
-###################################################################################################
 # Original code by LS; reviewed, edited and updated by YW for paper2
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loops
 #                   2. rename variables and define vectors to save to estimates
@@ -9,9 +8,8 @@
 #                      debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-# YW, 1/1/2023:     1. update output directory and tidy up
-#                   2. Put likelihood functions into a generic script under the functions folder
-##################################################################################################
+# YW, 1/1/2023:     update output directory and tidy up
+#########################################################################################
 
 rm(list=ls())
 library(copula); library(mvtnorm); library(numDeriv)
@@ -115,6 +113,121 @@ clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.5, 1
 clayton_gom_optim_lower = c(-0.2,-5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound 
 clayton_gom_optim_upper = c(0.1,-2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound 
 clayton_gom_optim_starting_values =  c(-0.1,-4.0, -3.0, -0.1, -5.0, -3.0, -1.0, -1.0) # starting values 
+
+##################################################################################
+# likelihood function specification                                              #
+##################################################################################
+
+# clayton copula exponential distribution: one covariates
+cpl_exp <- function(para, X, Y, d1, d2, age){
+  
+  a0 <- para[1]
+  a1 <- para[2]
+  c0 <- para[3]
+  c1 <- para[4]
+  b0 <- para[5]
+  b1 <- para[6]
+  
+  lambda1 <- exp(a0+a1*age)
+  lambda2 <- exp(c0+c1*age)
+  S1<-exp(-lambda1*X)
+  S2<-exp(-lambda2*Y)
+  
+  theta <- exp(b0+b1*age)
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
+  part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
+  part4<-((1-d1)*(1-d2))*log(C)
+  logpl<-sum(part1+part2+part3+part4) 
+  
+  return(logpl)
+}
+
+cpl_wei <- function(para, X, Y, d1, d2, age){
+  alpha1 <- para[1]
+  x1 <- para[2]
+  x2 <- para[3]
+  alpha2 <- para[4]
+  y1 <- para[5]
+  y2 <- para[6]
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- exp(b0+b1*age)  
+  beta1 <- exp(x1+x2*age)
+  beta2 <- exp(y1+y2*age)
+  
+  S1 <- exp(-beta1*X^alpha1)
+  S2 <- exp(-beta2*Y^alpha2)
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  S1S2 <- S1*S2
+  S1S2[which(S1S2<0.1^8)]=0.1^8
+  
+  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
+  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2) 
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  C[which(C<0.1^8)] <- 0.1^8
+  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
+  
+  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  
+  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  
+  part4 <- ((1-d1)*(1-d2))*log(C)
+  
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
+cpl_gom <- function(para, X, Y, d1, d2, age){
+  gamma1 <- para[1]
+  p0 <- para[2]
+  p1 <- para[3]
+  gamma2 <- para[4]
+  q0 <- para[5]
+  q1 <- para[6]
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- exp(b0+b1*age)
+  lambda1 <- exp(p0+p1*age)
+  lambda2 <- exp(q0+q1*age)
+  
+  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))
+  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  S1S2 <- S1*S2
+  S1S2[which(S1S2<0.1^8)]=0.1^8
+  
+  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1))
+  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1))
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  C[which(C<0.1^8)] <- 0.1^8
+  
+  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
+  
+  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  
+  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  
+  part4 <- ((1-d1)*(1-d2))*log(C)
+  
+  logpl <- sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
 
 ################################################################################
 # run 'runs' times                                                             #
@@ -525,6 +638,10 @@ for (i in 1:runs){
   hr_1_perc <- hr_1_up / runs *100
   hr_2_perc <- hr_2_up / runs *100
   
+  end_time = Sys.time()
+  run_time = end_time - start_time
+  run_time
+  
   # put results together and write to CSV file
   # mean of bias
   # hr_l1 represents non-terminal event; hr_l2 represents terminal event
@@ -558,6 +675,5 @@ for (i in 1:runs){
   # output results
   write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
   write.csv(Estimates, row.names=F,file=paste0(dir_results,out_file_estimates))
-  print(run_time)
   print("Simulation 2 for clayton exponential model completed successfully!")
   

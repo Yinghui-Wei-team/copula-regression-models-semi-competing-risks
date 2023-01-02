@@ -88,7 +88,6 @@ hr_1_lw = hr_1_up = hr_1_cross =  hr_2_lw = hr_2_up = hr_2_cross = 0
 # Specification of starting values for optim                                    #
 #################################################################################
 #likelihood function moved out of loop by YW
-#rewritten by YW
 gumbel_exp_optim_lower = c(-10, -10, -10, -10,  -5,  -5) # lower bound 
 gumbel_exp_optim_upper = c(-2.0,  1.5, -2.0,  3.0, -1.0,  3.0)# upper bound 
 # changed the last two elements starting value from true_b0 and true_b1

@@ -1,7 +1,9 @@
 ######################################################################################################
-# Simulation study: evaluation of misspecification of survival distributions  #
+# Simulation study 2: evaluation of misspecification of survival distributions  #
 # Content: underlying model - gumbel copula exponential survival model - evaluation aic
 # Data are simulated from gumbel copula exponential distribution
+######################################################################################################
+# Original code by LS; reviewed, edited and updated by YW for paper2
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
 #                   2. rename variables and define vectors to save to estimates
 #                   3. set up working directory, save output to estimates and summary, debug the code

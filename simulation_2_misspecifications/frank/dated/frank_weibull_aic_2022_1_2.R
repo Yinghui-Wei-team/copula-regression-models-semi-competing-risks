@@ -7,10 +7,8 @@
 #                   3. set up working directory, save output to estimates and summary, debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-# YW, 1 Jan 2023:   1. update output directory and tidy up
-#                   2. Put likelihood functions into a generic script under the functions folder
-#                   3. Put starting values, lower and upper bounds outside the loop
-######################################################################################################
+# YW, 1/1/2023:     update output directory and tidy up
+#######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(numDeriv)
 start_time = Sys.time()
@@ -25,8 +23,8 @@ dir_results = "../../results/simulation_results/"
 #dir = "/home/ywei/Simulation/Paper2/Frank"
 #setwd(dir)
 
-# likelihood function
-source("functions/function_sim2.R")
+# likelihood functions
+#source("Functions/paper2_functions.R")
 
 out_file_summary <- "S2_misspec_underlying_frank_gompertz_summary.csv"
 out_file_estimates <-"S2-misspec_underlying_frank_gompertz_estimates.csv"
@@ -34,6 +32,8 @@ out_file_estimates <-"S2-misspec_underlying_frank_gompertz_estimates.csv"
 #####################################################################################
 #################### Frank, age, gen from wei chose with aic ########################
 #####################################################################################
+
+#set.seed(6621139)
 set.seed(12345)
 
 n <- 3000
@@ -48,6 +48,7 @@ true_x0 <- -2.74 #weib beta1
 true_x1 <- 0.26 #weib beta1
 true_y0 <- -4.25 #weib beta2
 true_y1 <- 1.39 #weib beta2
+
 
 true_theta_d0 <- true_b0
 true_theta_d1 <- true_b0+true_b1
@@ -95,25 +96,125 @@ counter_gom = 0
 
 hr_1_lw = hr_1_up = hr_1_cross =  hr_2_lw = hr_2_up = hr_2_cross = 0
 
-#################################################################################
-# Specification of starting values for optim                                    #
-#################################################################################
+#----YW: specificaiton of likelihood function --------------------------#
 
-## frank-exponential: a0, a1, c0, b0, b1
-frank_exp_optim_lower = c(-10, -10, -10, -10,   1,   0) # lower bound 
-frank_exp_optim_upper = c(-2.0,  1.5, -2.0,  3.0, 10.0, 10.0)# upper bound 
-frank_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values 
+######################################################
+############### Frank pseudo likelihood ##############
+#################### Exponential #####################
+######################################################
 
-##  frank-weibull: alpha1, x1, x2, alpha2, y2, y2, b0, b1
-frank_wei_optim_lower = c(0.1, -5.0, -2.0,  0.1, -5.0, -2.0,  2.0,  1.0) # lower bound 
-frank_wei_optim_upper = c(1.5, -2.0,  1.0,  1.5, -3.0,  2.0,  8.0,  8.0)# upper bound 
-#frank_wei_optim_starting_values = c(true_alpha1, true_x0, true_x1, true_alpha2, true_y0, true_y1, true_b0, true_b1) # starting values 
-frank_wei_optim_starting_values = c(0.6, -2, 0.2, 0.9, -4, 1, 3, 4) # starting values 
+fpl_exp <- function(para, X, Y, d1, d2, age){
+  
+  a0 <- para[1]
+  a1 <- para[2]
+  c0 <- para[3]
+  c1 <- para[4]
+  b0 <- para[5]
+  b1 <- para[6]
+  
+  lambda1 <- exp(a0+a1*age)
+  lambda2 <- exp(c0+c1*age)
+  S1<-exp(-lambda1*X)
+  S2<-exp(-lambda2*Y)
+  
+  theta <- b0+b1*age
+  
+  C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
+  
+  #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part1 <- d1*d2*(log(theta*exp(theta*C)*(exp(theta*C)-1)*lambda1*exp(-lambda1*X)*lambda2*exp(-lambda2*Y))-log((exp(theta*S1)-1)*(exp(theta*S2)-1)))
+  part2 <- d1*(1-d2)*log(((1-exp(theta*C))/(1-exp(theta*S1)))*lambda1*exp(-lambda1*X))
+  part3 <- (1-d1)*d2*log(((1-exp(theta*C))/(1-exp(theta*S2)))*lambda2*exp(-lambda2*Y))
+  part4<-((1-d1)*(1-d2))*log(C)
+  logpl<-sum(part1+part2+part3+part4) 
+  
+  return(logpl)
+}
 
-## frank-weibull: alpha1, x1, x2, alpha2, y2, y2, b0, b1
-frank_gom_optim_lower = c(-0.2, -5.0, -2.0, -0.1, -5.0, -2.0,  1.0, -2.0) # lower bound
-frank_gom_optim_upper = c( 0.1, -1.0,  1.0, 0.1, -1.0,  2.0,  8.0,  8.0)# upper bound 
-frank_gom_optim_starting_values = c(-0.01, -3, -0.5, 0.02, -3.5, -0.8, 0.5, 0) # starting values 
+######################################################
+############### Frank pseudo likelihood ##############
+###################### Weibull #######################
+######################################################
+
+fpl_wei <- function(para, X, Y, d1, d2, age){
+  alpha1 <- para[1]
+  x1 <- para[2]
+  x2 <- para[3]
+  alpha2 <- para[4]
+  y1 <- para[5]
+  y2 <- para[6]
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- b0+b1*age
+  beta1 <- exp(x1+x2*age)
+  beta2 <- exp(y1+y2*age)
+  
+  S1 <- exp(-beta1*X^alpha1)
+  S2 <- exp(-beta2*Y^alpha2)
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
+  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2) 
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
+  C[which(C<0.1^8)]=0.1^8
+  
+  #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(f1)+log(f2))
+  part1 <- d1*d2*(log(theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)-log((exp(theta*S1)-1)*(exp(theta*S2)-1)))
+  part2 <- d1*(1-d2)*log(((1-exp(theta*C))*f1)/(1-exp(theta*S1)))
+  part3 <- (1-d1)*d2*log(((1-exp(theta*C))*f2)/(1-exp(theta*S2)))
+  part4<-((1-d1)*(1-d2))*log(C)
+  
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
+######################################################
+############### Frank pseudo likelihood ##############
+###################### Gompertz ######################
+######################################################
+
+fpl_gom <- function(para, X, Y, d1, d2, age){
+  gamma1 <- para[1]
+  p0 <- para[2]
+  p1 <- para[3]
+  gamma2 <- para[4]
+  q0 <- para[5]
+  q1 <- para[6]
+  
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- b0+b1*age
+  lambda1 <- exp(p0+p1*age)
+  lambda2 <- exp(q0+q1*age)
+  
+  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))
+  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1))
+  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1))
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
+  
+  part1 <- d1*d2*(log(theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)-log((exp(theta*S1)-1)*(exp(theta*S2)-1)))
+  part2 <- d1*(1-d2)*log(((1-exp(theta*C))/(1-exp(theta*S1)))*f1)
+  part3 <- (1-d1)*d2*log(((1-exp(theta*C))/(1-exp(theta*S2)))*f2)
+  part4<-((1-d1)*(1-d2))*log(C)
+  
+  logpl <- sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
+#----End of likelihood specification--------------------------#
 
 ###############################################################
 ###################### run 'runs' times #######################
@@ -150,6 +251,7 @@ for (i in 1:runs){
     U1[k]=u     #add to u and v vectors on the outside
     V1[k]=v
     true_t[k] <- theta1  #save theta for this individual
+    
   }
   
   #Step 4: T1 and T2 from inverse survival
@@ -175,6 +277,14 @@ for (i in 1:runs){
   #################### Exponential #####################
   ######################################################
   
+  # likelihood function moved out of loop by YW
+  # likelihood to move out the loop by YW
+  #rewritten by YW
+  frank_exp_optim_lower = c(-10, -10, -10, -10,   1,   0) # lower bound 
+  frank_exp_optim_upper = c(-2.0,  1.5, -2.0,  3.0, 10.0, 10.0)# upper bound 
+  frank_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values 
+  # checking lower == frank_exp_optim_lower
+  
   plfoptim_exp <- optim(frank_exp_optim_starting_values, fpl_exp, method="L-BFGS-B",
                         lower=frank_exp_optim_lower, upper=frank_exp_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
@@ -199,6 +309,14 @@ for (i in 1:runs){
   ############### Frank pseudo likelihood ##############
   ###################### Weibull #######################
   ######################################################
+  # likelihood function moved out of loop by YW
+  # rewritten by YW
+  frank_wei_optim_lower = c(0.1, -5.0, -2.0,  0.1, -5.0, -2.0,  2.0,  1.0) # lower bound 
+  frank_wei_optim_upper = c(1.5, -2.0,  1.0,  1.5, -3.0,  2.0,  8.0,  8.0)# upper bound 
+  #frank_wei_optim_starting_values = c(true_alpha1, true_x0, true_x1, true_alpha2, true_y0, true_y1, true_b0, true_b1) # starting values 
+  frank_wei_optim_starting_values = c(0.6, -2, 0.2, 0.9, -4, 1, 3, 4) # starting values 
+  
+   # checking lower == clayton_wei_optim_lower
   plfoptim_wei <- optim(frank_wei_optim_starting_values, fpl_wei, method="L-BFGS-B",
                         lower=frank_wei_optim_lower, upper=frank_wei_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
@@ -222,7 +340,15 @@ for (i in 1:runs){
   ############### Frank pseudo likelihood ##############
   ###################### Gompertz ######################
   ######################################################
-
+  
+  # likelihood function moved out of loop by YW
+  
+  # written by YW
+  frank_gom_optim_lower = c(-0.2, -5.0, -2.0, -0.1, -5.0, -2.0,  1.0, -2.0) # lower bound
+  frank_gom_optim_upper = c( 0.1, -1.0,  1.0, 0.1, -1.0,  2.0,  8.0,  8.0)# upper bound 
+  frank_gom_optim_starting_values = c(-0.01, -3, -0.5, 0.02, -3.5, -0.8, 0.5, 0) # starting values 
+  # checking lower == clayton_gom_optim_lower
+  
   plfoptim_gom <- optim(frank_gom_optim_starting_values, fpl_gom, method="L-BFGS-B",
                         lower=frank_gom_optim_lower, upper=frank_gom_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,

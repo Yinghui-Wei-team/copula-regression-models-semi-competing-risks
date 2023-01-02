@@ -8,10 +8,10 @@
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
 # YW, 1 January 2023: update output directory and tidy up
+#                   2. Put likelihood functions into a generic script under the functions folder
 #######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
-
 start_time = Sys.time()
 
 #####################################################################################
@@ -24,8 +24,8 @@ dir_results = "../../results/simulation_results/"
 #dir = "/home/ywei/Simulation/Paper2/Clayton"
 #setwd(dir)
 
-# likelihood functions
-#source("Functions/paper2_functions.R")
+# likelihood function
+source("functions/function_sim2.R")
 
 out_file_summary <- "S2_misspec_underlying_clayton_gompertz_summary.csv"
 out_file_estimates <-"S2_misspec_underlying_clayton_gompertz_estimates.csv"
@@ -88,163 +88,7 @@ counter_exp = 0
 counter_wei = 0
 counter_gom = 0
 
-# YW: what are these variables? put them into one lines
-
 hr_1_lw = hr_1_up = hr_1_cross =  hr_2_lw = hr_2_up = hr_2_cross = 0
-
-# Commented out by YW 26 July 2021
-# ## stuff for later ##
-# save_hr_l1 <- rep(0,runs)
-# save_hr_l2 <- rep(0,runs)
-# save_rho_d0 <- rep(0,runs)
-# save_rho_d1 <- rep(0,runs)
-# 
-# bias_l1_hr <- rep(0,runs)
-# bias_l2_hr <- rep(0,runs)
-# bias_rho_d0 <- rep(0,runs)
-# bias_rho_d1 <- rep(0,runs)
-# 
-# counter_hr_l1 = 0
-# counter_hr_l2 = 0
-# counter_rho_d0 = 0
-# counter_rho_d1 = 0
-# 
-# counter_exp = 0
-# counter_wei = 0
-# counter_gom = 0
-# 
-# hr_1_lw = 0
-# hr_1_up = 0
-# hr_1_cross = 0
-# hr_2_lw = 0
-# hr_2_up = 0
-# hr_2_cross = 0
-
-
-#-------------Yw: Likelihood functions-------------------------------------#
-########################################################
-############### Clayton pseudo likelihood ##############
-##################### Exponential ######################
-########################################################
-cpl_exp <- function(para, X, Y, d1, d2, age){
-  
-  a0 <- para[1]
-  a1 <- para[2]
-  c0 <- para[3]
-  c1 <- para[4]
-  b0 <- para[5]
-  b1 <- para[6]
-  
-  lambda1 <- exp(a0+a1*age)
-  lambda2 <- exp(c0+c1*age)
-  S1<-exp(-lambda1*X)
-  S2<-exp(-lambda2*Y)
-  
-  theta <- exp(b0+b1*age)
-  
-  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
-  part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
-  part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
-  part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
-  part4<-((1-d1)*(1-d2))*log(C)
-  logpl<-sum(part1+part2+part3+part4) 
-  
-  return(logpl)
-}
-
-########################################################
-############### Clayton pseudo likelihood ##############
-####################### Weibull ########################
-########################################################
-cpl_wei <- function(para, X, Y, d1, d2, age){
-  alpha1 <- para[1]
-  x1 <- para[2]
-  x2 <- para[3]
-  alpha2 <- para[4]
-  y1 <- para[5]
-  y2 <- para[6]
-  b0 <- para[7]
-  b1 <- para[8]
-  
-  theta <- exp(b0+b1*age)  
-  beta1 <- exp(x1+x2*age)
-  beta2 <- exp(y1+y2*age)
-  
-  S1 <- exp(-beta1*X^alpha1)
-  S2 <- exp(-beta2*Y^alpha2)
-  S1[which(S1<0.1^8)]=0.1^8
-  S2[which(S2<0.1^8)]=0.1^8
-  
-  S1S2 <- S1*S2
-  S1S2[which(S1S2<0.1^8)]=0.1^8
-  
-  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
-  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2) 
-  f1[which(f1<0.1^8)]=0.1^8
-  f2[which(f2<0.1^8)]=0.1^8
-  
-  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
-  C[which(C<0.1^8)] <- 0.1^8
-  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
-  
-  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
-  
-  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
-  
-  part4 <- ((1-d1)*(1-d2))*log(C)
-  
-  logpl<-sum(part1+part2+part3+part4) 
-  return(logpl)
-}
-
-########################################################
-############### Clayton pseudo likelihood ##############
-####################### Gompertz #######################
-########################################################
-
-cpl_gom <- function(para, X, Y, d1, d2, age){
-  gamma1 <- para[1]
-  p0 <- para[2]
-  p1 <- para[3]
-  gamma2 <- para[4]
-  q0 <- para[5]
-  q1 <- para[6]
-  b0 <- para[7]
-  b1 <- para[8]
-  
-  theta <- exp(b0+b1*age)
-  lambda1 <- exp(p0+p1*age)
-  lambda2 <- exp(q0+q1*age)
-  
-  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))
-  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))
-  S1[which(S1<0.1^8)]=0.1^8
-  S2[which(S2<0.1^8)]=0.1^8
-  
-  S1S2 <- S1*S2
-  S1S2[which(S1S2<0.1^8)]=0.1^8
-  
-  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1))
-  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1))
-  f1[which(f1<0.1^8)]=0.1^8
-  f2[which(f2<0.1^8)]=0.1^8
-  
-  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
-  C[which(C<0.1^8)] <- 0.1^8
-  
-  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
-  
-  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
-  
-  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
-  
-  part4 <- ((1-d1)*(1-d2))*log(C)
-  
-  logpl <- sum(part1+part2+part3+part4) 
-  return(logpl)
-}
-
-#----------YW: end of specifications of functions --------------------------
 
 ###############################################################
 ###################### run 'runs' times #######################
@@ -795,11 +639,6 @@ gom_perc <- counter_gom / runs *100
 hr_1_perc <- hr_1_up / runs *100
 hr_2_perc <- hr_2_up / runs *100
 
-
-end_time = Sys.time()
-run_time = end_time - start_time
-run_time
-
 # put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
@@ -820,13 +659,9 @@ Results <- cbind.data.frame(items, bias, CP, MSE, percentage_chosen)
 Results[,2:4] <- round(Results[,2:4],3)
 
 Results
-
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
 
 Estimates = data.frame(hr.l1= save_hr_l1, hr.l1.low= hr_l1_lwci, hr.l1.up = hr_l1_upci,
@@ -839,5 +674,5 @@ write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
 write.csv(Estimates, row.names=F,file=paste0(dir_results,out_file_estimates))
 
 print("Simulation 2 for clayton gompertz model completed successfully!")
-
+print(run_time)
 # percentage chosen is recorded in the order of exponential, weibull and gompertz. The true model is weibull.

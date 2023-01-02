@@ -1,20 +1,19 @@
-#######################################################################################################
+#########################################################################################
 # Simulation study: evaluation of misspecification of survival distributions  #
 # Data are simulated from Clayton copula exponential distribution
-# Original script by LS; edited and updated by YW
+# Original code by LS; reviewed, edited and updated by YW for paper2
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
 #                   2. rename variables and define vectors to save to estimates
-#                   3. set up working directory, save output to estimates and summary, debug the code
+#                   3. set up working directory, save output to estimates and summary, 
+#                      debug the code
 #                   4. put likelihood to functions outside the loop
 #                   5. rewrite some calculations by using vectors to improve efficiency
-# YW, 1 Jan 2023:   1. update output directory and tidy up
-#                   2. Put likelihood functions into a generic script under the functions folder
-#                   3. Put starting values, lower and upper bounds outside the loop
-######################################################################################################
-rm(list=ls())
-library(copula); library(mvtnorm); library(numDeriv)
-start_time = Sys.time()
+########################################################################################
 
+rm(list=ls())
+library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
+
+start_time = Sys.time()
 #####################################################################################
 #Output directory and output files                                                  #
 #####################################################################################
@@ -22,40 +21,41 @@ start_time = Sys.time()
 dir_results = "../../results/simulation_results/"
 
 # # directory if on cluster
-#dir = "/home/ywei/Simulation/Paper2/Frank"
-#setwd(dir)
+# dir = "/home/ywei/Simulation/Paper2/Clayton"
+# setwd(dir)
 
-# likelihood function
-source("functions/function_sim2.R")
+## likelihood functions
+#source("Functions/paper2_functions.R")
 
-out_file_summary <- "S2_misspec_underlying_frank_gompertz_summary.csv"
-out_file_estimates <-"S2-misspec_underlying_frank_gompertz_estimates.csv"
+out_file_summary <- "S2_misspec_underlying_clayton_weibull_summary.csv"
+out_file_estimates <-"S2_misspec_underlying_clayton_weibull_estimates.csv"
 
 #####################################################################################
-#################### Frank, age, gen from wei chose with aic ########################
+################## Clayton, age, gen from wei chose with aic ########################
 #####################################################################################
+
+#set.seed(9772002)
 set.seed(12345)
-
 n <- 3000
 runs <- 3
 
-true_b0 <- 3.54
-true_b1 <- 4.14
+true_b0 <- 0.55
+true_b1 <- 0.74
 
-true_alpha1 <- 0.70 #weib alpha1
-true_alpha2 <- 0.99 #weib alpha2
-true_x0 <- -2.74 #weib beta1
+true_alpha1 <- 0.71 #weib alpha1
+true_alpha2 <- 0.98 #weib alpha2
+true_x0 <- -2.75 #weib beta1
 true_x1 <- 0.26 #weib beta1
-true_y0 <- -4.25 #weib beta2
-true_y1 <- 1.39 #weib beta2
+true_y0 <- -4.30 #weib beta2
+true_y1 <- 1.33 #weib beta2
 
-true_theta_d0 <- true_b0
-true_theta_d1 <- true_b0+true_b1
+true_theta_d0 <- exp(true_b0)
+true_theta_d1 <- exp(true_b0+true_b1)
 
-t_theta_d0_cop <- frankCopula(true_theta_d0)
+t_theta_d0_cop <- claytonCopula(true_theta_d0)
 true_rho_d0 <- rho(t_theta_d0_cop)
 
-t_theta_d1_cop <- frankCopula(true_theta_d1)
+t_theta_d1_cop <- claytonCopula(true_theta_d1)
 true_rho_d1 <- rho(t_theta_d1_cop)
 
 #S1 exp, S2 weib
@@ -71,12 +71,6 @@ true_r <- rep(0,n)
 U1 <- rep(0,n)
 V1 <- rep(0,n)
 
-hr_1_lw = 0
-hr_1_up = 0
-hr_1_cross = 0
-hr_2_lw = 0
-hr_2_up = 0
-hr_2_cross = 0
 
 ## YW: added lower and upper bounds of 95%CI
 save_hr_l1 <-  hr_l1_lwci <- hr_l1_upci <- rep(0,runs)
@@ -93,28 +87,152 @@ counter_exp = 0
 counter_wei = 0
 counter_gom = 0
 
+# YW: what are these variables? put them into one lines
+
 hr_1_lw = hr_1_up = hr_1_cross =  hr_2_lw = hr_2_up = hr_2_cross = 0
 
-#################################################################################
-# Specification of starting values for optim                                    #
-#################################################################################
+# ## stuff for later ##
+# save_hr_l1 <- rep(0,runs)
+# save_hr_l2 <- rep(0,runs)
+# save_rho_d0 <- rep(0,runs)
+# save_rho_d1 <- rep(0,runs)
+# 
+# bias_l1_hr <- rep(0,runs)
+# bias_l2_hr <- rep(0,runs)
+# bias_rho_d0 <- rep(0,runs)
+# bias_rho_d1 <- rep(0,runs)
+# 
+# counter_hr_l1 = 0
+# counter_hr_l2 = 0
+# counter_rho_d0 = 0
+# counter_rho_d1 = 0
+# 
+# counter_exp = 0
+# counter_wei = 0
+# counter_gom = 0
+# 
+# hr_1_lw = 0
+# hr_1_up = 0
+# hr_1_cross = 0
+# hr_2_lw = 0
+# hr_2_up = 0
+# hr_2_cross = 0
 
-## frank-exponential: a0, a1, c0, b0, b1
-frank_exp_optim_lower = c(-10, -10, -10, -10,   1,   0) # lower bound 
-frank_exp_optim_upper = c(-2.0,  1.5, -2.0,  3.0, 10.0, 10.0)# upper bound 
-frank_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values 
 
-##  frank-weibull: alpha1, x1, x2, alpha2, y2, y2, b0, b1
-frank_wei_optim_lower = c(0.1, -5.0, -2.0,  0.1, -5.0, -2.0,  2.0,  1.0) # lower bound 
-frank_wei_optim_upper = c(1.5, -2.0,  1.0,  1.5, -3.0,  2.0,  8.0,  8.0)# upper bound 
-#frank_wei_optim_starting_values = c(true_alpha1, true_x0, true_x1, true_alpha2, true_y0, true_y1, true_b0, true_b1) # starting values 
-frank_wei_optim_starting_values = c(0.6, -2, 0.2, 0.9, -4, 1, 3, 4) # starting values 
+#-------------Yw: Likelihood functions-------------------------------------#
+cpl_exp <- function(para, X, Y, d1, d2, age){
+  
+  a0 <- para[1]
+  a1 <- para[2]
+  c0 <- para[3]
+  c1 <- para[4]
+  b0 <- para[5]
+  b1 <- para[6]
+  
+  lambda1 <- exp(a0+a1*age)
+  lambda2 <- exp(c0+c1*age)
+  S1<-exp(-lambda1*X)
+  S2<-exp(-lambda2*Y)
+  
+  theta <- exp(b0+b1*age)
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
+  part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
+  part4<-((1-d1)*(1-d2))*log(C)
+  logpl<-sum(part1+part2+part3+part4) 
+  
+  return(logpl)
+}
 
-## frank-weibull: alpha1, x1, x2, alpha2, y2, y2, b0, b1
-frank_gom_optim_lower = c(-0.2, -5.0, -2.0, -0.1, -5.0, -2.0,  1.0, -2.0) # lower bound
-frank_gom_optim_upper = c( 0.1, -1.0,  1.0, 0.1, -1.0,  2.0,  8.0,  8.0)# upper bound 
-frank_gom_optim_starting_values = c(-0.01, -3, -0.5, 0.02, -3.5, -0.8, 0.5, 0) # starting values 
+cpl_wei <- function(para, X, Y, d1, d2, age){
+  alpha1 <- para[1]
+  x1 <- para[2]
+  x2 <- para[3]
+  alpha2 <- para[4]
+  y1 <- para[5]
+  y2 <- para[6]
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- exp(b0+b1*age)  
+  beta1 <- exp(x1+x2*age)
+  beta2 <- exp(y1+y2*age)
+  
+  S1 <- exp(-beta1*X^alpha1)
+  S2 <- exp(-beta2*Y^alpha2)
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  S1S2 <- S1*S2
+  S1S2[which(S1S2<0.1^8)]=0.1^8
+  
+  f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
+  f2 <- beta2*alpha2*Y^(alpha2-1)*exp(-beta2*Y^alpha2) 
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  C[which(C<0.1^8)] <- 0.1^8
+  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
+  
+  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  
+  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  
+  part4 <- ((1-d1)*(1-d2))*log(C)
+  
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
 
+cpl_gom <- function(para, X, Y, d1, d2, age){
+  gamma1 <- para[1]
+  p0 <- para[2]
+  p1 <- para[3]
+  gamma2 <- para[4]
+  q0 <- para[5]
+  q1 <- para[6]
+  b0 <- para[7]
+  b1 <- para[8]
+  
+  theta <- exp(b0+b1*age)
+  lambda1 <- exp(p0+p1*age)
+  lambda2 <- exp(q0+q1*age)
+  
+  S1 <- exp(-lambda1/gamma1*(exp(gamma1*X)-1))
+  S2 <- exp(-lambda2/gamma2*(exp(gamma2*Y)-1))
+  S1[which(S1<0.1^8)]=0.1^8
+  S2[which(S2<0.1^8)]=0.1^8
+  
+  S1S2 <- S1*S2
+  S1S2[which(S1S2<0.1^8)]=0.1^8
+  
+  f1 <- lambda1*exp(gamma1*X-lambda1/gamma1*(exp(gamma1*X)-1))
+  f2 <- lambda2*exp(gamma2*Y-lambda2/gamma2*(exp(gamma2*Y)-1))
+  f1[which(f1<0.1^8)]=0.1^8
+  f2[which(f2<0.1^8)]=0.1^8
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  C[which(C<0.1^8)] <- 0.1^8
+  
+  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
+  
+  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  
+  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  
+  part4 <- ((1-d1)*(1-d2))*log(C)
+  
+  #print(c(sum(part1),sum(part2),sum(part3),sum(part4)))
+  
+  logpl <- sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
+
+#----------YW: Likelihood Functions -------------------------------------------#
 ###############################################################
 ###################### run 'runs' times #######################
 ###############################################################
@@ -128,19 +246,20 @@ for (i in 1:runs){
   #Step 1: generate age categories
   age <- rbinom(n,1,0.40)          #40% are in the older age group in NHSBT data
   
-  for(k in 1:(n)){   #loop to generate U an V from age-varying theta
+  for(k in 1:n){   #loop to generate U an V from age-varying theta
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    theta1 <- true_b0 + true_b1 * age[k]
+    
+    theta1 <- exp(true_b0 + true_b1 * age[k])
     true_beta1[k] <- exp(true_x0 + true_x1 * age[k])
     true_beta2[k] <- exp(true_y0 + true_y1 * age[k]) 
     
     #Step 4: Conditional distribution method
-    fc<- frankCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
+    fc<- claytonCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
     u<-uv[,1]  #split u and v from the results of cdm
@@ -150,6 +269,7 @@ for (i in 1:runs){
     U1[k]=u     #add to u and v vectors on the outside
     V1[k]=v
     true_t[k] <- theta1  #save theta for this individual
+    
   }
   
   #Step 4: T1 and T2 from inverse survival
@@ -167,22 +287,25 @@ for (i in 1:runs){
   
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age)
-  df$X[df$X==0] <- 0.1
-  df$Y[df$Y==0] <- 0.1
   
-  ######################################################
-  ############### Frank pseudo likelihood ##############
-  #################### Exponential #####################
-  ######################################################
+  ########################################################
+  ############### Clayton pseudo likelihood ##############
+  ##################### Exponential ######################
+  ########################################################
+  # YW: likelihood function (cpl_exp) has been moved out the loop
   
-  plfoptim_exp <- optim(frank_exp_optim_starting_values, fpl_exp, method="L-BFGS-B",
-                        lower=frank_exp_optim_lower, upper=frank_exp_optim_upper, 
+  #exponential initial values and bounds for a0, a1, c0, c1, b0, b1
+  clayton_exp_optim_lower = c(-10.0, -10.0, -10.0, -10.0,  -1.0,  -5.5) # lower bound 
+  clayton_exp_optim_upper = c(-1,  1, -1,  2,  3,  3) # upper bound 
+  clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values 
+  # checking lower == clayton_exp_optim_lower
+  plcoptim_exp <- optim(clayton_exp_optim_starting_values, cpl_exp, method="L-BFGS-B",
+                        lower=clayton_exp_optim_lower,upper=clayton_exp_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
+  index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
   
   if(length(index_lower)>0)
   {
@@ -195,51 +318,63 @@ for (i in 1:runs){
     break
   }
   
-  ######################################################
-  ############### Frank pseudo likelihood ##############
-  ###################### Weibull #######################
-  ######################################################
-  plfoptim_wei <- optim(frank_wei_optim_starting_values, fpl_wei, method="L-BFGS-B",
-                        lower=frank_wei_optim_lower, upper=frank_wei_optim_upper, 
+  ########################################################
+  ############### Clayton pseudo likelihood ##############
+  ####################### Weibull ########################
+  ########################################################
+  # YW: likelihood function (cpl_wei) has been moved out the loop
+  # for a1,a2,x1,x2,y1, y2, b0,b1
+  clayton_wei_optim_lower = c( 0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.00, -15.00) # lower bound 
+  clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  1.7) # upper bound 
+  clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.5, 0.7) # starting values 
+  
+  plcoptim_wei <- optim(clayton_wei_optim_starting_values, cpl_wei, method="L-BFGS-B",
+                        lower=clayton_wei_optim_lower,upper=clayton_wei_optim_upper, 
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
+  index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
   
   if(length(index_lower)>0)
   {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+    counter_wei_low[index_lower] = counter_wei_low[index_lower]+1
     break
   }
   if(length(index_upper)>0)
   {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+    counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
     break
   }
   
-  ######################################################
-  ############### Frank pseudo likelihood ##############
-  ###################### Gompertz ######################
-  ######################################################
-
-  plfoptim_gom <- optim(frank_gom_optim_starting_values, fpl_gom, method="L-BFGS-B",
-                        lower=frank_gom_optim_lower, upper=frank_gom_optim_upper, 
+  ########################################################
+  ############### Clayton pseudo likelihood ##############
+  ####################### Gompertz #######################
+  ########################################################
+  # YW: likelihood function (cpl_gom) has been moved out of the loop
+  # for g1,p0,p1,g2,q0, q1, b0,b1
+  clayton_gom_optim_lower = c(-0.2, -5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound
+  clayton_gom_optim_upper = c(0.1, -2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound
+  clayton_gom_optim_starting_values =  clayton_gom_optim_lower # starting values
+  
+  plcoptim_gom <- optim(clayton_gom_optim_starting_values, cpl_gom, method="L-BFGS-B",
+                        lower=clayton_gom_optim_lower,
+                        upper=clayton_gom_optim_upper,
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
   
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
+  index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
   
   if(length(index_lower)>0)
   {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
     break
   }
   if(length(index_upper)>0)
   {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
     break
   }
   
@@ -247,23 +382,22 @@ for (i in 1:runs){
   ######################### AICS #########################
   ########################################################
   
-  loglik_exp <- fpl_exp(plfoptim_exp$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
-  k_exp <- length(plfoptim_exp$par)
+  loglik_exp <- cpl_exp(plcoptim_exp$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
+  k_exp <- length(plcoptim_exp$par)
   aic_exp <- -2*loglik_exp+2*k_exp
   
-  loglik_wei <- fpl_wei(plfoptim_wei$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
-  k_wei <- length(plfoptim_wei$par)
+  loglik_wei <- cpl_wei(plcoptim_wei$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
+  k_wei <- length(plcoptim_wei$par)
   aic_wei <- -2*loglik_wei+2*k_wei
   
-  loglik_gom <- fpl_gom(plfoptim_gom$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
-  k_gom <- length(plfoptim_gom$par)
+  loglik_gom <- cpl_gom(plcoptim_gom$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
+  k_gom <- length(plcoptim_gom$par)
   aic_gom <- -2*loglik_gom+2*k_gom
   
   ########################################################
   ####################### RESULTS ########################
   ########################################################
   
-  # the whole results section - revised by YW to accomodate the newly defined vectors and outputs
   aics <- c(aic_exp, aic_wei, aic_gom)                                             #all AIC values
   cops <- c("Exponential", "Weibull", "Gompertz")                                  #Names of distributions
   index <- which.min(aics)                                                         #gives index distribution with min aic wrt aics     
@@ -276,45 +410,45 @@ for (i in 1:runs){
   
   if (index==1){ #chooses exponential
     
-    fisher_info <- solve(-plfoptim_exp$hessian) #inverse -hess
+    fisher_info <- solve(-plcoptim_exp$hessian) #inverse -hess
     se <- sqrt(diag(fisher_info)) 
     
     #b ci
-    est_a0 <- plfoptim_exp$par[1]
-    est_a1 <- plfoptim_exp$par[2]
-    est_c0 <- plfoptim_exp$par[3]
-    est_c1<- plfoptim_exp$par[4]
-    est_b0 <- plfoptim_exp$par[5]
-    est_b1 <- plfoptim_exp$par[6]
+    est_a0 <- plcoptim_exp$par[1]
+    est_a1 <- plcoptim_exp$par[2]
+    est_c0 <- plcoptim_exp$par[3]
+    est_c1<- plcoptim_exp$par[4]
+    est_b0 <- plcoptim_exp$par[5]
+    est_b1 <- plcoptim_exp$par[6]
     varb0 <- fisher_info[5,5]
     varb1 <- fisher_info[6,6]
     covb0b1 <- fisher_info[5,6]
     
     #rho for age=0
-    theta_d0[i] <- est_b0
-    var_theta_d0 <- varb0
+    theta_d0[i] <- exp(est_b0)
+    var_theta_d0 <- exp(2*est_b0)*varb0
     theta_d0_lwci[i] <- theta_d0[i] - 1.96*sqrt(var_theta_d0)
     theta_d0_upci[i] <- theta_d0[i] + 1.96*sqrt(var_theta_d0)
     
-    rho_d0_cop <- frankCopula(theta_d0[i])
+    rho_d0_cop <- claytonCopula(theta_d0[i])
     est_rho_d0 <- rho(rho_d0_cop)
-    rho_d0_lwci_cop <- frankCopula(theta_d0_lwci[i])
+    rho_d0_lwci_cop <- claytonCopula(theta_d0_lwci[i])
     rho_d0_lwci[i] <- rho(rho_d0_lwci_cop)
-    rho_d0_upci_cop <- frankCopula(theta_d0_upci[i])
+    rho_d0_upci_cop <- claytonCopula(theta_d0_upci[i])
     rho_d0_upci[i] <- rho(rho_d0_upci_cop) 
     save_rho_d0[i] <- est_rho_d0
     
     #rho for age=1
-    theta_d1[i] <- est_b0+est_b1
-    var_theta_d1 <- varb0+2*covb0b1+varb1
+    theta_d1[i] <- exp(est_b0+est_b1)
+    var_theta_d1 <- exp(2*(est_b0+est_b1))*(varb0+2*covb0b1+varb1)
     theta_d1_lwci[i] <- theta_d1[i] - 1.96*sqrt(var_theta_d1)
     theta_d1_upci[i] <- theta_d1[i] + 1.96*sqrt(var_theta_d1)
     
-    rho_d1_cop <- frankCopula(theta_d1[i])
+    rho_d1_cop <- claytonCopula(theta_d1[i])
     est_rho_d1 <- rho(rho_d1_cop)
-    rho_d1_lwci_cop <- frankCopula(theta_d1_lwci[i])
+    rho_d1_lwci_cop <- claytonCopula(theta_d1_lwci[i])
     rho_d1_lwci[i] <- rho(rho_d1_lwci_cop)
-    rho_d1_upci_cop <- frankCopula(theta_d1_upci[i])
+    rho_d1_upci_cop <- claytonCopula(theta_d1_upci[i])
     rho_d1_upci[i] <- rho(rho_d1_upci_cop) 
     save_rho_d1[i] <- est_rho_d1
     
@@ -325,7 +459,6 @@ for (i in 1:runs){
     varc0 <- fisher_info[3,3] 
     varc1 <- fisher_info[4,4] 
     cov_c0c1 <- fisher_info[3,4] 
-    
     
     est_hr_l1 <- exp(est_a1)
     est_hr_l2 <- exp(est_c1)
@@ -341,47 +474,47 @@ for (i in 1:runs){
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
   } else if (index==2){#if Weibull is chosen
     
-    fisher_info <- solve(-plfoptim_wei$hessian) #inverse -hess
+    fisher_info <- solve(-plcoptim_wei$hessian) #inverse -hess
     se <- sqrt(diag(fisher_info)) 
     
     #point and var
-    est_a1 <- plfoptim_wei$par[1]
-    est_a2 <- plfoptim_wei$par[4]
-    est_x0 <- plfoptim_wei$par[2]
-    est_x1 <- plfoptim_wei$par[3]
-    est_y0 <- plfoptim_wei$par[5]
-    est_y1 <- plfoptim_wei$par[6]
-    est_b0 <- plfoptim_wei$par[7]
-    est_b1 <- plfoptim_wei$par[8]
+    est_a1 <- plcoptim_wei$par[1]
+    est_a2 <- plcoptim_wei$par[4]
+    est_x0 <- plcoptim_wei$par[2]
+    est_x1 <- plcoptim_wei$par[3]
+    est_y0 <- plcoptim_wei$par[5]
+    est_y1 <- plcoptim_wei$par[6]
+    est_b0 <- plcoptim_wei$par[7]
+    est_b1 <- plcoptim_wei$par[8]
     varb0 <- fisher_info[7,7]
     varb1 <- fisher_info[8,8]
     covb0b1 <- fisher_info[7,8]
     
     #rho for age=0
-    theta_d0[i] <- est_b0
-    var_theta_d0 <- varb0
+    theta_d0[i] <- exp(est_b0)
+    var_theta_d0 <- exp(2*est_b0)*varb0
     theta_d0_lwci[i] <- theta_d0[i] - 1.96*sqrt(var_theta_d0)
     theta_d0_upci[i] <- theta_d0[i] + 1.96*sqrt(var_theta_d0)
     
-    rho_d0_cop <- frankCopula(theta_d0[i])
+    rho_d0_cop <- claytonCopula(theta_d0[i])
     est_rho_d0 <- rho(rho_d0_cop)
-    rho_d0_lwci_cop <- frankCopula(theta_d0_lwci[i])
+    rho_d0_lwci_cop <- claytonCopula(theta_d0_lwci[i])
     rho_d0_lwci[i] <- rho(rho_d0_lwci_cop)
-    rho_d0_upci_cop <- frankCopula(theta_d0_upci[i])
+    rho_d0_upci_cop <- claytonCopula(theta_d0_upci[i])
     rho_d0_upci[i] <- rho(rho_d0_upci_cop) 
     save_rho_d0[i] <- est_rho_d0
     
     #rho for age=1
-    theta_d1[i] <- est_b0+est_b1
-    var_theta_d1 <- varb0+2*covb0b1+varb1
+    theta_d1[i] <- exp(est_b0+est_b1)
+    var_theta_d1 <- exp(2*(est_b0+est_b1))*(varb0+2*covb0b1+varb1)
     theta_d1_lwci[i] <- theta_d1[i] - 1.96*sqrt(var_theta_d1)
     theta_d1_upci[i] <- theta_d1[i] + 1.96*sqrt(var_theta_d1)
     
-    rho_d1_cop <- frankCopula(theta_d1[i])
+    rho_d1_cop <- claytonCopula(theta_d1[i])
     est_rho_d1 <- rho(rho_d1_cop)
-    rho_d1_lwci_cop <- frankCopula(theta_d1_lwci[i])
+    rho_d1_lwci_cop <- claytonCopula(theta_d1_lwci[i])
     rho_d1_lwci[i] <- rho(rho_d1_lwci_cop)
-    rho_d1_upci_cop <- frankCopula(theta_d1_upci[i])
+    rho_d1_upci_cop <- claytonCopula(theta_d1_upci[i])
     rho_d1_upci[i] <- rho(rho_d1_upci_cop) 
     save_rho_d1[i] <- est_rho_d1
     
@@ -404,49 +537,49 @@ for (i in 1:runs){
     
   } else{# Gompertz is chosen
     #hessian
-    hessian <- hessian(fpl_gom, plfoptim_gom$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
+    hessian <- hessian(cpl_gom, plcoptim_gom$par, X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age)
     #fishers info matrix
     fisher_info <- solve(-hessian) 
     #Standard Error
     se <- sqrt(diag(fisher_info)) 
     
-    est_b0 <- plfoptim_gom$par[7]
-    est_b1 <- plfoptim_gom$par[8]
-    est_g1 <- plfoptim_gom$par[1]
-    est_g2 <- plfoptim_gom$par[4]
-    est_p0 <- plfoptim_gom$par[2]
-    est_p1 <- plfoptim_gom$par[3]
-    est_q0 <- plfoptim_gom$par[5]
-    est_q1 <- plfoptim_gom$par[6]
+    est_b0 <- plcoptim_gom$par[7]
+    est_b1 <- plcoptim_gom$par[8]
+    est_g1 <- plcoptim_gom$par[1]
+    est_g2 <- plcoptim_gom$par[4]
+    est_p0 <- plcoptim_gom$par[2]
+    est_p1 <- plcoptim_gom$par[3]
+    est_q0 <- plcoptim_gom$par[5]
+    est_q1 <- plcoptim_gom$par[6]
     varb0 <- fisher_info[7,7]
     varb1 <- fisher_info[8,8]
     covb0b1 <- fisher_info[7,8]
     
     #rho for donor=0
-    theta_d0[i] <- est_b0
-    var_theta_d0 <- varb0
+    theta_d0[i] <- exp(est_b0)
+    var_theta_d0 <- exp(2*est_b0)*varb0
     theta_d0_lwci[i] <- theta_d0[i] - 1.96*sqrt(var_theta_d0)
     theta_d0_upci[i] <- theta_d0[i] + 1.96*sqrt(var_theta_d0)
     
-    rho_d0_cop <- frankCopula(theta_d0[i])
+    rho_d0_cop <- claytonCopula(theta_d0[i])
     est_rho_d0 <- rho(rho_d0_cop)
-    rho_d0_lwci_cop <- frankCopula(theta_d0_lwci[i])
+    rho_d0_lwci_cop <- claytonCopula(theta_d0_lwci[i])
     rho_d0_lwci[i] <- rho(rho_d0_lwci_cop)
-    rho_d0_upci_cop <- frankCopula(theta_d0_upci[i])
+    rho_d0_upci_cop <- claytonCopula(theta_d0_upci[i])
     rho_d0_upci[i] <- rho(rho_d0_upci_cop) 
     save_rho_d0[i] <- est_rho_d0
     
     #rho for donor=1
-    theta_d1[i] <- est_b0+est_b1
-    var_theta_d1 <- varb0+2*covb0b1+varb1
+    theta_d1[i] <- exp(est_b0+est_b1)
+    var_theta_d1 <- exp(2*(est_b0+est_b1))*(varb0+2*covb0b1+varb1)
     theta_d1_lwci[i] <- theta_d1[i] - 1.96*sqrt(var_theta_d1)
     theta_d1_upci[i] <- theta_d1[i] + 1.96*sqrt(var_theta_d1)
     
-    rho_d1_cop <- frankCopula(theta_d1[i])
+    rho_d1_cop <- claytonCopula(theta_d1[i])
     est_rho_d1 <- rho(rho_d1_cop)
-    rho_d1_lwci_cop <- frankCopula(theta_d1_lwci[i])
+    rho_d1_lwci_cop <- claytonCopula(theta_d1_lwci[i])
     rho_d1_lwci[i] <- rho(rho_d1_lwci_cop)
-    rho_d1_upci_cop <- frankCopula(theta_d1_upci[i])
+    rho_d1_upci_cop <- claytonCopula(theta_d1_upci[i])
     rho_d1_upci[i] <- rho(rho_d1_upci_cop) 
     save_rho_d1[i] <- est_rho_d1
     
@@ -466,6 +599,7 @@ for (i in 1:runs){
     hr_l1_upci[i] <- est_hr_l1 + 1.96*sqrt(var_hr_l1)
     hr_l2_lwci[i] <- est_hr_l2 - 1.96*sqrt(var_hr_l2)
     hr_l2_upci[i] <- est_hr_l2 + 1.96*sqrt(var_hr_l2)
+    
   }
   
   if (hr_l1_lwci[i] <1 & hr_l1_upci[i]  <1) {hr_1_lw=hr_1_lw+1
@@ -475,10 +609,10 @@ for (i in 1:runs){
   if (hr_l2_lwci[i]  <1 & hr_l2_upci[i]  <1) {hr_2_lw=hr_2_lw+1
   } else if (hr_l2_lwci[i]  >1 & hr_l2_upci[i]  >1) {hr_2_up=hr_2_up+1
   } else {hr_2_cross = hr_2_cross+1}
-  
   print(i)
 } # end of loop
 
+#hrs#
 # OUTPUT by YW
 #bias: corrected by YW
 hr_l1_bias <- mean(save_hr_l1 -true_hr_l1)
@@ -520,6 +654,7 @@ gom_perc <- counter_gom / runs *100
 hr_1_perc <- hr_1_up / runs *100
 hr_2_perc <- hr_2_up / runs *100
 
+
 end_time = Sys.time()
 run_time = end_time - start_time
 run_time
@@ -542,8 +677,8 @@ items<-c("hr_nt", "hr_t", "rho_reference", "rho_covariates", "theta_reference", 
 Results <- cbind.data.frame(items, bias, CP, MSE, percentage_chosen)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
+
 rownames(Results)<-NULL
 end_time <- Sys.time()
 run_time = end_time - start_time
@@ -557,6 +692,6 @@ Estimates = data.frame(hr.l1= save_hr_l1, hr.l1.low= hr_l1_lwci, hr.l1.up = hr_l
 # output results
 write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
 write.csv(Estimates, row.names=F,file=paste0(dir_results,out_file_estimates))
-print("Simulation 2 for frank weibull model completed successfully!")
+print("Simulation 2 for clayton weibull model completed successfully!")
 
 # percentage chosen is recorded in the order of exponential, weibull and gompertz. The true model is weibull.
