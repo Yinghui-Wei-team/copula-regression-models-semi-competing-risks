@@ -1,10 +1,12 @@
 ################################################################################
 # Paper 2: Simulation 1
+# Model 2:             regression on both hazards and association
 # Data simulated from: Clayton copula exponential survival model with 
 #                      covariates on hazard rates and the association parameters
 # Fitted model:        The underlying clayton model as above
 # Purpose:             Evaluating performance when the true model is specified
 ################################################################################
+# Original script by LS, reviewed and updated by YW
 # YW 26 June 2021 updates: 
 # 1.corrected variance post simulation
 # 2.added code to output results into a CSV file
@@ -14,15 +16,13 @@
 #    respective parameters instead of starting from the true values
 # 5. correct the bias calculation
 # 6. Change the formula for MSE
+# YW: 2 January 2023 updates:
+# 1. Put likelihood, starting values, lower and upper bounds outside the loop
+# 2. reset results directory and tidy up
 ################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(numDeriv)
+library(copula); library(mvtnorm);library(numDeriv)
 
 ################################################################################
 #                                set up                                        #
@@ -36,13 +36,34 @@ dir = paste0(dir_results, "results/simulation_results")
 # setwd(dir)
 
 # set up outfile names
-out_file_results <- "S2-Table5-clayton-exponential-covariates-hazards-association.csv"
-out_file_estimates <- "S2-Clayton-exponential-covariates-for-hazards-estimates.csv"
+out_file_results <- "S2-M2-Table5-clayton-exponential-covariates-hazards-association.csv"
+out_file_estimates <- "S2-M2-Clayton-exponential-covariates-hazards-estimates.csv"
 
 start_time <- Sys.time()
 set.seed(90089811)
 n <- 3000
 runs <- 1000
+
+# starting values for optim ----------------------------------------------------
+# a0, a1, a2, a3, c0, c1, c2, c3, b0, b1, b2, b3
+starting_values = c(-6, -5, -5, -5, 
+                    -6, -5, -5, -5,
+                    2, 3, 5, 7)
+
+# lower and upper bound for parameters -----------------------------------------
+a0_lw <- -10; a0_up <- -2
+a1_lw <- -10; a1_up <- 1
+a2_lw <- -10; a2_up <- 1
+a3_lw <- -10; a3_up <- 1
+c0_lw <- -10; c0_up <- -2
+c1_lw <- -10; c1_up <- 3
+c2_lw <- -10; c2_up <- 1
+c3_lw <- -10; c3_up <- 1
+
+b0_lw <- -5; b0_up <- 10
+b1_lw <- -5; b1_up <- 12
+b2_lw <- -10; b2_up <- 20
+b3_lw <- -5; b3_up <- 20
 
 #true values from KTX data
 true_b0 <- 0.39
@@ -164,6 +185,51 @@ counter_b1_upper = 0
 counter_b2_upper = 0
 counter_b3_upper = 0 
 
+
+##########################################################
+############### Clayton pseudo likelihood ################
+##########################################################
+cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
+  a0 <- para[1]
+  a1 <- para[2]
+  a2 <- para[3]
+  a3 <- para[4]
+  
+  c0 <- para[5]
+  c1 <- para[6]
+  c2 <- para[7]
+  c3 <- para[8]
+  
+  b0 <- para[9]
+  b1 <- para[10]
+  b2 <- para[11]
+  b3 <- para[12]
+  
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  
+  S1 <- exp(-lambda1*X)
+  S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
+  f1 <- lambda1*exp(-lambda1*X)
+  f2 <- lambda2*exp(-lambda2*Y)
+  
+  theta <- exp(b0+b1*age.grp+b2*gen+b3*donor)
+  
+  C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  
+  C[which(C<0.1^(8))]=0.1^(8)
+  S1[which(S1 < 0.1^(8))]=0.1^(8)
+  S2[which(S2 < 0.1^(8))]=0.1^(8)
+  
+  part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
+  part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
+  part4<-((1-d1)*(1-d2))*log(C)    
+  
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
+
 ###############################################################
 ###################### run 'runs' times #######################
 ###############################################################
@@ -224,79 +290,7 @@ for (i in 1:runs){
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
   
-  ##########################################################
-  ############### Clayton pseudo likelihood ################
-  ##########################################################
-  cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
-    a0 <- para[1]
-    a1 <- para[2]
-    a2 <- para[3]
-    a3 <- para[4]
-    
-    c0 <- para[5]
-    c1 <- para[6]
-    c2 <- para[7]
-    c3 <- para[8]
-    
-    b0 <- para[9]
-    b1 <- para[10]
-    b2 <- para[11]
-    b3 <- para[12]
-    
-    lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-    lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
-    
-    S1 <- exp(-lambda1*X)
-    S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
-    f1 <- lambda1*exp(-lambda1*X)
-    f2 <- lambda2*exp(-lambda2*Y)
-    
-    theta <- exp(b0+b1*age.grp+b2*gen+b3*donor)
-    
-    C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
-    
-    C[which(C<0.1^(8))]=0.1^(8)
-    S1[which(S1 < 0.1^(8))]=0.1^(8)
-    S2[which(S2 < 0.1^(8))]=0.1^(8)
-    
-    part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
-    part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
-    part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)
-    part4<-((1-d1)*(1-d2))*log(C)    
-    
-    logpl<-sum(part1+part2+part3+part4) 
-    return(logpl)
-  }
-  
-  a0_lw <- -10
-  a0_up <- -2
-  a1_lw <- -10
-  a1_up <- 1
-  a2_lw <- -10
-  a2_up <- 1
-  a3_lw <- -10
-  a3_up <- 1
-  c0_lw <- -10
-  c0_up <- -2
-  c1_lw <- -10
-  c1_up <- 3
-  c2_lw <- -10
-  c2_up <- 1
-  c3_lw <- -10
-  c3_up <- 1
-  
-  b0_lw <- -5
-  b0_up <- 10
-  b1_lw <- -5
-  b1_up <- 12
-  b2_lw <- -10
-  b2_up <- 20
-  b3_lw <- -5
-  b3_up <- 20
-
-  # YW 11 July 2021: change starting values
-  plcoptim <- optim(c(-6, -5, -5, -5, -6, -5, -5, -5,
-                      2, 3, 5, 7), cpl, method="L-BFGS-B", 
+  plcoptim <- optim(starting_values, cpl, method="L-BFGS-B", 
                     lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, b0_lw,b1_lw, b2_lw, b3_lw),
                     upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
@@ -304,8 +298,8 @@ for (i in 1:runs){
   
   plcoptim$par
   
-  cpl(c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
-  
+  # cpl(c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
+  # 
   if(plcoptim$par[1] == a0_lw) {counter_a0_low = counter_a0_low + 1}
   if(plcoptim$par[1] == a0_up) {counter_a0_upper = counter_a0_upper + 1}
   if(plcoptim$par[2] == a1_lw) {counter_a1_low = counter_a1_low + 1}
@@ -727,20 +721,12 @@ items<-c("a0", "a1", "a2", "a3",
 Results <- cbind.data.frame(items, mean_bias, CP, MSE)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
 
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
-
-#write.csv(Results, row.names=F,file="S2-Table5-clayton-exponential-covariates-hazards-association.csv")
-
-write.csv(Results, row.names=F,file=paste0(dir_results, out_file_results))
 
 Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.est = save_a3, 
                        c0.est = save_c0, c1.est = save_c1, c2.est = save_c2, c3.est = save_c3, 
@@ -749,6 +735,8 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
 
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_results))
 write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
-
-#write.csv(Estimates, row.names=F,file="Results/S2-Clayton-exponential-covariates-for-hazards-estimates.csv")
+print(run_time)
+print("Simulation1 model2 for clayton exponential model completed successfully!")

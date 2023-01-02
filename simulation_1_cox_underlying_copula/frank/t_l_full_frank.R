@@ -1,8 +1,9 @@
 ################################################################################
 # Paper 2: Simulation 1
-# Modle: Frank copula exponential survival model 
-# with covariates on hazard rates and association parameter
+# Model 2: Frank copula exponential survival model 
+#          with covariates on hazard rates and association parameter
 ################################################################################
+# Original script by LS, reviewed and updated by YW
 # YW 27 June 2021 updates: 
 # 1.corrected variance post simulation
 # 2.added code to output results into a CSV file
@@ -12,53 +13,54 @@
 #    respective parameters instead of starting from the true values
 # 5. correct the bias calculation
 # 6. Change the formula for MSE
+# YW: 2 January 2023 updates:
+# 1. Put likelihood, starting values, lower and upper bounds outside the loop
+# 2. reset results directory and tidy up
 ################################################################################
 
 rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
-library(numDeriv)
+library(copula); library(mvtnorm);library(numDeriv)
 
-########################################################
-####################### set up #########################
-########################################################
-# directory if on PC
-dir = "results"
-setwd(dir)
+################################################################################
+#                                set up                                        #
+################################################################################
+# directory if on own PC
+dir_results <- "../../"
+dir = paste0(dir_results, "results/simulation_results")
+
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
+out_file_summary <- "S2-M2-Table5-frank-exponential-covariates-hazards-association.csv"
+out_file_estimates <- "S2-M2-estimates-frank-exponential-covariates-hazards-association.csv"
+
 start_time <- Sys.time()
 set.seed(65153622)
 n <- 3000
-runs <- 1000
+runs <- 10
+
+# starting values for optim -------------------------------------------------------------
+# a0, a1, a2, a3, c0, c1, c2, c3, b0, b1, b2, b3
+starting_values = c(-4, 0.5, 0.5,-1, -5, -2, -1, -1,
+                    4, 6, 1, 1)
+# lower and upper bounds for regression coefficients --------------------------
+a0_lw <- -10; a0_up <- -2;a1_lw <- -10; a1_up <- 1
+a2_lw <- -10; a2_up <- 1; a3_lw <- -10; a3_up <- 1
+c0_lw <- -10; c0_up <- -2; c1_lw <- -10; c1_up <- 3
+c2_lw <- -10; c2_up <- 1;c3_lw <- -10; c3_up <- 1
+
+b0_lw <- -5; b0_up <- 10;b1_lw <- -5; b1_up <- 12
+b2_lw <- -10; b2_up <- 20;b3_lw <- -5; b3_up <- 20
 
 #true values from KTX data
-true_b0 <- 3.06
-true_b1 <- 5.07
-true_b2 <- 0
-true_b3 <- 0.86
+true_a0 <- -3.27; true_a1 <- 0.31;true_a2 <- 0; true_a3 <- -0.53
+true_c0 <- -4.08; true_c1 <- 1.35; true_c2 <- -0.07; true_c3 <- -0.62
+true_b0 <- 3.06; true_b1 <- 5.07; true_b2 <- 0;true_b3 <- 0.86
 
-true_a0 <- -3.27
-true_a1 <- 0.31
-true_a2 <- 0
-true_a3 <- -0.53
 
-true_c0 <- -4.08
-true_c1 <- 1.35
-true_c2 <- -0.07
-true_c3 <- -0.62
-
-true_l1 <- rep(0,n)
-true_l2 <- rep(0,n)
-true_t <- rep(0,n)
-true_r <- rep(0,n)
-U1 <- rep(0,n)
-V1 <- rep(0,n)
+true_l1 <- true_l2 <- true_t <- true_r <- rep(0,n)
+U1 <- V1 <- rep(0,n)
 
 true_hr_l1_age <- exp(true_a1)
 true_hr_l1_gen <- exp(true_a2)
@@ -69,98 +71,82 @@ true_hr_l2_gen <- exp(true_c2)
 true_hr_l2_donor <- exp(true_c3)
 
 ## stuff for later ##
-save_a0 <- rep(0,runs)
-save_a1 <- rep(0,runs)
-save_a2 <- rep(0,runs)
-save_a3 <- rep(0,runs)
-save_b0 <- rep(0,runs)
-save_b1 <- rep(0,runs)
-save_b2 <- rep(0,runs)
-save_b3 <- rep(0,runs)
-save_c0 <- rep(0,runs)
-save_c1 <- rep(0,runs)
-save_c2 <- rep(0,runs)
-save_c3 <- rep(0,runs)
-save_hr_l1_age <- rep(0,runs)
-save_hr_l2_age <- rep(0,runs)
-save_hr_l1_gen <- rep(0,runs)
-save_hr_l2_gen <- rep(0,runs)
-save_hr_l1_donor <- rep(0,runs)
-save_hr_l2_donor <- rep(0,runs)
+save_a0 <- save_a1 <- save_a2 <- save_a3 <- rep(0,runs)
+save_b0 <-save_b1 <- save_b2 <- save_b3 <- rep(0,runs)
+save_c0 <- save_c1 <- save_c2 <- save_c3 <- rep(0,runs)
+save_hr_l1_age <- save_hr_l2_age <- save_hr_l1_gen <- save_hr_l2_gen <- rep(0,runs)
+save_hr_l1_donor <- save_hr_l2_donor <- rep(0,runs)
 
-bias_a0 <- rep(0,runs)
-bias_a1 <- rep(0,runs)
-bias_a2 <- rep(0,runs)
-bias_a3 <- rep(0,runs)
-bias_b0 <- rep(0,runs)
-bias_b1 <- rep(0,runs)
-bias_b2 <- rep(0,runs)
-bias_b3 <- rep(0,runs)
-bias_c0 <- rep(0,runs)
-bias_c1 <- rep(0,runs)
-bias_c2 <- rep(0,runs)
-bias_c3 <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
+bias_a0 <- bias_a1 <- bias_a2 <- bias_a3 <- rep(0,runs)
+bias_b0 <- bias_b1 <- bias_b2 <- bias_b3 <- rep(0,runs)
+bias_c0 <- bias_c1 <- bias_c2 <- bias_c3 <- rep(0,runs)
+bias_l1_hr_age <-bias_l1_hr_gen <- bias_l1_hr_donor <- rep(0,runs)
+bias_l2_hr_age <- bias_l2_hr_gen <-  bias_l2_hr_donor <- rep(0,runs)
 
-counter_a0 = 0
-counter_a1 = 0
-counter_a2 = 0
-counter_a3 = 0
-counter_c0 = 0
-counter_c1 = 0
-counter_c2 = 0
-counter_c3 = 0
-counter_b0 = 0
-counter_b1 = 0
-counter_b2 = 0
-counter_b3 = 0
-counter_hr_l1_age = 0
-counter_hr_l1_gen = 0
-counter_hr_l1_donor = 0
-counter_hr_l2_age = 0
-counter_hr_l2_gen = 0
-counter_hr_l2_donor = 0 
+counter_a0 = counter_a1 = counter_a2 = counter_a3 = 0
+counter_c0 = counter_c1 = counter_c2 = counter_c3 = 0
+counter_b0 = counter_b1 = counter_b2 = counter_b3 = 0
+counter_hr_l1_age = counter_hr_l1_gen = counter_hr_l1_donor = 0
+counter_hr_l2_age = counter_hr_l2_gen = counter_hr_l2_donor = 0 
 
-counter_a0_low = 0
-counter_a1_low = 0
-counter_a2_low = 0
-counter_a3_low = 0
-counter_c0_low = 0
-counter_c1_low = 0
-counter_c2_low = 0
-counter_c3_low = 0
-counter_b0_low = 0
-counter_b1_low = 0
-counter_b2_low = 0
-counter_b3_low = 0
-counter_a0_upper = 0
-counter_a1_upper = 0 
-counter_a2_upper = 0
-counter_a3_upper = 0 
-counter_c0_upper = 0
-counter_c1_upper = 0
-counter_c2_upper = 0
-counter_c3_upper = 0 
-counter_b0_upper = 0
-counter_b1_upper = 0
-counter_b2_upper = 0
-counter_b3_upper = 0 
+counter_a0_low = counter_a1_low = counter_a2_low = counter_a3_low = 0
+counter_c0_low = counter_c1_low = counter_c2_low = counter_c3_low = 0
+counter_b0_low = counter_b1_low = counter_b2_low = counter_b3_low = 0
+counter_a0_upper = counter_a1_upper = counter_a2_upper = counter_a3_upper = 0 
+counter_c0_upper = counter_c1_upper = counter_c2_upper = counter_c3_upper = 0 
+counter_b0_upper = counter_b1_upper = counter_b2_upper = counter_b3_upper = 0 
 
-###############################################################
-###################### run 'runs' times #######################
-###############################################################
+# Frank pseudo likelihood-------------------------------------------------------
+fpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
+  a0 <- para[1]
+  a1 <- para[2]
+  a2 <- para[3]
+  a3 <- para[4]
+  
+  c0 <- para[5]
+  c1 <- para[6]
+  c2 <- para[7]
+  c3 <- para[8]
+  
+  b0 <- para[9]
+  b1 <- para[10]
+  b2 <- para[11]
+  b3 <- para[12]
+  
+  lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+  
+  S1 <- exp(-lambda1*X)
+  S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
+  f1 <- lambda1*exp(-lambda1*X)
+  f2 <- lambda2*exp(-lambda2*Y)
+  
+  theta <- b0+b1*age.grp+b2*gen+b3*donor
+  
+  C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
+  
+  C[which(C<0.1^(8))]=0.1^(8)
+  S1[which(S1 < 0.1^(8))]=0.1^(8)
+  S2[which(S2 < 0.1^(8))]=0.1^(8)
+  
+  #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
+  part1 <- d1*d2*log((theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)/((exp(theta*S1)-1)*(exp(theta*S2)-1)))
+  
+  #part2 <- d1*(1-d2)*log(((1-exp(theta*C))/(1-exp(theta*S1)))*lambda1*exp(-lambda1*X))
+  part2 <- d1*(1-d2)*log(((1-exp(theta*C))*f1)/(1-exp(theta*S1)))
+  
+  #part3 <- (1-d1)*d2*log(((1-exp(theta*C))/(1-exp(theta*S2)))*lambda2*exp(-lambda2*Y))
+  part3 <- (1-d1)*d2*log(((1-exp(theta*C))*f2)/(1-exp(theta*S2)))
+  
+  part4<-((1-d1)*(1-d2))*log(C)
+  #print(theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)=0
+  
+  # print(S1)
+  logpl<-sum(part1+part2+part3+part4) 
+  return(logpl)
+}
 
+# replicate 'runs' times ------------------------------------------------------
 for (i in 1:runs){
   
   ###############################################################
@@ -214,89 +200,7 @@ for (i in 1:runs){
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
   
-  ########################################################
-  ############### Frank pseudo likelihood ################
-  ########################################################
-  fpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
-    a0 <- para[1]
-    a1 <- para[2]
-    a2 <- para[3]
-    a3 <- para[4]
-    
-    c0 <- para[5]
-    c1 <- para[6]
-    c2 <- para[7]
-    c3 <- para[8]
-    
-    b0 <- para[9]
-    b1 <- para[10]
-    b2 <- para[11]
-    b3 <- para[12]
-    
-    lambda1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
-    lambda2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
-    
-    S1 <- exp(-lambda1*X)
-    S2 <- exp(-lambda2*Y) #problems when S2 too small -> 0 
-    f1 <- lambda1*exp(-lambda1*X)
-    f2 <- lambda2*exp(-lambda2*Y)
-    
-    theta <- b0+b1*age.grp+b2*gen+b3*donor
-    
-    C= -1/theta * log(((1-exp(-theta)-(1-exp(-theta*S1))*(1-exp(-theta*S2))))/(1-exp(-theta)))
-
-    C[which(C<0.1^(8))]=0.1^(8)
-    S1[which(S1 < 0.1^(8))]=0.1^(8)
-    S2[which(S2 < 0.1^(8))]=0.1^(8)
-    
-    #part1 <- d1*d2*(log(theta)+theta*C+log(exp(theta*C)-1)-log(exp(theta*S1)-1)-log(exp(theta*S2)-1)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
-    part1 <- d1*d2*log((theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)/((exp(theta*S1)-1)*(exp(theta*S2)-1)))
-    
-    #part2 <- d1*(1-d2)*log(((1-exp(theta*C))/(1-exp(theta*S1)))*lambda1*exp(-lambda1*X))
-    part2 <- d1*(1-d2)*log(((1-exp(theta*C))*f1)/(1-exp(theta*S1)))
-    
-    #part3 <- (1-d1)*d2*log(((1-exp(theta*C))/(1-exp(theta*S2)))*lambda2*exp(-lambda2*Y))
-    part3 <- (1-d1)*d2*log(((1-exp(theta*C))*f2)/(1-exp(theta*S2)))
-
-    part4<-((1-d1)*(1-d2))*log(C)
-    #print(theta*exp(theta*C)*(exp(theta*C)-1)*f1*f2)=0
-
-   # print(S1)
-    logpl<-sum(part1+part2+part3+part4) 
-    return(logpl)
-  }
-  
-  #fpl(c(-0.5,0,-0.5,0,5,2),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp)
-  
-  a0_lw <- -10
-  a0_up <- -2
-  a1_lw <- -10
-  a1_up <- 1
-  a2_lw <- -10
-  a2_up <- 1
-  a3_lw <- -10
-  a3_up <- 1
-  c0_lw <- -10
-  c0_up <- -2
-  c1_lw <- -10
-  c1_up <- 3
-  c2_lw <- -10
-  c2_up <- 1
-  c3_lw <- -10
-  c3_up <- 1
-  
-  b0_lw <- -5
-  b0_up <- 10
-  b1_lw <- -5
-  b1_up <- 12
-  b2_lw <- -10
-  b2_up <- 20
-  b3_lw <- -5
-  b3_up <- 20
-  
-  # YW 11 July 2021: change starting values
-  plfoptim <- optim(c(-4, 0.5, 0.5,-1, -5, -2, -1, -1,
-                     4, 6, 1, 1), fpl, method="L-BFGS-B", 
+  plfoptim <- optim(starting_values, fpl, method="L-BFGS-B", 
                     lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, b0_lw,b1_lw, b2_lw, b3_lw),
                     upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,
@@ -304,7 +208,7 @@ for (i in 1:runs){
   
 
   plfoptim$par
- fpl(c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
+ #fpl(c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
  
   if(plfoptim$par[1] == a0_lw) {counter_a0_low = counter_a0_low + 1}
   if(plfoptim$par[1] == a0_up) {counter_a0_upper = counter_a0_upper + 1}
@@ -719,7 +623,7 @@ MSE <- c(a0_mse,a1_mse,a2_mse,a3_mse,
          hr_l1_mse_age, hr_l1_mse_donor, hr_l1_mse_gen,
          hr_l2_mse_age, hr_l2_mse_donor, hr_l2_mse_gen)
 
-# YW: put results together
+# put results together
 items<-c("a0", "a1", "a2", "a3",
          "c0", "c1", "c2", "c3", 
          "b0", "b1", "b2", "b3",
@@ -728,18 +632,12 @@ items<-c("a0", "a1", "a2", "a3",
 Results <- cbind.data.frame(items, mean_bias, CP, MSE)
 
 Results[,2:4] <- round(Results[,2:4],3)
-
 Results
 
 rownames(Results)<-NULL
-
 end_time <- Sys.time()
-
 run_time = end_time - start_time
-
 run_time
-
-write.csv(Results, row.names=F,file="S2-Table5-frank-exponential-covariates-hazards-association.csv")
 
 Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.est = save_a3, 
                        c0.est = save_c0, c1.est = save_c1, c2.est = save_c2, c3.est = save_c3, 
@@ -747,4 +645,8 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.age.est = save_hr_l1_age, hr.l2.age.est = save_hr_l2_age,
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
-write.csv(Estimates, row.names=F,file="S2-Frank-exponential-covariates-for-hazards-estimates.csv")
+
+write.csv(Results, row.names=F,file= out_file_summary)
+write.csv(Estimates, row.names=F,file= out_file_estimates)
+print(run_time)
+print("Simulation1 model2 for frank exponential model completed successfully!")

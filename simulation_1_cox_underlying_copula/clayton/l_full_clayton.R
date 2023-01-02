@@ -1,8 +1,9 @@
 ################################################################################
-# Paper 2: Simulation 1
-# Clayton copula exponential survival model with covariates on hazard rates
+# Paper 2: Simulation 1 Model 1
+# Model 1 - Clayton copula exponential survival model with covariates on hazard rates
+# Original code by LS, reviewed and updated by MW and YW
 # YW 25 June 2021 updates: 
-# 1.corrected variance post simulation
+# 1.correction for the variance post simulation
 # 2.add code to output results into a CSV file
 # 3.output simulation time
 # MW 14 July updates:
@@ -106,7 +107,7 @@ cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
 }
 
 
-simulation <- function(runs, n, starting_values, out_file_summary, out_file_estimates){
+simulation <- function(runs, n, starting_values, reg_coef_lw, reg_coef_up, out_file_summary, out_file_estimates){
   
   # set up ---------------------------------------------------------------------
   start_time <- Sys.time()
@@ -510,6 +511,7 @@ simulation <- function(runs, n, starting_values, out_file_summary, out_file_esti
 } # END OF FUNCTION simulation
 
 simulation(runs = runs, n= n, starting_values = starting_values, 
+           reg_coef_lw = reg_coef_lw, reg_coef_up = reg_coef_up,
            out_file_summary = out_file_summary,
            out_file_estimates = out_file_estimates)
-print("Simulation 1 for clayton exponential model completed successfully!")
+print("Simulation1 model1 for clayton exponential model completed successfully!")

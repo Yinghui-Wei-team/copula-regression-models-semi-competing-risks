@@ -35,7 +35,7 @@ start_time <- Sys.time()
 set.seed(98452221)
 #set.seed(123)
 n <- 3000
-runs <- 1
+runs <- 10
 
 #true values from KTX data
 true_b0 <- 0.39
