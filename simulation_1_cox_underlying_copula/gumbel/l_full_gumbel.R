@@ -24,7 +24,8 @@ dir_results = "../../results/simulation_results/simulation1/"
 out_file_summary = "S1-gumbel-exponential-covariates-hazards.csv"
 
 start_time <- Sys.time()
-set.seed(5333244)
+#set.seed(5333244)
+set.seed(12345)
 n <- 3000
 runs <- 2
 #runs <- 1000

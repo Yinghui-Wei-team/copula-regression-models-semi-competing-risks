@@ -35,7 +35,8 @@ out_file_estimates <-"S2_misspec_underlying_clayton_gompertz_estimates.csv"
 ################## Clayton, age, gen from gom chose with aic ######################
 #####################################################################################
 
-set.seed(9006465)
+#set.seed(9006465)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

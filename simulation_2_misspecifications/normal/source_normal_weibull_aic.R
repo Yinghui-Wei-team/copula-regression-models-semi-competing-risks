@@ -26,7 +26,8 @@ out_file_estimates <- paste0("S2_misspec_underlying_normal_weibull_", part, ".cs
 ################## Normal, age, gen from wei chose with aic #######################
 #####################################################################################
 
-set.seed(45766764)
+#set.seed(45766764)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

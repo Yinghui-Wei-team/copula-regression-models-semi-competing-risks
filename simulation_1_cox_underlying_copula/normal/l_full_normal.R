@@ -28,9 +28,9 @@ dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 out_file_estimates = "S1-normal-exponential-covariates-for-hazards-estimates1.csv"
 out_file_summary = "S1-Table4-normal-exponential-covariates-hazards1.csv"
 
-
 start_time <- Sys.time()
-set.seed(55552324)
+#set.seed(55552324)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

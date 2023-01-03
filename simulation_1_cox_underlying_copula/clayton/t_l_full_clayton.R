@@ -40,7 +40,8 @@ out_file_results <- "S2-M2-Table5-clayton-exponential-covariates-hazards-associa
 out_file_estimates <- "S2-M2-Clayton-exponential-covariates-hazards-estimates.csv"
 
 start_time <- Sys.time()
-set.seed(90089811)
+#set.seed(90089811)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

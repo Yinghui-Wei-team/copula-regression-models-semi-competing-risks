@@ -112,7 +112,8 @@ simulation <- function(runs, n, starting_values, reg_coef_lw, reg_coef_up,
   
   # set up ---------------------------------------------------------------------
   start_time <- Sys.time()
-  set.seed(98452221)
+  #set.seed(98452221)
+  set.seed(12345)
   
   #true values from KTX data --------------------------------------------------
   true_b0 <- 0.39

@@ -34,7 +34,8 @@ out_file_summary <- "S2-M2-table5-gumbel-exponential-covariates-hazards-associat
 out_file_estimates <- "S2-M2-estimates-gumbel-exponential-covariates-hazards-association.csv"
 
 start_time <- Sys.time()
-set.seed(65147222)
+#set.seed(65147222)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

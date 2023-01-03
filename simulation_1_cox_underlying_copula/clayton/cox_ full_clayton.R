@@ -16,7 +16,7 @@ rm(list=ls())
 library(copula);library(mvtnorm); library(plyr);library(survival);library(numDeriv)
 
 # directory if on own PC
-dir_results <- "../../results/simulation_results/simulation1/"
+dir_results <- "../../results/simulation_results/"
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
@@ -30,7 +30,8 @@ out_file_estimates <- "S1-estimates-Cox model-data from Clayton copula.csv"
 ########################################################
 ####################### set up #########################
 ########################################################
-set.seed(2000192)
+#set.seed(2000192)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 

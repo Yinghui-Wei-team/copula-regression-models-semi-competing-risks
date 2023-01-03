@@ -22,7 +22,8 @@ dir_results = "../../results/simulation_results/simulation1/"
 # setwd(dir)
 start_time <- Sys.time()
 
-set.seed(73339023)
+#set.seed(73339023)
+set.seed(12345)
 n <- 3000
 runs = 2
 #runs <- 1000

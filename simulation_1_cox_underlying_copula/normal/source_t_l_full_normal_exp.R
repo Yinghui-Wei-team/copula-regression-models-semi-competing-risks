@@ -12,7 +12,8 @@
 ######################################################################################################
 library(copula); library(mvtnorm); library(plyr); library(survival)
 start_time <- Sys.time()
-set.seed(235452333)
+#set.seed(235452333)
+set.seed(12345)
 n <- 3000
 runs <- 1000
 
