@@ -11,7 +11,7 @@ rm(list=ls())
 library(copula);library(mvtnorm);library(survival);library(numDeriv)
 
 # directory if on own PC
-dir_results <- "../../results/simulation_results/simulation1/"
+dir_results <- "../../results/simulation_results/"
 source("functions/function_sim_data_t_l_full.R")
 
 #setwd(dir)

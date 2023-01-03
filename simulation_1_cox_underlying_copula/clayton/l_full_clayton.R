@@ -28,14 +28,14 @@
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
-########################################################
-####################### set up #########################
-########################################################
+################################################################################
+# set up                                                                       #
+################################################################################
 
 # results directory
 # directory if on own PC
 dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
+dir_results = paste0(dir_results, "results/simulation_results/")
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
@@ -45,9 +45,10 @@ dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 n = 3000    # number of participants
 runs = 1  # number of replications
 
-# set outfile name
-out_file_estimates <- "S1-Table4-clayton-exponential-covariates-hazards.csv"
-out_file_summary <- "S1-Clayton-exponential-covariates-hazards.csv"
+# set out file name
+# set out file name
+out_file_summary <- "s1_model1_summary_clayton_exponential.csv"
+out_file_estimates <- "s1-model1_estimates_clayton_exponential.csv"
 
 # Starting values for parameter estimation for optim():
 start_a0 <- 0.5; start_a1 <- 0.5; start_a2 <- 0.5; start_a3 <- 0.5;
@@ -73,9 +74,10 @@ true_b0 <- 0.39; true_b1 <- 1.09; true_b2 <- 0.14; true_b3 <- 0.53
 true_values <- c(true_a0, true_a1, true_a2, true_a3, 
                  true_c0, true_c1, true_c2, true_c3, true_b0)
 
-##########################################################
-############### Clayton pseudo likelihood ################
-##########################################################
+################################################################################
+# Clayton pseudo likelihood                                                    #
+################################################################################
+
 cpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
   
   a0 <- para[1]; a1 <- para[2]; a2 <- para[3];  a3 <- para[4]
@@ -517,4 +519,5 @@ simulation(runs = runs, n= n, starting_values = starting_values,
            dir_results = dir_results,
            out_file_summary = out_file_summary,
            out_file_estimates = out_file_estimates)
+
 print("Simulation1 model1 for clayton exponential model completed successfully!")

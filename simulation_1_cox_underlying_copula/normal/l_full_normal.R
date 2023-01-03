@@ -1,38 +1,65 @@
-###########################################################################################
+###################################################################################################
 # Paper 2: Simulation 1
-# Normal copula exponential survival model - covairates on hazard rates
-# Original code by LS
+# Normal copula exponential survival model - covariates on hazard rates
 # YW 24June 2021: added time counter, results to CSV file.
-# YW 24 June 2021: corrected variances and MSE
+# YW 24 June 2021: corrected variances
 # YW 24 June 2021: specified save_hr within the loop of simulation, previously not defined.
-# YW 11 Sept 2021: changed starting values
-# YW 1 January 2022: take likelihood function out of the loop; reset results directory
-###########################################################################################
+# MW 14 July updates:
+# 1. Correction for the formula for bias.
+# 2. Change for the formula for MSE.
+# 3. Changed starting values.
+# 4. All results saved in a csv file.
+# YW 2 January 2023 updates
+# 1. reset results directory, specify out files, n and runs nearer to the front of the script
+###################################################################################################
 
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
-########################################################
-####################### set up #########################
-########################################################
+# set outfile name
+out_file_summary <- "s1_model1_summary_normal_exponential.csv"
+out_file_estimates <- "s1-model1_estimates_normal_exponential.csv"
+
+################################################################################
+# set up                                                                       #
+################################################################################
 
 # results directory
 # directory if on own PC
 dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
+dir_results = paste0(dir_results, "results/simulation_results/")
 
-# directory if on cluster
-# dir = "/home/ywei/Simulation/Paper2/Normal"
+# directory if working on cluster
+# dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
-out_file_estimates = "S1-normal-exponential-covariates-for-hazards-estimates1.csv"
-out_file_summary = "S1-Table4-normal-exponential-covariates-hazards1.csv"
+# Number of participants and number of replications of the simulation
+n = 3000    # number of participants
+runs = 1  # number of replications
+################################################################################
+# Starting values for parameter estimation for optim():
 
+start_a0 <- -2; start_a1 <- -2; start_a2 <- -2; start_a3 <- -2;
+start_c0 <- -2; start_c1 <- -2; start_c2 <- -2; start_c3 <- -2;
+start_b0 <- 0.5;
+starting_values <- c(start_a0, start_a1, start_a2, start_a3, start_c0, start_c1, start_c2, start_c3, start_b0)
+
+true_b0 <- 0.35; true_b1 <- 0.28; true_b2 <- 0; true_b3 <- 0
+true_a0 <- -3.30; true_a1 <- 0.11; true_a2 <- 0.02; true_a3 <- -0.51
+true_c0 <- -4.15; true_c1 <- 1.32; true_c2 <- -0.11; true_c3  <- -0.65
+true_values <- c(true_a0, true_a1, true_a2, true_a3, true_c0, true_c1, true_c2, true_c3, true_b0)
+
+
+simulation <- function(runs, n, starting_values = starting_values){
+
+######################## Full #########################
+
+########################################################
+####################### set up #########################
+########################################################
 start_time <- Sys.time()
-#set.seed(55552324)
-set.seed(12345)
-n <- 3000
-runs <- 1000
+set.seed(55552324)
+
 
 #true values from KTX data
 true_b0 <- 0.35
@@ -55,6 +82,8 @@ true_r <- rep(0,n)
 U1 <- rep(0,n)
 V1 <- rep(0,n)
 
+
+
 true_hr_l1_age <- exp(true_a1)
 true_hr_l1_gen <- exp(true_a2)
 true_hr_l1_donor <- exp(true_a3)
@@ -64,87 +93,31 @@ true_hr_l2_gen <- exp(true_c2)
 true_hr_l2_donor <- exp(true_c3)
 
 ## stuff for later ##
-save_a0 <- rep(0,runs)
-save_a1 <- rep(0,runs)
-save_a2 <- rep(0,runs)
-save_a3 <- rep(0,runs)
-save_c0 <- rep(0,runs)
-save_c1 <- rep(0,runs)
-save_c2 <- rep(0,runs)
-save_c3 <- rep(0,runs)
-save_t <- rep(0,runs)
-save_hr_l1_age <- rep(0,runs)
-save_hr_l2_age <- rep(0,runs)
-save_hr_l1_gen <- rep(0,runs)
-save_hr_l2_gen <- rep(0,runs)
-save_hr_l1_donor <- rep(0,runs)
-save_hr_l2_donor <- rep(0,runs)
+save_a0 <- save_a1 <- save_a2 <- save_a3 <- rep(0,runs)
+save_c0 <- save_c1 <- save_c2 <- save_c3 <- rep(0,runs)
+save_b0 <- rep(0, runs)     # Added by MW
+save_hr_l1_age <- save_hr_l2_age <- save_hr_l1_gen <- save_hr_l2_gen <- rep(0,runs)
+save_hr_l1_donor <- save_hr_l2_donor <- rep(0,runs)
 
-bias_a0 <- rep(0,runs)
-bias_a1 <- rep(0,runs)
-bias_a2 <- rep(0,runs)
-bias_a3 <- rep(0,runs)
-bias_c0 <- rep(0,runs)
-bias_c1 <- rep(0,runs)
-bias_c2 <- rep(0,runs)
-bias_c3 <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_age <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_gen <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l1_hr_donor <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_age <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_gen <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
-bias_l2_hr_donor <- rep(0,runs)
+counter_a0 <- counter_a1 <- counter_a2 <- counter_a3 <- 0
+counter_c0 <- counter_c1 <- counter_c2 <- counter_c3 <-  0
+counter_hr_l1_age <- counter_hr_l1_gen <- counter_hr_l1_donor <-  0
+counter_hr_l2_age <- counter_hr_l2_gen <- counter_hr_l2_donor <- 0
 
-counter_a0 = 0
-counter_a1 = 0
-counter_a2 = 0
-counter_a3 = 0
-counter_c0 = 0
-counter_c1 = 0
-counter_c2 = 0
-counter_c3 = 0
-counter_hr_l1_age = 0
-counter_hr_l1_gen = 0
-counter_hr_l1_donor = 0
-counter_hr_l2_age = 0
-counter_hr_l2_gen = 0
-counter_hr_l2_donor = 0 
+counter_a0_low <- counter_a1_low <- counter_a2_low <- counter_a3_low <-  0
+counter_c0_low <- counter_c1_low <- counter_c2_low <- counter_c3_low <- 0
+counter_t_low <- 0
 
-counter_a0_low = 0
-counter_a1_low = 0
-counter_a2_low = 0
-counter_a3_low = 0
-counter_c0_low = 0
-counter_c1_low = 0
-counter_c2_low = 0
-counter_c3_low = 0
-counter_t_low = 0
-counter_a0_upper = 0
-counter_a1_upper = 0 
-counter_a2_upper = 0
-counter_a3_upper = 0 
-counter_c0_upper = 0
-counter_c1_upper = 0
-counter_c2_upper = 0
-counter_c3_upper = 0 
-counter_t_upper = 0
+counter_a0_upper <- counter_a1_upper <- counter_a2_upper <- counter_a3_upper <- 0
+counter_c0_upper <- counter_c1_upper <- counter_c2_upper <- counter_c3_upper <-  0
+counter_t_upper <- 0
 
-# starting values for optim
-starting_values = c(-2.74,0.32,0.004,-0.535,  
-                    -3.41,1.35,-0.06,-0.61,  
-                    0.1)
 
 ##########################################################
 ############### Normal pseudo likelihood ################
 ##########################################################
 
-likelihood_l_full_normal <- function(para, X,Y,d1,d2,age.grp,gen,donor){
+npl <- function(para, X,Y,d1,d2,age.grp,gen,donor){
   
   a0 <- para[1]
   a1 <- para[2]
@@ -271,7 +244,24 @@ likelihood_l_full_normal <- function(para, X,Y,d1,d2,age.grp,gen,donor){
   return(loglik);
 }
 
-# replicate run 'runs' times 
+#npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
+
+a0_lw <- -10; a0_up <- -1
+a1_lw <- -10; a1_up <- 0.5
+a2_lw <- -10; a2_up <- 0.5
+a3_lw <- -10; a3_up <- 0
+
+c0_lw <- -10; c0_up <- -2.5
+c1_lw <- -10; c1_up <- 2
+c2_lw <- -10; c2_up <- 0.5
+c3_lw <- -10; c3_up <- 0
+
+t_lw <- 0; t_up <- 0.9
+
+
+###############################################################
+###################### run 'runs' times #######################
+###############################################################
 
 for (i in 1:runs){
   
@@ -331,33 +321,23 @@ for (i in 1:runs){
   df$X[df$X==0] <- 0.1
   df$Y[df$Y==0] <- 0.1
   
-  a0_lw <- -10
-  a0_up <- -1
-  a1_lw <- -10
-  a1_up <- 0.5
-  a2_lw <- -10
-  a2_up <- 0.5
-  a3_lw <- -10
-  a3_up <- 0
+  #Step 11: Find true rho for each person
+  #for(j in 1:(n)){
+  #  fcop <- normalCopula(true_t[j]) #convert theta to rho
+  #  frho <- rho(fcop)
+  #  true_r[j]<-frho
+  #}
   
-  c0_lw <- -10
-  c0_up <- -2.5
-  c1_lw <- -10
-  c1_up <- 2
-  c2_lw <- -10
-  c2_up <- 0.5
-  c3_lw <- -10
-  c3_up <- 0
   
-  t_lw <- 0
-  t_up <- 0.9
   
-  plnoptim <- optim(starting_values, likelihood_l_full_normal, method="L-BFGS-B",
+  plnoptim <- optim(starting_values, npl, method="L-BFGS-B",
                     lower=c(a0_lw,a1_lw,a2_lw,a3_lw,c0_lw,c1_lw,c2_lw, c3_lw,t_lw),upper=c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), 
                     X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, gen=df$gen,donor=df$donor,
                     control=list(fnscale=-1),hessian=TRUE)
   
-  plnoptim$par
+ # npl(c(a0_up,a1_up,a2_up,a3_up,c0_up,c1_up,c2_up,c3_up,t_up), X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen,donor=df$donor)
+  
+  #plnoptim$par
   
   if(plnoptim$par[1] == a0_lw) {counter_a0_low = counter_a0_low + 1}
   if(plnoptim$par[1] == a0_up) {counter_a0_upper = counter_a0_upper + 1}
@@ -427,6 +407,9 @@ for (i in 1:runs){
   uci_c3 <- c3_est + 1.96*se[8]
   lci_c3 <- c3_est - 1.96*se[8]
   
+  # t
+  
+  save_b0[i] <- plnoptim$par[9]
   
   ###HR###
   
@@ -505,34 +488,17 @@ for (i in 1:runs){
   if(true_hr_l1_donor <= hr_l1_upci_donor && true_hr_l1_donor >= hr_l1_lwci_donor) {counter_hr_l1_donor=counter_hr_l1_donor+1}
   if(true_hr_l2_donor <= hr_l2_upci_donor && true_hr_l2_donor >= hr_l2_lwci_donor) {counter_hr_l2_donor=counter_hr_l2_donor+1}
   
-  bias_a0[i] <- true_a0 - a0_est
-  bias_a1[i] <- true_a1 - a1_est
-  bias_a2[i] <- true_a2 - a2_est
-  bias_a3[i] <- true_a3 - a3_est
-  
-  bias_c0[i] <- true_c0 - c0_est
-  bias_c1[i] <- true_c1 - c1_est
-  bias_c2[i] <- true_c2 - c2_est
-  bias_c3[i] <- true_c3 - c3_est
-  
-  bias_l1_hr_age[i] <- true_hr_l1_age - esthr_l1_age
-  bias_l2_hr_age[i] <- true_hr_l2_age - esthr_l2_age
-  bias_l1_hr_gen[i] <- true_hr_l1_gen - esthr_l1_gen
-  bias_l2_hr_gen[i] <- true_hr_l2_gen - esthr_l2_gen
-  bias_l1_hr_donor[i] <- true_hr_l1_donor - esthr_l1_donor
-  bias_l2_hr_donor[i] <- true_hr_l2_donor - esthr_l2_donor
-  
   print(i)
 }
 
-#bias corrected 
+#hrs#
+#bias corrected by MW
 hr_l1_bias_age <- mean(save_hr_l1_age) - true_hr_l1_age
 hr_l2_bias_age <- mean(save_hr_l2_age) - true_hr_l2_age
 hr_l1_bias_gen <- mean(save_hr_l1_gen) - true_hr_l1_gen
 hr_l2_bias_gen <- mean(save_hr_l2_gen) - true_hr_l2_gen
 hr_l1_bias_donor <- mean(save_hr_l1_donor) - true_hr_l1_donor
 hr_l2_bias_donor <- mean(save_hr_l2_donor) - true_hr_l2_donor
-
 #coverage
 hr_l1_cov_age <- (counter_hr_l1_age / runs) * 100
 hr_l2_cov_age <- (counter_hr_l2_age / runs) * 100
@@ -540,16 +506,14 @@ hr_l1_cov_gen <- (counter_hr_l1_gen / runs) * 100
 hr_l2_cov_gen <- (counter_hr_l2_gen / runs) * 100
 hr_l1_cov_donor <- (counter_hr_l1_donor / runs) * 100
 hr_l2_cov_donor <- (counter_hr_l2_donor / runs) * 100
-
-# YW corrected the code to the following: variance
+#variance: corrected by Yw
 hr_l1_var_age <- var(save_hr_l1_age)
 hr_l2_var_age <- var(save_hr_l2_age)
 hr_l1_var_gen <- var(save_hr_l1_gen)
 hr_l2_var_gen <- var(save_hr_l2_gen)
 hr_l1_var_donor <- var(save_hr_l1_donor)
 hr_l2_var_donor <- var(save_hr_l2_donor)
-
-#mse: corrected
+#mse: corrected by MW
 hr_l1_mse_age <- mean((save_hr_l1_age - true_hr_l1_age)^2)
 hr_l2_mse_age <- mean((save_hr_l2_age - true_hr_l2_age)^2)
 hr_l1_mse_gen <- mean((save_hr_l1_gen - true_hr_l1_gen)^2)
@@ -558,50 +522,45 @@ hr_l1_mse_donor <- mean((save_hr_l1_donor - true_hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((save_hr_l2_donor - true_hr_l2_donor)^2)
 
 #a#
-#bias corrected 
+#bias corrected by MW
 a0_bias <- mean(save_a0) - true_a0
 a1_bias <- mean(save_a1) - true_a1
 a2_bias <- mean(save_a2) - true_a2
 a3_bias <- mean(save_a3) - true_a3
-
 #coverage
 a0_cov <- (counter_a0 / runs) * 100
 a1_cov <- (counter_a1 / runs) * 100
 a2_cov <- (counter_a2 / runs) * 100
 a3_cov <- (counter_a3 / runs) * 100
 
-# YW corrected to
+#variance: corrected by YW 25june2021
 a0_var <- var(save_a0)
 a1_var <- var(save_a1)
 a2_var <- var(save_a2)
 a3_var <- var(save_a3)
-
-#mse: corrected
+#mse: corrected by MW
 a0_mse <- mean((save_a0 - true_a0)^2)
 a1_mse <- mean((save_a1 - true_a1)^2)
 a2_mse <- mean((save_a2 - true_a2)^2)
 a3_mse <- mean((save_a3 - true_a3)^2)
 
 #cs#
-#bias: corrected 
+#bias: corrected by MW
 c0_bias <- mean(save_c0) - true_c0
 c1_bias <- mean(save_c1) - true_c1
 c2_bias <- mean(save_c2) - true_c2
 c3_bias <- mean(save_c3) - true_c3
-
 #coverage
 c0_cov <- (counter_c0 / runs) * 100
 c1_cov <- (counter_c1 / runs) * 100
 c2_cov <- (counter_c2 / runs) * 100
 c3_cov <- (counter_c3 / runs) * 100
-
-#Variance: YW corrected to
+#variance: corrected by YW
 c0_var <- var(save_c0)
 c1_var <- var(save_c1)
 c2_var <- var(save_c2)
 c3_var <- var(save_c3)
-
-#mse: corrected by YW
+#mse: corrected by MW
 c0_mse <- mean((save_c0 - true_c0)^2)
 c1_mse <- mean((save_c1 - true_c1)^2)
 c2_mse <- mean((save_c2 - true_c2)^2)
@@ -617,6 +576,7 @@ print(paste("c0 bias", c0_bias))
 print(paste("c1 bias", c1_bias))
 print(paste("c2 bias", c2_bias))
 print(paste("c3 bias", c3_bias))
+
 print(paste("a0 mse", a0_mse))
 print(paste("a1 mse", a1_mse))
 print(paste("a2 mse", a2_mse))
@@ -625,6 +585,7 @@ print(paste("c0 mse", c0_mse))
 print(paste("c1 mse", c1_mse))
 print(paste("c2 mse", c2_mse))
 print(paste("c3 mse", c3_mse))
+
 print(paste("a0 coverage", a0_cov))
 print(paste("a1 coverage", a1_cov))
 print(paste("a2 coverage", a2_cov))
@@ -633,6 +594,7 @@ print(paste("c0 coverage", c0_cov))
 print(paste("c1 coverage", c1_cov))
 print(paste("c2 coverage", c2_cov))
 print(paste("c3 coverage", c3_cov))
+
 #################################
 
 print(paste("HR l1 bias age", hr_l1_bias_age))
@@ -677,6 +639,12 @@ print(paste("counter c2 upper bound", counter_c2_upper))
 print(paste("counter c3 upper bound", counter_c3_upper))
 print(paste("counter t upper bound", counter_t_upper))
 
+end_time <- Sys.time()
+
+run_time = end_time - start_time
+
+print(paste("Run time", run_time))
+
 # YW 23 June 2021: put results together and write to CSV file
 # mean of bias
 # hr_l1 represents non-terminal event; hr_l2 represents terminal event
@@ -691,6 +659,7 @@ CP <- c(a0_cov, a1_cov, a2_cov, a3_cov,
         hr_l1_cov_age, hr_l1_cov_donor, hr_l1_cov_gen,
         hr_l2_cov_age, hr_l2_cov_donor, hr_l2_cov_gen)
 
+
 MSE <- c(a0_mse,a1_mse,a2_mse,a3_mse,
          c0_mse, c1_mse, c2_mse, c3_mse,
          hr_l1_mse_age, hr_l1_mse_donor, hr_l1_mse_gen,
@@ -701,29 +670,21 @@ items<-c("a0", "a1", "a2", "a3",
          "c0", "c1", "c2", "c3", 
          "NT_age", "NT_donor", "NT_gen",
          "T_age", "T_donor", "T_gen")
-
-end_time <- Sys.time()
-run_time = end_time - start_time
 Run_Time <- rep(run_time, length(MSE))
 Results <- cbind.data.frame(items, mean_bias, CP, MSE, Run_Time)
 
 #Results[,2:4] <- round(Results[,2:4],3)
-
 rownames(Results)<-NULL
 
-print(Results)
-
-print(paste("Run time", run_time))
-
+# 15 July 2021 MW: ALSO SAVE IN A FILE THE ENTIRE VECTORS OF ESTIMATES FOR EACH ITERATION:
 Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.est = save_a3, 
                        c0.est = save_c0, c1.est = save_c1, c2.est = save_c2, c3.est = save_c3, 
                        b0.est = save_b0, 
                        hr.l1.age.est = save_hr_l1_age, hr.l2.age.est = save_hr_l2_age,
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
+write.csv(Results, row.names = F, file = paste0(dir_results,out_file_summary))
+write.csv(Estimates, row.names = F, file=paste0(dir_results,out_file_estimates))
+} # END OF FUNCTION simulation
 
-# Output results---------------------------------------------------------------
-
-write.csv(Results, row.names=F,file=out_file_summary)
-write.csv(Estimates, row.names=F,file=out_file_estimates)
-print("Simulation 1 for normal exponential model is completed successfuly! ")
+simulation(runs = runs, n= n, starting_values = starting_values)

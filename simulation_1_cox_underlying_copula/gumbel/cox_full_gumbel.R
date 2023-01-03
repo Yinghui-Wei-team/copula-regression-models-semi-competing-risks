@@ -24,14 +24,14 @@ dir_results <- "../../results/simulation_results/simulation1/"
 # # set working directory
 # setwd(dir2)
 
-out_file_summary <- "S1-Cox model-data from Gumbel copula-summary.csv"
-out_file_estimates <- "S1-Cox model-data from Gumbel copula-estimates.csv"
+out_file_summary <- "s1-cox-model-data-from-gumbel-copula-summary.csv"
+out_file_estimates <- "s1-cox-model-data-from-gumbel-0copula-estimates.csv"
 start_time = Sys.time()
 
-########################################################
-####################### set up #########################
-########################################################
-#set.seed(541121303)
+################################################################################
+# set up                                                                       #
+################################################################################
+
 set.seed(12345)
 n <- 3000
 runs <- 1000
@@ -137,7 +137,6 @@ for (i in 1:runs){
   #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
   
-  
   #############################################
   ###############    CPHM   ###################
   #############################################  
@@ -160,7 +159,6 @@ for (i in 1:runs){
   hr_l1_upci_gen[i] <- sum_l1$conf.int[11]
   hr_l1_upci_donor[i] <- sum_l1$conf.int[12]
   
-
   ## Terminal event ##
   cox_l2 <- coxph(Surv(Y, d2) ~ age.grp+gen+donor, data = df)
   sum_l2 <- summary(cox_l2)
@@ -176,7 +174,6 @@ for (i in 1:runs){
   hr_l2_upci_age[i] <- sum_l2$conf.int[10]
   hr_l2_upci_gen[i] <- sum_l2$conf.int[11]
   hr_l2_upci_donor[i] <- sum_l2$conf.int[12]
-  
   
   print(i)
 }
@@ -209,7 +206,6 @@ hr_l1_mse_gen <- mean((true_hr_l1_gen - hr_l1_gen)^2)
 hr_l2_mse_gen <- mean((true_hr_l2_gen - hr_l2_gen)^2)
 hr_l1_mse_donor <- mean((true_hr_l1_donor - hr_l1_donor)^2)
 hr_l2_mse_donor <- mean((true_hr_l2_donor - hr_l2_donor)^2)
-
 
 end_time = Sys.time()
 run_time = end_time - start_time
