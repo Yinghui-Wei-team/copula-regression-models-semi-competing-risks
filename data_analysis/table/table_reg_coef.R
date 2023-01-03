@@ -56,6 +56,9 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
   
   tbl$Parameter <- parameters
   
+  for(j in 2:ncol(tbl)){
+    tbl[,j] = gsub("-", "$-$", tbl[,j])  # maths symbol 
+  }
   # Output table to a CSV file-----------------------------------------------------------------
   write.csv(tbl, 
             file=paste0(dir_results, "table_reg_coef_", survival_distribution,".csv"), 
