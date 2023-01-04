@@ -22,8 +22,15 @@ dir_results = paste0(dir_results, "results/simulation_results")
 # dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
 
-out_file_summary <- "S1-Cox model-data from Normal copula-summary.csv"
-out_file_estimates <- "S1-Cox model-data from Normal copula-estimates.csv"
+simulation = "s1"
+model  = "cox_model"
+copula = "normal_copula"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
+
 start_time = Sys.time()
 
 ########################################################

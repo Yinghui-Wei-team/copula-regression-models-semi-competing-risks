@@ -24,14 +24,21 @@ dir_results <- "../../results/simulation_results/"
 # # set working directory
 # setwd(dir2)
 
-out_file_summary <- "s1-cox-model-data-from-gumbel-copula-summary.csv"
-out_file_estimates <- "s1-cox-model-data-from-gumbel-0copula-estimates.csv"
+simulation = "s1"
+model  = "cox_model"
+copula = "gumbel_copula"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+
+out_file_summary
+out_file_estimates
+
 start_time = Sys.time()
 
 ################################################################################
 # set up                                                                       #
 ################################################################################
-
 set.seed(12345)
 n <- 3000
 runs <- 1000
@@ -76,11 +83,7 @@ hr_l2_age <- hr_l2_lwci_age <- hr_l2_upci_age <- rep(0,runs)
 hr_l2_gen <- hr_l2_lwci_gen <- hr_l2_upci_gen <-  rep(0,runs)
 hr_l2_donor <- hr_l2_lwci_donor <- hr_l2_upci_donor <- rep(0,runs)
 
-
-###############################################################
-###################### run 'runs' times #######################
-###############################################################
-
+#replicate run 'runs' times ----------------------------------------------------
 for (i in 1:runs){
   
   ###############################################################
@@ -96,17 +99,14 @@ for (i in 1:runs){
     m=1                  
     
     #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-    
     u1 <- runif(m,0,1)       
     
     #Step 3: X_true generated from u1 values (T1 from later)
-    
     theta1 <- exp(true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k])+1
     true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
     true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
     
     #Step 4: Conditional distribution method
-    
     fc<- gumbelCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
     uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
     #this generates v using theta1 and u1 
@@ -249,4 +249,3 @@ write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
 write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
 print(run_time)
 print("Simulation1 cox model for gumbel exponential data completed successfully!")
-

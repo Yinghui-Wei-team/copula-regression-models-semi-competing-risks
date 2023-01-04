@@ -21,8 +21,15 @@ source("functions/function_sim_data_t_l_full.R")
 # setwd(dir)
 # source("function_sim_data_t_l_full.R")
 
-out_file_summary <- "S1-summary-Cox model-data from Frank copula.csv"
-out_file_estimates <- "S1-estimates-Cox model-data from Frank copula.csv"
+simulation = "s1"
+model  = "cox_model"
+copula = "frank_copula"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
+
 start_time = Sys.time()
 
 ########################################################

@@ -23,14 +23,19 @@ dir_results <- "../../results/simulation_results/"
 
 #setwd(dir)
 
-start_time = Sys.time()
-out_file_summary <- "S1-summary-Cox model-data from Clayton copula.csv"
-out_file_estimates <- "S1-estimates-Cox model-data from Clayton copula.csv"
+simulation = "s1"
+model  = "cox_model"
+copula = "clayton_copula"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
 
 ########################################################
 ####################### set up #########################
 ########################################################
-#set.seed(2000192)
+start_time = Sys.time()
 set.seed(12345)
 n <- 3000
 runs <- 1000

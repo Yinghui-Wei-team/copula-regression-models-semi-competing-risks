@@ -5,7 +5,7 @@
 #     2. make unified data set for analysis paper2_data.csv
 #     3. Output results into a vector
 # original script by LS; edited and updated for paper2 by YW
-# model: gompertz surival distribution; frank copula; regression on 
+# model: gompertz survival distribution; frank copula; regression on 
 #        both hazard rates (lambda) and association parameter (theta)
 # table 4 gompertz survival models with frank copula
 # script name: t - theta; l- lambda; 
