@@ -1,13 +1,20 @@
-###################################################################################
+###############################################################################################
 # Programmed by YW, 3 January 2023
 # Purpose: to combine results for simulation 1 for paper 2
 # Output: table in a format that can be included to LaTeX file directly
-##################################################################################
+###############################################################################################
 
 library(dplyr); library(xtable)
 # directory if on own PC
 dir_results <- "../../results/simulation_results/"
 
+###############################################################################################
+# Simulation 1 Cox Model
+###############################################################################################
+
+###############################################################################################
+# Simulation 1 Model 1
+###############################################################################################
 model1_normal <- read.csv(file=paste0(dir_results,"s1_model1_summary_normal_exponential.csv" ))
 names(model1_normal) <- c("items", "normal_bias", "normal_cp", "normal_mse", "normal_run_time")
 model1_normal <- model1_normal %>% select(!contains("time", ignore.case = TRUE))

@@ -1,8 +1,8 @@
-###################################################################################
+##################################################################################################
 # Programmed by YW, 31 December 2022
 # Purpose: to combine results for hazard ratios together for paper2
 # Output: table in a format that can be included to LaTeX file directly
-###################################################################################
+##################################################################################################
 library(dplyr); library(formattable)
 dir_results <- "../../results/real_data_analysis/revision_1/"
 
@@ -11,7 +11,7 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   # normal
   norm <- read.csv(file=paste0(dir_results, "table",table_ref ,"_normal_",survival_distribution, ".csv"))
   
-  # put AIC and running time on a seperate row - row one
+  # put AIC and running time on a separate row - row one
   row.one <- norm[1,]
   row.one$X = paste0("Normal copula ", survival_distribution, " survival model")
   row.one[2:(ncol(row.one)-2)] = ""
@@ -55,7 +55,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   gum
   
   # combine results into one data frame
-  
   df <- rbind(norm, cly, frank, gum)
   df
   
@@ -79,7 +78,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
     mutate(aic= paste0(aic, "&"))
   
   index <- which(grepl("copula", df[,1], fixed = TRUE)==T)
-  
   
   df[index,2:(ncol(df)-2)]=""
   

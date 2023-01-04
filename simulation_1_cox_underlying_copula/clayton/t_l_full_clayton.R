@@ -35,9 +35,9 @@ dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
 
-# set up outfile names
-out_file_results <- "S2-M2-Table5-clayton-exponential-covariates-hazards-association.csv"
-out_file_estimates <- "S2-M2-Clayton-exponential-covariates-hazards-estimates.csv"
+# set up out file names - simulation 2 model 2
+out_file_results <- "s2-m2-summary-clayton-exponential.csv"
+out_file_estimates <- "s2-m2-estimates-clayton-exponential.csv"
 
 start_time <- Sys.time()
 #set.seed(90089811)

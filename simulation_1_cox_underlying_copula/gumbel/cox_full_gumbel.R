@@ -16,7 +16,7 @@ rm(list=ls())
 library(copula);library(mvtnorm); library(plyr);library(survival);library(numDeriv)
 
 # directory if on own PC
-dir_results <- "../../results/simulation_results/simulation1/"
+dir_results <- "../../results/simulation_results/"
 
 # # directory if on cluster
 # dir2 = "home/ywei/Simulation/Paper2/Gumbel"

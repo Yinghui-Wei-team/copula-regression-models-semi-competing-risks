@@ -4,6 +4,7 @@
 # YW: 23 July 2021: 1. add running time tracker
 #                   2. rename variables (to vectors instead of scalars), output results
 # YW: 2 Jan 2023:   1. reset results directory and tidy up
+#                   2. make random seed consistent
 ################################################################################
 
 rm(list=ls())
@@ -15,7 +16,7 @@ library(copula); library(mvtnorm); library(plyr); library(survival); library(num
 # results directory
 # directory if on own PC
 dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/simulation1")
+dir_results = paste0(dir_results, "results/simulation_results")
 
 # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Normal"
