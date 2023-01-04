@@ -25,8 +25,7 @@ library(copula); library(mvtnorm);library(numDeriv)
 #                                set up                                        #
 ################################################################################
 # directory if on own PC
-dir_results <- "../../"
-dir = paste0(dir_results, "results/simulation_results/simulation1")
+dir_results <- "../../results/simulation_results/simulation1/"
 source("functions/function_sim_data_t_l_full.R")
 
 # directory if working on cluster
@@ -34,8 +33,15 @@ source("functions/function_sim_data_t_l_full.R")
 # setwd(dir)
 # source("function_sim_data_t_l_full.R")
 
-out_file_summary <- "S2-M2-Table5-frank-exponential-covariates-hazards-association.csv"
-out_file_estimates <- "S2-M2-estimates-frank-exponential-covariates-hazards-association.csv"
+# set up out file names - simulation 1 model 2
+simulation = "s1"
+model  = "model2"
+copula = "frank_exponential"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
 
 start_time <- Sys.time()
 #set.seed(65153622)
@@ -651,7 +657,9 @@ Estimates = data.frame(a0.est = save_a0, a1.est = save_a1, a2.est = save_a2, a3.
                        hr.l1.gen.est = save_hr_l1_gen, hr.l2.gen.est = save_hr_l2_gen,
                        hr.l1.donor.est = save_hr_l1_donor, hr.l2.donor.est = save_hr_l2_donor)
 
-write.csv(Results, row.names=F,file= out_file_summary)
-write.csv(Estimates, row.names=F,file= out_file_estimates)
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, out_file_summary))
+write.csv(Estimates, row.names=F,file=paste0(dir_results, out_file_estimates))
+print(run_time)
 print(run_time)
 print("Simulation1 model2 for frank exponential model completed successfully!")

@@ -23,15 +23,21 @@ library(copula); library(mvtnorm);library(numDeriv)
 #                                set up                                        #
 ################################################################################
 # directory if on own PC
-dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
+dir_results <- "../../results/simulation_results/simulation1/"
 
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Gumbel"
 # setwd(dir)
 
-out_file_summary <- "S2-M2-table5-gumbel-exponential-covariates-hazards-association.csv"
-out_file_estimates <- "S2-M2-estimates-gumbel-exponential-covariates-hazards-association.csv"
+# set up out file names - simulation 1 model 2
+simulation = "s1"
+model  = "model2"
+copula = "gumbel_exponential"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
 
 start_time <- Sys.time()
 #set.seed(65147222)
