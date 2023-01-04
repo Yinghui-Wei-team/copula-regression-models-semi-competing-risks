@@ -31,7 +31,7 @@ source("functions/function_sim_data_t_l_full.R")
 # directory if working on cluster
 # dir = "/home/ywei/Simulation/Paper2/Clayton"
 # setwd(dir)
-# source("function_sim_data_t_l_full.R")
+#source("function_sim_data_t_l_full.R")
 
 # set up out file names - simulation 1 model 2
 simulation = "s1"
@@ -47,11 +47,12 @@ start_time <- Sys.time()
 #set.seed(65153622)
 set.seed(12345)
 n <- 3000
-runs <- 10
+runs <- 1000
 
 # starting values for optim -------------------------------------------------------------
 # a0, a1, a2, a3, c0, c1, c2, c3, b0, b1, b2, b3
-starting_values = c(-4, 0.5, 0.5,-1, -5, -2, -1, -1,
+starting_values = c(-4, 0.5, 0.5,-1, 
+                    -5, -2, -1, -1,
                     4, 6, 1, 1)
 # lower and upper bounds for regression coefficients --------------------------
 a0_lw <- -10; a0_up <- -2;a1_lw <- -10; a1_up <- 1
@@ -156,7 +157,6 @@ fpl<-function(para, X, Y, d1, d2, age.grp, gen, donor){
 
 # replicate 'runs' times ------------------------------------------------------
 for (i in 1:runs){
-  
   df <- sim_data_t_l_full_frank(true_b0,true_b1,true_b2,true_b3,
                                 true_a0, true_a1, true_a2, true_a3,
                                 true_c0, true_c1, true_c2, true_c3)
@@ -170,23 +170,23 @@ for (i in 1:runs){
   # gen <- rbinom(n,1,0.38)
   # 
   # for(k in 1:(n)){   #loop to generate U an V from age-varying theta
-  #   m=1                  
-  #   
-  #   #Step 2: generate 1 random variable from Uniform(0,a) distribution 
-  #   u1 <- runif(m,0,1)       
-  #   
+  #   m=1
+  # 
+  #   #Step 2: generate 1 random variable from Uniform(0,a) distribution
+  #   u1 <- runif(m,0,1)
+  # 
   #   #Step 3: X_true generated from u1 values (T1 from later)
   #   theta1 <- true_b0+true_b1*age.grp[k]+true_b2*gen[k]+true_b3*donor[k]
-  #   true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k]) 
+  #   true_l1s <- exp(true_a0 + true_a1*age.grp[k] + true_a2*gen[k] + true_a3*donor[k])
   #   true_l2s <- exp(true_c0 + true_c1*age.grp[k] + true_c2*gen[k] + true_c3*donor[k])
-  #   
+  # 
   #   #Step 4: Conditional distribution method
   #   fc<- frankCopula(theta1, dim=2) #only allows 1 theta at a time (-> loop)
   #   uv<- cCopula(cbind(u1, runif(m)), copula = fc, inverse = TRUE) #gives vector (u1,v) - new v
-  #   #this generates v using theta1 and u1 
+  #   #this generates v using theta1 and u1
   #   u<-uv[,1]  #split u and v from the results of cdm
   #   v<-uv[,2]
-  #   
+  # 
   #   #SAVE:
   #   U1[k]=u     #add to u and v vectors on the outside
   #   V1[k]=v
@@ -196,21 +196,21 @@ for (i in 1:runs){
   # }
   # 
   # #Step 4: T1 and T2 from inverse exponential CDF (F^{-1}=-log(1-U)/lambda_1), could use qexp(u1)
-  # T1 <- -log(U1)/true_l1 
-  # T2 <- -log(V1)/true_l2  
+  # T1 <- -log(U1)/true_l1
+  # T2 <- -log(V1)/true_l2
   # 
   # #Step 7: Follow up time C, censoring variable
-  # C<-runif(n,0,25) 
+  # C<-runif(n,0,25)
   # 
   # #Step 8 and 9: Find observed X and Y and indicators
   # X<-pmin(T1,T2,C)
-  # Y<-pmin(T2, C) 
-  # d1<-ifelse(T1<=Y,1,0) 
-  # d2<-ifelse(T2<=C,1,0) 
+  # Y<-pmin(T2, C)
+  # d1<-ifelse(T1<=Y,1,0)
+  # d2<-ifelse(T2<=C,1,0)
   # 
   # #Step 10: Create dataframe, true values of X and Y have association theta=b0+b1*X
   # df<-data.frame(X, Y, d1, d2, age.grp, gen, donor)
-  
+
   plfoptim <- optim(starting_values, fpl, method="L-BFGS-B", 
                     lower=c(a0_lw,a1_lw,a2_lw, a3_lw,c0_lw,c1_lw,c2_lw, c3_lw, b0_lw,b1_lw, b2_lw, b3_lw),
                     upper=c(a0_up,a1_up,a2_up, a3_up, c0_up,c1_up,c2_up,c3_up, b0_up,b1_up,b2_up, b3_up), 
