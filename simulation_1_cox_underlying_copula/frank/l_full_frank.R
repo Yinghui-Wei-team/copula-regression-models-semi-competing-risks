@@ -22,18 +22,23 @@ library(copula); library(mvtnorm); library(plyr); library(survival); library(num
 ################################################################################
 # results directory
 # directory if on own PC
-dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/")
+dir_results <- "../../results/simulation_results/simulation1/"
 
 # directory if working on cluster
-# dir = "/home/ywei/Simulation/Paper2/Clayton"
+# dir = "/home/ywei/Simulation/Paper2/Frank"
 # setwd(dir)
 
-# set out file name
-out_file_summary <- "s1_model1_summary_frank_exponential.csv"
-out_file_estimates <- "s1-model1_estimates_frank_exponential.csv"
+# set up out file names - simulation 1 model 1
+simulation = "s1"
+model  = "model1"
+copula = "frank_exponential"
 
-runs = 1
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula, ".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
+
+runs = 1000
 n = 3000
 
 # Starting values for parameter estimation for optim(): the center of the lower and upper bounds

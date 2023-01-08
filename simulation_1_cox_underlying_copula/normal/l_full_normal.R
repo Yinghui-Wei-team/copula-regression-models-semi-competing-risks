@@ -16,26 +16,31 @@
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival); library(numDeriv)
 
-# set outfile name
-out_file_summary <- "s1_model1_summary_normal_exponential.csv"
-out_file_estimates <- "s1-model1_estimates_normal_exponential.csv"
-
 ################################################################################
 # set up                                                                       #
 ################################################################################
 
 # results directory
 # directory if on own PC
-dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results/")
+dir_results <- "../../results/simulation_results/simulation1/"
 
 # directory if working on cluster
-# dir = "/home/ywei/Simulation/Paper2/Clayton"
+# dir = "/home/ywei/Simulation/Paper2/Normal"
 # setwd(dir)
+
+# set up out file names - simulation 1 model 1
+simulation = "s1"
+model  = "model1"
+copula = "normal_exponential"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula, ".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
 
 # Number of participants and number of replications of the simulation
 n = 3000    # number of participants
-runs = 1  # number of replications
+runs = 1000  # number of replications
 ################################################################################
 # Starting values for parameter estimation for optim():
 

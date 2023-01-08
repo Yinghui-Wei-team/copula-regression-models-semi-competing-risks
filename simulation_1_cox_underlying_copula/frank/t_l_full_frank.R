@@ -257,6 +257,10 @@ for (i in 1:runs){
   #fisher_info <- solve(-plfoptim$hessian) #inverse -hess
   #Standard error = sqrt(var/n)
   se<-sqrt(diag(fisher_info)) 
+  if(length(which(is.na(se)==T))>0){   # iteration 956
+    print(paste0("Problems in estimating se in iteration ", i))
+    next
+  }
   
   #b ci
   b0_est <- plfoptim$par[9]
