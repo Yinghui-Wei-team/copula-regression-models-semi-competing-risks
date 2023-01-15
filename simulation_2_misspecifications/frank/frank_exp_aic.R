@@ -25,7 +25,7 @@ start_time = Sys.time()
 dir_results = "../../results/simulation_results/"
 
 # # directory if on cluster
-dir_results = "/home/ywei/Simulation/Paper2/Frank"
+dir_results = "/home/ywei/Simulation/Paper2/Frank/"
 setwd(dir_results)
 
 # likelihood function
