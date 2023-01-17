@@ -1,16 +1,18 @@
-################################################################################
+###############################################################################
 # Real data analysis
-# original script by LS; edited and updated for paper2 by YW
-# YW: 9 July 2021: normal gompertz survival models - 
-#                  regression on both hazards and association parameters
-# YW: 14 July 2021: make unified data set for analysis
+# YW: 9 July 2021 normal gompertz survival models - regression on both hazards and association parameters
+# YW: 14 July 2021: make unified data set for analysis paper2_data.csv
 # YW: 17 July 2021: adding constraints for terms in likelihood involving log()
+# original script by LS; edited and updated for paper2 by YW
 # YW: 2022-02-20: update load data and output results sections
 # YW: 2022-12-29: output regression coefficients and add comments
-################################################################################
+###############################################################################
+
 rm(list=ls())
 library(copula);library(mvtnorm);library(plyr)
+
 start.time = Sys.time()
+
 ################################################################################
 # Set up model specs and load data                                             #
 ################################################################################
@@ -50,7 +52,7 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   a1 <- para[3]
   a2 <- para[4]
   a3 <- para[5]
-  gamma2 <- para[6]  # parameter in Gompertz distribution
+  gamma2 <- para[6]  # parametr in Gompertz distribution
   c0 <- para[7]      # regression coefficients for lambda2 (hazard for death)
   c1 <- para[8]
   c2 <- para[9]
@@ -76,11 +78,14 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   #########################################################
   
   if(sum(df.1)>0){
+    
+    
     X.1 <- df[df.1,1]
     Y.1 <- df[df.1,2]
     lambda1.1 <- lambda1[df.1]
     lambda2.1 <- lambda2[df.1]
     
+  
     # Gompertz survival functions
     S1.1 <- 1-exp(-lambda1.1/gamma1*(exp(gamma1*X.1)-1))
     S2.1 <- 1-exp(-lambda2.1/gamma2*(exp(gamma2*Y.1)-1))
@@ -90,6 +95,7 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
     f2.1 <- lambda2.1*exp(gamma2*Y.1-lambda2.1/gamma2*(exp(gamma2*Y.1)-1))
     
     rho.1 <- rho[df.1]
+    
     
     # YW added
     S1.1[which(S1.1<0.1^8)] <- 0.1^8
@@ -249,6 +255,11 @@ npl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   return(loglik);
 }
 
+#npl(c(),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
+#npl(c(),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
+#npl(c(),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
+
+
 plnoptim <- optim(c(0.01,                # gamma1: parameter for Gompertz distribution for graft failure
                     -3,0.2,0.01,-0.5,    # a: regression coefficients for lambda 1 (hazard for graft failure)
                     0.04,                # gamma2: parameter for Gompertz distribution for death
@@ -266,23 +277,22 @@ plnoptim <- optim(c(0.01,                # gamma1: parameter for Gompertz distri
                           0.2,     
                           -1,2,2,1   
                           ,0.6,0.6,0.5,0.5), 
-                  X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, 
-                  donor=df$donor, gen=df$gen,
+                  X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
 
 plnoptim$par
 
-################################################################################
-# Confidence Intervals                                                         #
-################################################################################
+########################################################
+################## Confidence Intervals ################
+########################################################
 
 #Fisher's Information matrix
 fisher_info<-solve(-plnoptim$hessian) #inverse -hess
 #Standard error = sqrt(var/n)
 se<-sqrt(diag(fisher_info)) 
 
-#b ci: regression coefficients for association parameter#
+#beta ci#
 est_b0 <- plnoptim$par[11]
 est_b1 <- plnoptim$par[12]
 est_b2 <- plnoptim$par[13]
@@ -296,7 +306,7 @@ upci_b1 <- est_b1 + 1.96*se[12]
 upci_b2 <- est_b2 + 1.96*se[13]
 upci_b3 <- est_b3 + 1.96*se[14] 
 
-#gamma ci: parameter in Gompertz distribution#
+#g ci#
 est_g1 <- plnoptim$par[1]
 est_g2 <- plnoptim$par[6]
 lwci_g1 <- est_g1 - 1.96*se[1]
@@ -304,7 +314,7 @@ lwci_g2 <- est_g2 - 1.96*se[6]
 upci_g1 <- est_g1 + 1.96*se[1] 
 upci_g2 <- est_g2 + 1.96*se[6]
 
-#a ci: regression coefficients for lambda1 (hazard for graft failure)#
+#p ci#
 est_a0 <- plnoptim$par[2]
 est_a1 <- plnoptim$par[3]
 est_a2 <- plnoptim$par[4]
@@ -318,7 +328,7 @@ upci_a1 <- est_a1 + 1.96*se[3]
 upci_a2 <- est_a2 + 1.96*se[4]
 upci_a3 <- est_a3 + 1.96*se[5] 
 
-#c ci: regression coefficients for lambda2 (hazard for death)#
+#q ci#
 est_c0 <- plnoptim$par[7]
 est_c1 <- plnoptim$par[8]
 est_c2 <- plnoptim$par[9]
@@ -356,6 +366,7 @@ var_hr_l2_age <- exp(est_c1)^2 * var_c1
 var_hr_l2_gen <- exp(est_c2)^2 * var_c2
 var_hr_l2_donor <- exp(est_c3)^2 * var_c3
 
+
 hr_l1_lwci_age <- est_hr_l1_age - 1.96*sqrt(var_hr_l1_age)
 hr_l1_upci_age <- est_hr_l1_age + 1.96*sqrt(var_hr_l1_age)
 
@@ -374,15 +385,19 @@ hr_l2_upci_gen <- est_hr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 hr_l2_lwci_donor <- est_hr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- est_hr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
+
+
 ##AIC BIC
 loglik <- npl(plnoptim$par,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(plnoptim$par)
-n<-length(df$X)
+n<-length(X)
 aic<- -2*loglik+2*k
 bic<- -2*loglik+log(n)*k
 loglik
 aic
 bic
+
+
 
 #### print ###
 print(est_b0)
@@ -441,6 +456,7 @@ print(est_c3)
 print(lwci_c3)
 print(upci_c3)
 
+
 print(est_hr_l1_age)
 print(hr_l1_lwci_age)
 print(hr_l1_upci_age)
@@ -452,6 +468,7 @@ print(hr_l1_upci_gen)
 print(est_hr_l1_donor)
 print(hr_l1_lwci_donor)
 print(hr_l1_upci_donor)
+
 
 print(est_hr_l2_age)
 print(hr_l2_lwci_age)
@@ -466,26 +483,27 @@ print(hr_l2_lwci_donor)
 print(hr_l2_upci_donor)
 
 # Results --------------------------------------------------------------------
-# recipient age
+# YW data needed for paper 2: age
 hr_gf_age <-c(est_hr_l1_age,hr_l1_lwci_age, hr_l1_upci_age)
 hr_gf_age
 hr_d_age <-c(est_hr_l2_age,hr_l2_lwci_age, hr_l2_upci_age)
 hr_d_age
 
-# recipient gender
+# YW data needed for paper 2: gender
 hr_gf_gender <-c(est_hr_l1_gen,hr_l1_lwci_gen, hr_l1_upci_gen)
 hr_gf_gender
 hr_d_gender <-c(est_hr_l2_gen,hr_l2_lwci_gen, hr_l2_upci_gen)
 hr_d_gender
 
-# donor type
+# YW data needed for paper 2: donor
 hr_gf_donor <-c(est_hr_l1_donor,hr_l1_lwci_donor, hr_l1_upci_donor)
 hr_gf_donor
 
 hr_d_donor <-c(est_hr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-# regression coefficients on association
+
+# YW data needed for paper 2: regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
 association_donor<- c(est_b3, lwci_b3, upci_b3)
@@ -501,21 +519,19 @@ results <-rbind(results.age, results.gender, results.donor)
 results <- data.frame(results)
 names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 results <- round(results, 3)
+results
 
 # Results --------------------------------------------------------------------
 print(aic)
 print(bic)
-
-results$aic = c(round(aic,1), "NA", "NA")
-row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-
-results
-end.time = Sys.time()
-
 run.time = end.time - start.time
 run.time
+
+results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run.time,2), "NA", "NA")
-print("normal copula gompertz survival models fitted succesfully!")
+row.names(results) <- c("age.gl50", "gender.female","donor.living") 
+end.time = Sys.time()
+print("normal copula gompertz survival models")
 
 ################################################################################
 # Create a data frame for regression coefficients                              #
@@ -544,17 +560,16 @@ reg_coef <- c(est_g1, lwci_g1, upci_g1,
               )  
 reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
 reg_coef <- round(reg_coef, 3)
+reg_coef
 data.frame(reg_coef, row.names=NULL)
 row.names(reg_coef) <-c("gamma1","gamma2",      # parameters in Gompertz distributions
                         "a0", "a1","a2","a3",   # regression coefficients for hazard 1 (graft failure)
                         "c0","c1","c2","c3",    # regression coefficients for hazard 2 (death)
                         "b0","b1","b2","b3"     # regression coefficients for association parameter
                         )
-reg_coef
+
 ################################################################################
 # Output results                                                               #
 ################################################################################
-dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
-print(paste0("saved output for ", copula, " ", survival_distribution, "!"))
