@@ -11,6 +11,6 @@ dir_results = "../../results/simulation_results/"
 source("simulation_2_misspecifications/normal/source_normal_gompertz_aic.R")
 
 # directory if on cluster
-# dir = "/home/ywei/Simulation/Paper2/Normal"
-# setwd(dir)
-# source("source_normal_gompertz_aic.R")
+dir_results = "/home/ywei/Simulation/Paper2/Normal/simulation2/"
+setwd(dir_results)
+source("source_normal_gompertz_aic.R")

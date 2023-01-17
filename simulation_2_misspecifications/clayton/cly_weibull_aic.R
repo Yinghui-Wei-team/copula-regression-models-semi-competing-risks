@@ -29,13 +29,13 @@ start_time = Sys.time()
 ## End if on own PC
 
 ## directory if on cluster
-dir_results = "/home/ywei/Simulation/Paper2/Clayton"
+dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
 setwd(dir_results)
 source("../function_sim2.R")
 ## End if on cluster
 
-out_file_summary <- "S2_misspec_underlying_clayton_weibull_summary.csv"
-out_file_estimates <-"S2_misspec_underlying_clayton_weibull_estimates.csv"
+out_file_summary <- "s2_misspec_underlying_clayton_weibull_summary.csv"
+out_file_estimates <-"s2_misspec_underlying_clayton_weibull_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from wei chose with aic ########################

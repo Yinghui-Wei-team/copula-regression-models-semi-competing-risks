@@ -1,6 +1,6 @@
 #######################################################################################################
 # Simulation study 2: evaluation of misspecification of survival distributions  
-# Data are simulated from Clayton copula exponential distribution
+# Data are simulated from frank copula exponential distribution
 ######################################################################################################
 # Original code by LS; reviewed, edited and updated by YW for paper2
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
@@ -22,14 +22,14 @@ start_time = Sys.time()
 #Output directory and output files                                                  #
 #####################################################################################
 ## directory if on own PC
-dir_results = "../../results/simulation_results/"
+#dir_results = "../../results/simulation_results/"
+#source("functions/function_sim2.R")
 
 # # directory if on cluster
 dir_results = "/home/ywei/Simulation/Paper2/Frank/"
 setwd(dir_results)
-
-# likelihood function
-source("functions/function_sim2.R")
+source("../function_sim2.R")
+## End if on cluster
 
 out_file_summary <- "S2_misspec_underlying_frank_exp_summary.csv"
 out_file_estimates <-"S2_misspec_underlying_frank_exp_estimates.csv"
@@ -41,7 +41,7 @@ out_file_estimates <-"S2_misspec_underlying_frank_exp_estimates.csv"
 #set.seed(96662391) # original
 set.seed(12345) # changed by YW
 n <- 3000
-runs <- 3
+runs <- 1000
 
 # True values
 true_b0 <- 3.44

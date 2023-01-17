@@ -23,14 +23,16 @@ start_time = Sys.time()
 #Output directory and output files                                                  #
 #####################################################################################
 ## directory if on own PC
-dir_results = "../../results/simulation_results/"
+# dir_results = "../../results/simulation_results/"
+## likelihood function
+# source("functions/function_sim2.R")
+## end if on own PC
 
 # # directory if on cluster
 dir_results = "/home/ywei/Simulation/Paper2/Gumbel/"
 setwd(dir_results)
-
-# likelihood function
-source("functions/function_sim2.R")
+source("../function_sim2.R")
+## End if on cluster
 
 # output files
 out_file_summary <- "S2_misspec_underlying_gumbel_exp_summary.csv"
@@ -41,7 +43,7 @@ out_file_estimates <-"S2_misspec_underlying_gumbel_exp_estimates.csv"
 #####################################################################################
 set.seed(12345) # changed by YW
 n <- 3000
-runs <- 1
+runs <- 1000
 
 true_b0 <- -2.24
 true_b1 <- 1.35

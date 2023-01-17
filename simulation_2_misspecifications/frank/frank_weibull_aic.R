@@ -1,6 +1,6 @@
 #######################################################################################################
 # Simulation study: evaluation of misspecification of survival distributions  #
-# Data are simulated from Clayton copula exponential distribution
+# Data are simulated from frank copula weibull distribution
 # Original script by LS; edited and updated by YW
 #######################################################################################################
 # YW, 24 July 2021: 1. correct bias, mse and re-calculate mse without using loop
@@ -21,17 +21,18 @@ start_time = Sys.time()
 #Output directory and output files                                                  #
 #####################################################################################
 ## directory if on own PC
-dir_results = "../../results/simulation_results/"
+#  dir_results = "../../results/simulation_results/"
+## likelihood function
+#  source("functions/function_sim2.R")
 
-# # directory if on cluster
-#dir = "/home/ywei/Simulation/Paper2/Frank/"
-#setwd(dir)
+## directory if on cluster
+dir_results = "/home/ywei/Simulation/Paper2/Frank/"
+setwd(dir_results)
+source("../function_sim2.R")
+## End if on cluster
 
-# likelihood function
-source("functions/function_sim2.R")
-
-out_file_summary <- "S2_misspec_underlying_frank_gompertz_summary.csv"
-out_file_estimates <-"S2-misspec_underlying_frank_gompertz_estimates.csv"
+out_file_summary <- "S2_misspec_underlying_frank_weibull_summary.csv"
+out_file_estimates <-"S2-misspec_underlying_frank_weibull_estimates.csv"
 
 #####################################################################################
 #################### Frank, age, gen from wei chose with aic ########################
@@ -39,7 +40,7 @@ out_file_estimates <-"S2-misspec_underlying_frank_gompertz_estimates.csv"
 set.seed(12345)
 
 n <- 3000
-runs <- 3
+runs <- 1000
 
 true_b0 <- 3.54
 true_b1 <- 4.14
