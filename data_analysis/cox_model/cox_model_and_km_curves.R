@@ -70,6 +70,24 @@ km_os_agegrp
 ggsave(file="km_os_agegrp.pdf", 
        path = paste0(dir_results, "results/real_data_analysis/figures"),
        plot=km_os_agegrp)
+
+df1 <- df[which(df$age.grp  =="<=50 years"),]
+index <- which(df1$X>23&df1$d1==0)
+length(df1[index,])
+df1[index,]
+
+index1 <- which(df1$X>23&df1$d1==1)
+length(df1[index1,])
+df1[index1,]
+
+df1 <- df[which(df$age.grp  ==">50 years"),]
+index <- which(df1$X>23&df1$d1==0)
+length(df1[index,])
+df1[index,]
+
+index1 <- which(df1$X>23&df1$d1==1)
+length(df1[index1,])
+df1[index1,]
 ################################################################################
 #Part 3. Summary Statistics                                                    #
 ################################################################################
