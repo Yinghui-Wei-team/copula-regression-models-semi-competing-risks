@@ -42,7 +42,7 @@ df <- cbind(cox_normal, cox_clayton, cox_frank, cox_gumbel)
 df <- function_latex_table(df)
 
 df$items <- gsub("_", ",\\\\mbox{",df$items)
-df$items <- paste0("$\\mbox{HR}_", df$items, "}$")
+df$items <- paste0("$\\mbox{HR}_", df$items, "}$ &")
 df$items
 df
 

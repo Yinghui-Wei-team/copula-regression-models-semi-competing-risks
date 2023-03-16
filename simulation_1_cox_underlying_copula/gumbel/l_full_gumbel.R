@@ -35,7 +35,7 @@ dir_results = paste0(dir_results, "results/simulation_results/")
 
 # Number of participants and number of replications of the simulation
 n = 3000    # number of participants
-runs = 1  # number of replications
+runs = 1000  # number of replications
 ################################################################################
 
 # Starting values for parameter estimation for optim():
