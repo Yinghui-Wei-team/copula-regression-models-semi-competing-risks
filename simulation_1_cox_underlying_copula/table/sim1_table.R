@@ -95,14 +95,18 @@ df <- df %>% mutate(clayton_cp = format(round(100*(clayton_cp/100),1), nsmall=1)
 
 for(j in 2:ncol(df)){
   if(j!=ncol(df)){
-    df[,j] = paste0(df[,j],"&")      # column seperator
+    df[,j] = paste0(df[,j],"&")      # column separator
   }else{
-    df[,j] = paste0(df[,j],"&\\")    # end of the column for a new line
+    df[,j] = paste0(df[,j],"\\")    # end of the column for a new line
   }
   df[,j] = gsub("-", "$-$", df[,j])  # maths symbol 
 }
 
+df$items <- gsub("_", ",\\\\mbox{",df$items)
+df$items <- paste0("$\\mbox{HR}_", df$items, "}$ &")
+df$items
 df
+
 # df <- xtable(df, type = "latex", file = "filename2.tex")
 
-write.csv(df, file=paste0(dir_results, "sim1_table.csv"))
+write.csv(df, file=paste0(dir_results, "sim1_table_copula_model1.csv"))
