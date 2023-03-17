@@ -1,6 +1,9 @@
 ################################################################################
-# Run simulation by part: normal - exponential model                           #
+# Purpose: Run simulation by part: normal - exponential model     
+# Date: 15 January 2023
+# Programmed by Yinghui Wei
 ################################################################################
+
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr); library(survival)
 part = 1; rep_start = 1; rep_end = 100
