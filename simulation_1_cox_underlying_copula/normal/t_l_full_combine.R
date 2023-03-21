@@ -1,5 +1,26 @@
+################################################################################
+# Paper 2: Simulation 1
+# Model 2:             regression on both hazards and association
+# Data simulated from: Normal copula exponential survival model with 
+#                      covariates on hazard rates and the association parameters
+# Fitted model:        The underlying normal model as above
+# Purpose:             Evaluating performance when the true model is specified
+################################################################################
+# Original script by LS, reviewed and updated by YW
+
 # directory if on own PC
 dir_results <- "../../results/simulation_results/"
+
+# set up out file names - simulation 1 model 2
+simulation = "s1"
+model  = "model2"
+copula = "normal_exponential"
+
+out_file_summary <- paste0(simulation,"_",model, "_summary_", copula,".csv")
+out_file_estimates <- paste0(simulation,"_",model, "_estimates_", copula,".csv")
+out_file_summary
+out_file_estimates
+
 
 model2_normal1 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_1_250.csv" ))
 model2_normal2 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_251_500.csv" ))
@@ -256,3 +277,41 @@ cov_hr_l2_age <- (counter_hr_l2_age / runs) * 100
 cov_hr_l2_gen <- (counter_hr_l2_gen / runs) * 100
 cov_hr_l2_donor <- (counter_hr_l2_donor / runs) * 100
 
+# Combine results together ---------------------------------------------------------------
+# YW 21 March 2023: put results together and write to CSV file
+# mean of bias
+# hr_l1 represents non-terminal event; hr_l2 represents terminal event
+mean_bias <- c(bias_a0, bias_a1, bias_a2, bias_a3, 
+               bias_c0, bias_c1, bias_c2, bias_c3,
+               bias_b0, bias_b1, bias_b2, bias_b3,
+               bias_hr_l1_age, bias_hr_l1_donor, bias_hr_l1_gen,
+               bias_hr_l2_age, bias_hr_l2_donor, bias_hr_l2_gen)
+
+# Coverage probability
+CP <- c(cov_a0, cov_a1, cov_a2, cov_a3,
+        cov_c0, cov_c1, cov_c2, cov_c3,
+        cov_b0, cov_b1, cov_b2, cov_b3,
+        cov_hr_l1_age, cov_hr_l1_donor, cov_hr_l1_gen,
+        cov_hr_l2_age, cov_hr_l2_donor, cov_hr_l2_gen)
+
+# mean square errors
+MSE <- c(mse_a0, mse_a1, mse_a2, mse_a3,
+         mse_c0, mse_c1, mse_c2, mse_c3,
+         mse_b0, mse_b1, mse_b2, mse_b3,
+         mse_hr_l1_age, mse_hr_l1_donor, mse_hr_l1_gen,
+         mse_hr_l2_age, mse_hr_l2_donor, mse_hr_l2_gen)
+
+# names of the parameters
+items<-c("a0", "a1", "a2", "a3",
+         "c0", "c1", "c2", "c3", 
+         "b0", "b1", "b2", "b3",
+         "NT_age", "NT_donor", "NT_gen",
+         "T_age", "T_donor", "T_gen")
+Results <- cbind.data.frame(items, mean_bias, CP, MSE)
+
+Results[,2:4] <- round(Results[,2:4],3)
+Results
+
+# Output estimates from each replication and summary of results -----------------
+write.csv(Results, row.names=F,file=paste0(dir_results, "simulation1/", out_file_summary))
+write.csv(df, row.names=F, file=paste0(dir_results, "simulation1/", out_file_estimates))
