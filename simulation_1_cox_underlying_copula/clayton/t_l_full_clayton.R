@@ -52,7 +52,10 @@ n <- 3000
 runs <- 1000
 
 # starting values for optim ----------------------------------------------------
-# a0, a1, a2, a3, c0, c1, c2, c3, b0, b1, b2, b3
+# a0, a1, a2, a3 regression coefficients for lambda1
+# c0, c1, c2, c3 regression coefficients for lambda2
+# b0, b1, b2, b3 regression coefficients for theta
+
 starting_values = c(-6, -5, -5, -5, 
                     -6, -5, -5, -5,
                     2, 3, 5, 7)

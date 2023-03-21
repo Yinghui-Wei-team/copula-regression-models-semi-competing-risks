@@ -110,3 +110,63 @@ df
 # df <- xtable(df, type = "latex", file = "filename2.tex")
 
 write.csv(df, file=paste0(dir_results, "sim1_table_copula_model1.csv"))
+
+
+###############################################################################################
+# Simulation 1 Model 2
+###############################################################################################
+
+# Model 2 normal copula
+model2_normal1 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_1_250.csv" ))
+model2_normal2 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_251_500.csv" ))
+model2_normal3 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_501_750.csv" ))
+model2_normal4 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_751_1000.csv" ))
+
+model2_normal <- rbind(model2_normal1, model2_normal2, model2_normal3, model2_normal4)
+model2_normal <- model2_normal %>% select(!contains("X", ignore.case = TRUE))
+
+true_b0 <- 0.35; true_b1 <- 0.28; true_b2 <- 0; true_b3 <- 0
+true_a0 <- -3.30; true_a1 <- 0.11; true_a2 <- 0.02; true_a3 <- -0.51
+true_c0 <- -4.15; true_c1 <- 1.32; true_c2 <- -0.11; true_c3  <- -0.65
+
+
+# model2_normal <- read.csv(file=paste0(dir_results,"simulation1/s1_model1_summary_normal_exponential.csv" ))
+# names(model1_normal) <- c("items", "normal_bias", "normal_cp", "normal_mse", "normal_run_time")
+# model1_normal <- model1_normal %>% select(!contains("time", ignore.case = TRUE))
+
+# Model 2 Clayton copula exponential survival
+model2_clayton <- read.csv(file=paste0(dir_results,
+                                       "simulation1/s1_model2_summary_clayton_exponential.csv" ))
+index <- which(model2_clayton == "a0"|model2_clayton == "a1"|model2_clayton == "a2"|model2_clayton == "a3"|
+               model2_clayton == "c0"|model2_clayton == "c1"|model2_clayton == "c2"|model2_clayton == "c3")
+model2_clayton <- model2_clayton[-index,]
+names(model2_clayton) <- c("items", "clayton_bias", "clayton_cp", "clayton_mse")
+
+# Model 2 frank copula exponential survival
+model2_frank <- read.csv(file=paste0(dir_results,
+                                       "simulation1/s1_model2_summary_frank_exponential.csv" ))
+index <- which(model2_frank == "a0"|model2_frank == "a1"|model2_frank == "a2"|model2_frank == "a3"|
+              model2_frank == "c0"|model2_frank == "c1"|model2_frank == "c2"|model2_frank == "c3")
+model2_frank <- model2_frank[-index,]
+names(model2_frank) <- c("items", "frank_bias", "frank_cp", "frank_mse")
+model2_frank <- model2_frank %>% select(!contains(c("item"), ignore.case = TRUE))
+
+# Model 2 gumbel copula exponential survival
+model2_gumbel <- read.csv(file=paste0(dir_results,
+                                      "simulation1/s1_model2_summary_gumbel_exponential.csv" ))
+index <- which(model2_gumbel == "a0"|model2_gumbel == "a1"|model2_gumbel == "a2"|model2_gumbel == "a3"|
+                 model2_gumbel == "c0"|model2_gumbel == "c1"|model2_gumbel == "c2"|model2_gumbel == "c3")
+model2_gumbel <- model2_gumbel[-index,]
+names(model2_gumbel) <- c("items", "gumbel_bias", "gumbel_cp", "gumbel_mse")
+model2_gumbel <- model2_gumbel %>% select(!contains(c("item"), ignore.case = TRUE))
+
+#df <- cbind(model1_normal, model1_clayton, model1_frank, model1_gumbel)
+df <- cbind(model2_clayton, model2_frank, model2_gumbel)
+
+row.number <-c(7, 8, 9, 10,
+               1, 3, 2, 4, 
+               6, 5)
+
+df <- cbind(row.number,df)
+df <- df[order(row.number),]
+df <- df %>% select(!row.number)
