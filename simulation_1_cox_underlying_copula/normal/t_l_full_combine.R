@@ -23,9 +23,13 @@ out_file_estimates
 
 
 model2_normal1 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_1_250.csv" ))
+model2_normal1 <- model2_normal1[1:250,]
 model2_normal2 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_251_500.csv" ))
+model2_normal2 <- model2_normal2[251:500,]
 model2_normal3 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_501_750.csv" ))
+model2_normal3 <- model2_normal3[501:750,]
 model2_normal4 <- read.csv(file=paste0(dir_results,"simulation1/s1_model2_t_l_full_normal_exp_751_1000.csv" ))
+model2_normal4 <- model2_normal4[751:1000,]
 
 model2_normal <- rbind(model2_normal1, model2_normal2, model2_normal3, model2_normal4)
 model2_normal <- model2_normal %>% select(!contains("X", ignore.case = TRUE))

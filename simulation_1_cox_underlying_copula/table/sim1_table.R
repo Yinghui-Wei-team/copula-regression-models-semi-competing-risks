@@ -43,7 +43,7 @@ df$items <- str_replace(df$items, "gen", "sex")
 df <- function_latex_table(df)
 
 df$items <- gsub("_", ",\\\\mbox{",df$items)
-df$items <- paste0("$\\mbox{HR}_", df$items, "}$ &")
+df$items <- paste0("$\\mbox{HR}_", df$items, "}$")
 df$items
 df
 
@@ -181,10 +181,10 @@ for(j in 2:ncol(df)){
 
 df$items <- gsub("_", ",\\\\mbox{",df$items)
 df$items[1:6] <- paste0("$\\mbox{HR}_", df$items[1:6], "}$ &")
-df$items[which(df$items=="b0")] = "$\beta_0$ &"
-df$items[which(df$items=="b1")] = "$\beta_1$ &"
-df$items[which(df$items=="b2")] = "$\beta_2$ &"
-df$items[which(df$items=="b3")] = "$\beta_3$ &"
+df$items[which(df$items=="b0")] = "$\\beta_0$ &"
+df$items[which(df$items=="b1")] = "$\\beta_1$ &"
+df$items[which(df$items=="b2")] = "$\\beta_2$ &"
+df$items[which(df$items=="b3")] = "$\\beta_3$ &"
 df$items
 df
 
