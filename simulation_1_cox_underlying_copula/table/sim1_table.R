@@ -9,11 +9,11 @@ library(dplyr); library(xtable); library(stringr)
 dir_results <- "../../results/simulation_results/"
 
 function_latex_table <- function(df){
-  for(j in 2:ncol(df)){
+  for(j in 1:ncol(df)){
     if(j!=ncol(df)){
       df[,j] = paste0(df[,j],"&")      # column separator
     }else{
-      df[,j] = paste0(df[,j],"&\\")    # end of the column for a new line
+      df[,j] = paste0(df[,j],"\\\\")    # end of the column for a new line
     }
     df[,j] = gsub("-", "$-$", df[,j])  # maths symbol 
   }
