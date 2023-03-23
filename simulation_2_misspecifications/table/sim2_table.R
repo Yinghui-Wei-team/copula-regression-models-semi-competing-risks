@@ -87,3 +87,26 @@ df <- df_input(df, row_ref=3, results=gumbel_gompertz)
 df <- function_latex_table(df)
 
 write.csv(df, file=paste0(dir_results, "sim2_aic_table_gumbel_copula.csv"))
+
+
+################################################################################
+# Normal copula 
+################################################################################
+# normal exponential
+normal_exp <- read.csv(file=paste0(dir_results,"simulation2/normal_exp/S2_aic_normal_exp_summary.csv"))
+
+# normal weibull
+normal_weibull <- read.csv(file=paste0(dir_results,"simulation2/normal_weib/S2_aic_normal_weib_summary.csv"))
+
+# normal gompertz
+normal_gompertz <- read.csv(file=paste0(dir_results,"simulation2/normal_gomp/S2_aic_normal_gomp_summary.csv"))
+
+df <- NULL
+df <- df_setup(df)
+df <- df_input(df, row_ref=1, results=normal_exp)
+df <- df_input(df, row_ref=2, results=normal_weibull)
+df <- df_input(df, row_ref=3, results=normal_gompertz)
+df[,c(3,6,9,12)] <- format(round(df[,c(3,6,9,12)],1), nsmall=1)
+
+df <- function_latex_table(df)
+write.csv(df, file=paste0(dir_results, "sim2_aic_table_normal_copula.csv"))
