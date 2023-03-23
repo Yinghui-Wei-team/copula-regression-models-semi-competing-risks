@@ -20,6 +20,11 @@ cpl_exp <- function(para, X, Y, d1, d2, age){
   theta <- exp(b0+b1*age)
   
   C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
+  
+  C[which(C<0.1^(8))]=0.1^(8)
+  S1[which(S1 < 0.1^(8))]=0.1^(8)
+  S2[which(S2 < 0.1^(8))]=0.1^(8)
+  
   part1 <- d1*d2*(log(1+theta)+(1+2*theta)*log(C)-(theta+1)*log(S1)-(theta+1)*log(S2)+log(lambda1)-lambda1*X+log(lambda2)-lambda2*Y)
   part2 <- d1*(1-d2)*((theta+1)*log(C)-(theta+1)*log(S1)+log(lambda1)-lambda1*X)
   part3<-((1-d1)*(d2))*((theta+1)*log(C)-(theta+1)*log(S2)+log(lambda2)-lambda2*Y)

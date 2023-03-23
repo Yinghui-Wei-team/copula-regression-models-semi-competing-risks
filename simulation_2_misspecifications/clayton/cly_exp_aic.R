@@ -12,6 +12,8 @@
 # YW, 1/1/2023:     1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. comment out "break"
+# YW, 23/03/2023:   1. Added constrain on C and S for small values 0.1^8 in the likelihood to get log() works
+#                   2. uncomment "break"
 ##################################################################################################
 
 rm(list=ls())
@@ -33,8 +35,8 @@ setwd(dir_results)
 source("../function_sim2.R")
 ## End if on cluster
 
-out_file_summary <- "s2_misspec_underlying_clayton_exp_summary.csv"
-out_file_estimates <-"s2_misspec_underlying_clayton_exp_estimates.csv"
+out_file_summary <- "s2_aic_clayton_exp_summary.csv"
+out_file_estimates <-"s2_aic_clayton_exp_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from exp chose with aic ########################
@@ -112,7 +114,7 @@ clayton_exp_optim_starting_values = c(-3,0.01,-3,0.01,3,0) # starting values for
 clayton_wei_optim_lower = c(0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.00, -15.00)   # lower bound for a0, a1, c0, c1, b0, b1
 clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  3.0)                  # upper bound for a0, a1, c0, c1, b0, b1
 # clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, true_b0, true_b1) # starting values for a0, a1, c0, c1, b0, b1
-clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.5, 1) # starting values for a0, a1, c0, c1, b0, b1
+clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.6, 1) # starting values for a0, a1, c0, c1, b0, b1
 
 # boundaries and starting values for g1, p0, p1, g2, q0, q1, b0, b1
 clayton_gom_optim_lower = c(-0.2,-5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound 
@@ -185,19 +187,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  # index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
-  # index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
-  # 
-  # if(length(index_lower)>0)
-  # {
-  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-  #   break
-  # }
-  # if(length(index_upper)>0)
-  # {
-  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-  #   break
-  # }
+  index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
+  index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
+
+  if(length(index_lower)>0)
+  {
+    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+    break
+  }
+  if(length(index_upper)>0)
+  {
+    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+    break
+  }
 
   ########################################################
   ############### Clayton pseudo likelihood ##############
@@ -213,16 +215,16 @@ for (i in 1:runs){
   index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
 
 
-  # if(length(index_lower)>0)
-  # {
-  #   counter_wei_low[index_lower] = counter__wei_low[index_lower]+1
-  #   break
-  # }
-  # if(length(index_upper)>0)
-  # {
-  #   counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
-  #   break
-  # }
+  if(length(index_lower)>0)
+  {
+    counter_wei_low[index_lower] = counter__wei_low[index_lower]+1
+    break
+  }
+  if(length(index_upper)>0)
+  {
+    counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
+    break
+  }
 
   
   ########################################################
@@ -236,19 +238,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  # index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
-  # index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
-  # 
-  # if(length(index_lower)>0)
-  # {
-  #   counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
-  #   break
-  # }
-  # if(length(index_upper)>0)
-  # {
-  #   counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
-  #   break
-  # }
+  index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
+  index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
+
+  if(length(index_lower)>0)
+  {
+    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
+    break
+  }
+  if(length(index_upper)>0)
+  {
+    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
+    break
+  }
 
   ########################################################
   ######################### AIC  #########################
