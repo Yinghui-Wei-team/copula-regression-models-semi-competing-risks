@@ -34,7 +34,7 @@ cpl_exp <- function(para, X, Y, d1, d2, age){
   return(logpl)
 }
 
-# clayton copula Weibull distribution: one covariates
+# clayton copula Weibull distribution: one covariate
 cpl_wei <- function(para, X, Y, d1, d2, age){
   alpha1 <- para[1]
   x1 <- para[2]
@@ -72,11 +72,16 @@ cpl_wei <- function(para, X, Y, d1, d2, age){
   
   part4 <- ((1-d1)*(1-d2))*log(C)
   
+  part1[which(part1<0.1^(10))]=0.1^(10)
+  part2[which(part2<0.1^(10))]=0.1^(10)
+  part3[which(part3<0.1^(10))]=0.1^(10)
+  part4[which(part4<0.1^(10))]=0.1^(10)
+  
   logpl<-sum(part1+part2+part3+part4) 
   return(logpl)
 }
 
-# clayton copula Gompertz distribution: one covariates
+# clayton copula Gompertz distribution: one covariate
 cpl_gom <- function(para, X, Y, d1, d2, age){
   gamma1 <- para[1]
   p0 <- para[2]

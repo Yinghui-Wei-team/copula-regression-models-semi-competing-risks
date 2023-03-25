@@ -19,20 +19,20 @@ start_time = Sys.time()
 #####################################################################################
 #Output directory and output files                                                  #
 #####################################################################################
-# directory if on own PC
-#dir_results = "../../results/simulation_results/"
+##directory if on own PC
+dir_results = "../../results/simulation_results/"
 ## likelihood function
-#source("functions/function_sim2.R")
+source("functions/function_sim2.R")
 ## End if on own PC
 
 ## directory if on cluster
-dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
-setwd(dir_results)
-source("../function_sim2.R")
+# dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
+# setwd(dir_results)
+# source("../function_sim2.R")
 ## End if on cluster
 
-out_file_summary <- "s2_misspec_underlying_clayton_gompertz_summary.csv"
-out_file_estimates <-"s2_misspec_underlying_clayton_gompertz_estimates.csv"
+out_file_summary <- "s2_aic_clayton_gompertz_summary.csv"
+out_file_estimates <-"s2_aic_clayton_gompertz_estimates.csv"
 
 #####################################################################################
 ################## Clayton, age, gen from gom chose with aic ######################
@@ -41,7 +41,7 @@ out_file_estimates <-"s2_misspec_underlying_clayton_gompertz_estimates.csv"
 #set.seed(9006465)
 set.seed(12345)
 n <- 3000
-runs <- 1000
+runs <- 160
 
 true_b0 <- 0.58
 true_b1 <- 0.90
