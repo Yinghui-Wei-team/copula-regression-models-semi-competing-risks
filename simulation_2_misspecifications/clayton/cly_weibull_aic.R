@@ -23,17 +23,17 @@ start_time = Sys.time()
 #####################################################################################
 #Output directory and output files                                                  #
 #####################################################################################
-## directory if on own PC
-dir_results = "../../results/simulation_results/"
-# likelihood function
-source("functions/function_sim2.R")
-# End if on own PC
+# ## directory if on own PC
+# dir_results = "../../results/simulation_results/"
+# # likelihood function
+# source("functions/function_sim2.R")
+# # End if on own PC
 
-## directory if on cluster
-# dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
-# setwd(dir_results)
-# source("../function_sim2.R")
-## End if on cluster
+# directory if on cluster
+dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
+setwd(dir_results)
+source("../function_sim2.R")
+# End if on cluster
 
 out_file_summary <- "s2_aic_clayton_weibull_summary.csv"
 out_file_estimates <-"s2_aic_clayton_weibull_estimates.csv"
@@ -57,7 +57,6 @@ clayton_wei_optim_lower = c( 0.01, -10.00, -10.00,   0.01, -10.00, -10.00, -10.0
 clayton_wei_optim_upper = c(1.5, -1.0,  1.0,  1.5, -1.0,  3.0,  1.2,  1.7) # upper bound 
 clayton_wei_optim_starting_values = c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.5, 0.7) # starting values 
 
-
 # for g1,p0,p1,g2,q0, q1, b0,b1
 clayton_gom_optim_lower = c(-0.2, -5.0, -4.0, -0.2, -6.0, -4.0, -2.0, -2.0) # lower bound
 clayton_gom_optim_upper = c(0.1, -2.0,  2.0,  0.1, -2.0,  3.0,  1.2,  1.7) # upper bound
@@ -70,6 +69,16 @@ true_x0 <- -2.75 #weib beta1
 true_x1 <- 0.26 #weib beta1
 true_y0 <- -4.30 #weib beta2
 true_y1 <- 1.33 #weib beta2
+
+# YW, added
+true_values <- c(true_b0, true_b1, true_alpha1, true_alpha2, true_x0, true_x1, true_y0, true_y1)
+n_parameters = length(true_values)
+
+# count number of runs outside the defined boundaries for each parameter
+counter_exp_low <- counter_exp_upper <- rep(0, n_parameters-2)
+counter_wei_low <- counter_wei_upper <- rep(0, n_parameters)
+counter_gom_low <- counter_gom_upper <- rep(0, n_parameters)
+
 
 true_theta_d0 <- exp(true_b0)
 true_theta_d1 <- exp(true_b0+true_b1)

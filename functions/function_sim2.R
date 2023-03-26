@@ -64,18 +64,46 @@ cpl_wei <- function(para, X, Y, d1, d2, age){
   
   C=(S1^(-theta)+S2^(-theta)-1)^(-1/theta)
   C[which(C<0.1^8)] <- 0.1^8
-  part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
   
-  part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  part1a <- (1+theta)*C^(1+2*theta)*f1*f2
+  part1b <- (S1S2)^(1+theta)
+  part1a[which(part1a<0.1^300)] = 0.1^300 # o.w. log(part1a) = -Inf
+  part1b[which(part1b<0.1^300)]=0.1^300  # o.w. log(part1b) = -Inf
   
-  part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  part1 <- d1*d2*(log(part1a)-log(part1b))
+  #part1 <- d1*d2*(log((1+theta)*C^(1+2*theta)*f1*f2)-log((S1S2)^(1+theta)))
+  
+  # if(length(which(is.infinite(part1))>0)){
+  #      print(which(is.infinite(part1)))
+  # }
+
+  
+  part2a <- C^(1+theta)*f1
+  part2b <- S1^(1+theta)
+  part2a[which(part2a<0.1^300)] = 0.1^300 # o.w. log(part2a) = -Inf
+  part2b[which(part2b<0.1^300)]=0.1^300  # o.w. log(part2b) = -Inf
+  part2 <- d1*(1-d2)*(log(part2a)-log(part2b))
+  
+  #part2 <- d1*(1-d2)*(log(C^(1+theta)*f1)-log(S1^(1+theta)))
+  # if(length(which(is.infinite(part2))>0)){
+  #   print(which(is.infinite(part2)))
+  # }
+  # 
+  part3a <- C^(1+theta)*f2
+  part3b <- S2^(1+theta)
+  part3a[which(part3a<0.1^300)] = 0.1^300 # o.w. log(part2a) = -Inf
+  part3b[which(part3b<0.1^300)]=0.1^300  # o.w. log(part2b) = -Inf
+  part3 <- d2*(1-d1)*(log(part3a)-log(part3b))
+  
+  #part3 <- d2*(1-d1)*(log(C^(1+theta)*f2)-log(S2^(1+theta)))
+  # if(length(which(is.infinite(part3))>0)){
+  #   print(which(is.infinite(part3)))
+  # }
   
   part4 <- ((1-d1)*(1-d2))*log(C)
-  
-  part1[which(part1<0.1^(10))]=0.1^(10)
-  part2[which(part2<0.1^(10))]=0.1^(10)
-  part3[which(part3<0.1^(10))]=0.1^(10)
-  part4[which(part4<0.1^(10))]=0.1^(10)
+  # if(length(which(is.infinite(part4))>0)){
+  #   print(which(is.infinite(part4)))
+  # }
   
   logpl<-sum(part1+part2+part3+part4) 
   return(logpl)

@@ -31,8 +31,8 @@ setwd(dir_results)
 source("../function_sim2.R")
 ## End if on cluster
 
-out_file_summary <- "S2_misspec_underlying_frank_weibull_summary.csv"
-out_file_estimates <-"S2-misspec_underlying_frank_weibull_estimates.csv"
+out_file_summary <- "s2_aic_frank_weibull_summary.csv"
+out_file_estimates <-"s2_aic_frank_weibull_estimates.csv"
 
 #####################################################################################
 #################### Frank, age, gen from wei chose with aic ########################

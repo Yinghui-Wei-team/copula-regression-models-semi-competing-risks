@@ -12,6 +12,8 @@
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. Put starting values, lower and upper bounds outside the loop
 #                   4. comment out break
+# YW, 24 Mar 2023:  1. uncomment break
+#                   2. shorten output file names
 ##################################################################################################
 
 rm(list=ls())
@@ -23,9 +25,9 @@ start_time = Sys.time()
 #####################################################################################
 # directory if working on own PC
 # dir_results = "../../results/simulation_results/"
-# likelihood function
+# ##likelihood function
 # source("functions/function_sim2.R")
-## End if on own PC
+# # End if on own PC
 
 ## directory if on cluster
 dir_results = "/home/ywei/Simulation/Paper2/Frank/"
@@ -33,8 +35,8 @@ setwd(dir_results)
 source("../function_sim2.R")
 ## End if on cluster
 
-out_file_summary <- "S2_misspec_underlying_frank_gompertz_summary.csv"
-out_file_estimates <-"S2_misspec_underlying_frank_gompertz_estimates.csv"
+out_file_summary <- "s2_aic_frank_gompertz_summary.csv"
+out_file_estimates <-"s2_aic_frank_gompertz_estimates.csv"
 
 #####################################################################################
 #################### Frank, age, gen from gom chose with aic ########################

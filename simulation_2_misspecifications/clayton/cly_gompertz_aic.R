@@ -19,17 +19,17 @@ start_time = Sys.time()
 #####################################################################################
 #Output directory and output files                                                  #
 #####################################################################################
-##directory if on own PC
-dir_results = "../../results/simulation_results/"
-## likelihood function
-source("functions/function_sim2.R")
-## End if on own PC
+# ##directory if on own PC
+# dir_results = "../../results/simulation_results/"
+# ## likelihood function
+# source("functions/function_sim2.R")
+# ## End if on own PC
 
-## directory if on cluster
-# dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
-# setwd(dir_results)
-# source("../function_sim2.R")
-## End if on cluster
+# directory if on cluster
+dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
+setwd(dir_results)
+source("../function_sim2.R")
+# End if on cluster
 
 out_file_summary <- "s2_aic_clayton_gompertz_summary.csv"
 out_file_estimates <-"s2_aic_clayton_gompertz_estimates.csv"
@@ -41,7 +41,7 @@ out_file_estimates <-"s2_aic_clayton_gompertz_estimates.csv"
 #set.seed(9006465)
 set.seed(12345)
 n <- 3000
-runs <- 160
+runs <- 1000
 
 true_b0 <- 0.58
 true_b1 <- 0.90
@@ -53,6 +53,15 @@ true_p1 <- 0.36 #gomp lambda1
 true_q0 <- -4.55 #gomp lambda2
 true_q1 <- 1.46 #gomp lambda2
 
+
+# YW, added
+true_values <- c(true_b0, true_b1, true_g1, true_g2, true_p0, true_p1, true_q0, true_q1)
+n_parameters = length(true_values)
+
+# count number of runs outside the defined boundaries for each parameter
+counter_exp_low <- counter_exp_upper <- rep(0, n_parameters-2)
+counter_wei_low <- counter_wei_upper <- rep(0, n_parameters)
+counter_gom_low <- counter_gom_upper <- rep(0, n_parameters)
 
 true_theta_d0 <- exp(true_b0)
 true_theta_d1 <- exp(true_b0+true_b1)
@@ -93,14 +102,24 @@ counter_exp = 0
 counter_wei = 0
 counter_gom = 0
 
+# count number of runs outside the defined boundaries for each parameter
+counter_exp_low <- counter_exp_upper <-0
+counter_wei_low <- counter_wei_upper <- 0
+counter_gom_low <- counter_gom_upper <- 0
+
 hr_1_lw = hr_1_up = hr_1_cross =  hr_2_lw = hr_2_up = hr_2_cross = 0
+
+# count number of runs outside the defined boundaries for each parameter
+counter_exp_low <- counter_exp_upper <- rep(0, n_parameters)
+counter_wei_low <- counter_wei_upper <- rep(0, n_parameters+2)
+counter_gom_low <- counter_gom_upper <- rep(0, n_parameters+2)
 
 ###############################################################
 ###################### run 'runs' times #######################
 ###############################################################
 
 for (i in 1:runs){
-  
+ 
   ###############################################################
   ######################## generate data ########################
   ###############################################################
@@ -341,14 +360,14 @@ for (i in 1:runs){
 
   if(length(index_lower)>0)
   {
-    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
-    break
-  }
+     counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
+     break
+   }
   if(length(index_upper)>0)
   {
-    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
-    break
-  }
+     counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
+     break
+   }
   
   ########################################################
   ######################### AICS #########################

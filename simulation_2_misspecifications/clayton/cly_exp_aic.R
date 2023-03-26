@@ -24,16 +24,16 @@ start_time = Sys.time()
 #Output directory and output files                                                  #
 #####################################################################################
 ##directory if on own PC
-dir_results = "../../results/simulation_results/"
-## likelihood function
-source("functions/function_sim2.R")
-## End if on own PC
+# dir_results = "../../results/simulation_results/"
+# ## likelihood function
+# source("functions/function_sim2.R")
+# ## End if on own PC
 
-# ## directory if on cluster
-# dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
-# setwd(dir_results)
-# source("../function_sim2.R")
-# ## End if on cluster
+## directory if on cluster
+dir_results = "/home/ywei/Simulation/Paper2/Clayton/"
+setwd(dir_results)
+source("../function_sim2.R")
+## End if on cluster
 
 out_file_summary <- "s2_aic_clayton_exp_summary.csv"
 out_file_estimates <-"s2_aic_clayton_exp_estimates.csv"
