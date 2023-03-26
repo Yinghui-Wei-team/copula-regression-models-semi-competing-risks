@@ -10,7 +10,6 @@
 # YW, 1 Jan 2023:   1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. comment out break
-# YW, 23/03/2023:   1. uncomment "break"
 #######################################################################################################
 rm(list=ls())
 library(copula); library(mvtnorm); library(plyr);library(survival); library(numDeriv)
@@ -187,19 +186,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
-  index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
-
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
+  # index_lower = which(plcoptim_exp$par == clayton_exp_optim_lower)
+  # index_upper = which(plcoptim_exp$par == clayton_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
 
  # a0_lw <- -10
  #  a0_up <- -1
@@ -263,19 +262,19 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
-  index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
-
-  if(length(index_lower)>0)
-  {
-    counter_wei_low[index_lower] = counter_wei_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
-    break
-  }
+  # index_lower = which(plcoptim_wei$par == clayton_wei_optim_lower)
+  # index_upper = which(plcoptim_wei$par == clayton_wei_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_wei_low[index_lower] = counter_wei_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_wei_upper[index_upper] = counter_wei_upper[index_upper]+1
+  #   break
+  # }
 
   
  # a1_lw <- 0.01
@@ -355,20 +354,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
-  index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
-
-  if(length(index_lower)>0)
-  {
-     counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
-     break
-   }
-  if(length(index_upper)>0)
-  {
-     counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
-     break
-   }
-  
+  # index_lower = which(plcoptim_gom$par == clayton_gom_optim_lower)
+  # index_upper = which(plcoptim_gom$par == clayton_gom_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #    counter_gom_low[index_lower] = counter_gom_low[index_lower]+1
+  #    break
+  #  }
+  # if(length(index_upper)>0)
+  # {
+  #    counter_gom_upper[index_upper] = counter_gom_upper[index_upper]+1
+  #    break
+  #  }
+  # 
   ########################################################
   ######################### AICS #########################
   ########################################################

@@ -12,8 +12,7 @@
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. Put starting values, lower and upper bounds outside the loop
 #                   4. comment out break
-# YW, 24 Mar 2023:  1. uncomment break
-#                   2. shorten output file names
+# YW, 24 Mar 2023:  1. shorten output file names
 ##################################################################################################
 
 rm(list=ls())
@@ -171,20 +170,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
- 
+  # index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
+  # index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
+  # 
   ######################################################
   ############### Frank pseudo likelihood ##############
   ###################### Weibull #######################
@@ -196,20 +195,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
-  
+  # index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
+  # index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
+  # 
   ######################################################
   ############### Frank pseudo likelihood ##############
   ###################### Gompertz ######################
@@ -221,20 +220,20 @@ for (i in 1:runs){
                         X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age=df$age,
                         control=list(fnscale=-1),hessian=TRUE)
   
-  index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
-  index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
-  
-  if(length(index_lower)>0)
-  {
-    counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
-    break
-  }
-  if(length(index_upper)>0)
-  {
-    counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
-    break
-  }
-  
+  # index_lower = which(plfoptim_exp$par == frank_exp_optim_lower)
+  # index_upper = which(plfoptim_exp$par == frank_exp_optim_upper)
+  # 
+  # if(length(index_lower)>0)
+  # {
+  #   counter_exp_low[index_lower] = counter_exp_low[index_lower]+1
+  #   break
+  # }
+  # if(length(index_upper)>0)
+  # {
+  #   counter_exp_upper[index_upper] = counter_exp_upper[index_upper]+1
+  #   break
+  # }
+  # 
   ########################################################
   ######################### AICS #########################
   ########################################################
