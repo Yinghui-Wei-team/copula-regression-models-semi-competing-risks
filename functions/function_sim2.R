@@ -1,6 +1,8 @@
 ##################################################################################
 # likelihood function specification  - Clayton Copula                            #
 ##################################################################################
+# Original code by LS; reviewed, edited and updated by YW for paper2
+##################################################################################
 
 # clayton copula exponential distribution: one covariates
 cpl_exp <- function(para, X, Y, d1, d2, age){

@@ -12,8 +12,6 @@
 # YW, 1/1/2023:     1. update output directory and tidy up
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. comment out "break"
-# YW, 23/03/2023:   1. Added constrain on C and S for small values 0.1^8 in the likelihood to get log() works
-#                   2. uncomment "break"
 ##################################################################################################
 
 rm(list=ls())

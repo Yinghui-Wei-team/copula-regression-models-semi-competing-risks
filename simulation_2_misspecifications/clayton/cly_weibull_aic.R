@@ -13,7 +13,6 @@
 #                   2. Put likelihood functions into a generic script under the functions folder
 #                   3. Put starting values, lower and upper bounds outside the loop
 #                   4. comment out break
-# YW, 23/03/2023:   1. uncomment "break"
 ##################################################################################################
 
 rm(list=ls())
