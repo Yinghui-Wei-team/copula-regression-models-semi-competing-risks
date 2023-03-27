@@ -45,8 +45,23 @@ function_latex_table <- function(df){
 }
 
 ###############################################################################################
-# Simulation 2: miss-specificaiton of survival distributions
+# Simulation 2: miss-specification of survival distributions
 ###############################################################################################
+# Clayton copula 
+clayton_exp <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_exp_summary.csv"))
+clayton_weibull <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_weibull_summary.csv"))
+clayton_gompertz <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_gompertz_summary.csv"))
+
+df <- NULL
+df <- df_setup(df)
+
+df <- df_input(df, row_ref=1, results=clayton_exp)
+df <- df_input(df, row_ref=2, results=clayton_weibull)
+df <- df_input(df, row_ref=3, results=clayton_gompertz)
+
+df <- function_latex_table(df)
+
+write.csv(df, file=paste0(dir_results, "sim2_aic_table_clayton_copula.csv"))
 
 # Frank copula 
 frank_exp <- read.csv(file=paste0(dir_results,"simulation2/frank/S2_aic_frank_exp_summary.csv"))
