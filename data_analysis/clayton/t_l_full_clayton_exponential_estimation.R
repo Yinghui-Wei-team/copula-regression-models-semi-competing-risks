@@ -246,7 +246,7 @@ results
 para <- c(est_a0, est_a1, est_a2, est_a3, est_c0, est_c1, est_c2, est_c3, est_b0, est_b1, est_b2, est_b3)
 loglik <- cpl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
-n<-length(X)
+n<-length(df$X)
 aic<- -2*loglik+2*k
 bic<- -2*loglik+log(n)*k
 loglik
