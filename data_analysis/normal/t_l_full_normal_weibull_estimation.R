@@ -23,7 +23,7 @@ if(survival_distribution == "weibull") {table_ref = "table5"}
 # Load data
 # set working directory to project directory and send through the next two lines
 dir_data <-dir_results <- "../../"
-df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data.csv"))
 
 dim(df)
 attach(df)
