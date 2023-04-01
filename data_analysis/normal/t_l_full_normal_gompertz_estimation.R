@@ -524,13 +524,15 @@ results
 # Results --------------------------------------------------------------------
 print(aic)
 print(bic)
+end.time = Sys.time()
 run.time = end.time - start.time
 run.time
 
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run.time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-end.time = Sys.time()
+
+
 print("normal copula gompertz survival models")
 
 ################################################################################
