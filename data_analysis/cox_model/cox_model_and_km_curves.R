@@ -14,8 +14,8 @@ library(survival); library(dplyr);library(ggsurvfit);library(readr);library(surv
 # need to firstly set working directory to project directory and then send through the next two lines
 dir_data <-dir_results <- "../../"
 
-df <- read_rds(file=paste0(dir_data, "NHSBT/paper2_data_v2.rds"))
-#df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
+#df <- read_rds(file=paste0(dir_data, "NHSBT/paper2_data_v2.rds"))
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data.csv"))
 ################################################################################
 #Part 2. KM Curves                                                             #
 ################################################################################

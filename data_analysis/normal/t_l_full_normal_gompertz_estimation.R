@@ -573,5 +573,6 @@ row.names(reg_coef) <-c("gamma1","gamma2",      # parameters in Gompertz distrib
 ################################################################################
 # Output results                                                               #
 ################################################################################
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
 write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
 write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
