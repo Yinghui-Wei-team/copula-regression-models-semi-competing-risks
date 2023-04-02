@@ -30,7 +30,7 @@ df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 ################################################################################
 start_time = Sys.time()
 cpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
-  alpha1 <- para[1]       # shape parameter in weibull survival distribution for graft failure
+  alpha1 <- para[1]       # shape parameter in Weibull survival distribution for graft failure
   a0 <- para[2]           # regression parameters in lambda1 (hazard for graft failure)
   a1 <- para[3]
   a2 <- para[4]
