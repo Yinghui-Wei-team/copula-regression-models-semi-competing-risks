@@ -57,7 +57,6 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   # combine results into one data frame
   df <- rbind(norm, cly, frank, gum)
   df
-  
   # prepare a table for LaTeX file
   df$X[which(df$X=="age.gl50")] = "\\phantom{xxx} Age group: $>50$ &"
   df$X[which(df$X=="gender.female")] = "\\phantom{xxx} Sex: Female &"
@@ -84,6 +83,12 @@ combined_table_hr <- function(dir_results, table_ref, survival_distribution){
   df[index,1] <- paste0("\\hline\\multicolumn{3}{|l}{", df[index,1], "} & &")
   df
   
+  for(j in 2:ncol(df)){
+    df[,j] = gsub("-", "$-$", df[,j])
+  }
+
+ 
+
   # Output table to a CSV file-----------------------------------------------------------------
   write.csv(df, 
             file=paste0(dir_results, "table_hr_", survival_distribution,".csv"), 

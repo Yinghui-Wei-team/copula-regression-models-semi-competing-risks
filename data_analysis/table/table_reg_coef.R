@@ -38,23 +38,28 @@ combined_table_reg_coef <- function(dir_results, survival_distribution, paramete
                     frank = as.character())
   
   tbl <- as.data.frame(matrix(nrow=nrow(df),ncol=5))
-  names(tbl) <- c("Parameter", "Normal-gompertz", "Clayton-gompertz", 
-                  "Frank-gompertz", "Gumbel-gompertz")
+  names(tbl) <- c("Parameter", "Normal", "Clayton", "Frank", "Gumbel")
+
   tbl$Parameter <- df$para
-  tbl$`Normal-gompertz` <- paste0("&",format(round(df$norm,2),nsmall=2), 
+
+  tbl$`Normal` <- paste0("&",format(round(df$norm,2),nsmall=2), 
                                  " (", format(round(df$norm.lower,2), nsmall=2), ", ", 
                                  format(round(df$norm.upper,2), nsmall=2),")")
-  tbl$`Clayton-gompertz` <- paste0("&", format(round(df$clayton,2),nsmall=2), " (", 
+  tbl$`Clayton` <- paste0("&", format(round(df$clayton,2),nsmall=2), " (", 
                                   format(round(df$clayton.lower,2), nsmall=2), ", ", 
                                   format(round(df$clayton.upper,2), nsmall=2),")")
-  tbl$`Frank-gompertz` <- paste0("&", format(round(df$frank,2),nsmall=2), " (", 
+  tbl$`Frank` <- paste0("&", format(round(df$frank,2),nsmall=2), " (", 
                                 format(round(df$frank.lower,2),nsmall=2), ", ", 
                                 format(round(df$frank.upper,2),nsmall=2),")")
-  tbl$`Gumbel-gompertz` <- paste0("&",format(round(df$gum,2),nsmall=2), " (", 
+  tbl$`Gumbel` <- paste0("&",format(round(df$gum,2),nsmall=2), " (", 
                                  format(round(df$gum.lower,2),nsmall=2), ", ", 
-                                 format(round(df$gum.upper,2),nsmall=2),")", "\\")
+                                 format(round(df$gum.upper,2),nsmall=2),")", "\\\\")
   
   tbl$Parameter <- parameters
+  
+  
+  names(tbl) <- c("Parameter", paste0("Normal-",survival_distribution), paste0("Clayton-",survival_distribution), 
+                  paste0("Frank-", survival_distribution), paste0("Gumbel-",survival_distribution))
   
   for(j in 2:ncol(tbl)){
     tbl[,j] = gsub("-", "$-$", tbl[,j])  # maths symbol 
