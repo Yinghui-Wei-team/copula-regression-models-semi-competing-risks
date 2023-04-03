@@ -48,9 +48,9 @@ function_latex_table <- function(df){
 # Simulation 2: miss-specification of survival distributions
 ###############################################################################################
 # Clayton copula 
-clayton_exp <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_exp_summary.csv"))
-clayton_weibull <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_weibull_summary.csv"))
-clayton_gompertz <- read.csv(file=paste0(dir_results,"simulation2/clayton/S2_aic_clayton_gompertz_summary.csv"))
+clayton_exp <- read.csv(file=paste0(dir_results,"simulation2/clayton/s2_aic_clayton_exp_summary.csv"))
+clayton_weibull <- read.csv(file=paste0(dir_results,"simulation2/clayton/s2_aic_clayton_weibull_summary.csv"))
+clayton_gompertz <- read.csv(file=paste0(dir_results,"simulation2/clayton/s2_aic_clayton_gompertz_summary.csv"))
 
 df <- NULL
 df <- df_setup(df)
@@ -64,9 +64,9 @@ df <- function_latex_table(df)
 write.csv(df, file=paste0(dir_results, "sim2_aic_table_clayton_copula.csv"))
 
 # Frank copula 
-frank_exp <- read.csv(file=paste0(dir_results,"simulation2/frank/S2_aic_frank_exp_summary.csv"))
-frank_weibull <- read.csv(file=paste0(dir_results,"simulation2/frank/S2_aic_frank_weibull_summary.csv"))
-frank_gompertz <- read.csv(file=paste0(dir_results,"simulation2/frank/S2_aic_frank_gompertz_summary.csv"))
+frank_exp <- read.csv(file=paste0(dir_results,"simulation2/frank/s2_aic_frank_exp_summary.csv"))
+frank_weibull <- read.csv(file=paste0(dir_results,"simulation2/frank/s2_aic_frank_weibull_summary.csv"))
+frank_gompertz <- read.csv(file=paste0(dir_results,"simulation2/frank/s2_aic_frank_gompertz_summary.csv"))
 
 df <- NULL
 df <- df_setup(df)
@@ -88,9 +88,9 @@ write.csv(df, file=paste0(dir_results, "sim2_aic_table_frank_copula.csv"))
 ################################################################################
 # Gumbel copula 
 ################################################################################
-gumbel_exp <- read.csv(file=paste0(dir_results,"simulation2/gumbel/S2_aic_gumbel_exp_summary.csv"))
-gumbel_weibull <- read.csv(file=paste0(dir_results,"simulation2/gumbel/S2_aic_gumbel_weibull_summary.csv"))
-gumbel_gompertz <- read.csv(file=paste0(dir_results,"simulation2/gumbel/S2_aic_gumbel_gompertz_summary.csv"))
+gumbel_exp <- read.csv(file=paste0(dir_results,"simulation2/gumbel/s2_aic_gumbel_exp_summary.csv"))
+gumbel_weibull <- read.csv(file=paste0(dir_results,"simulation2/gumbel/s2_aic_gumbel_weibull_summary.csv"))
+gumbel_gompertz <- read.csv(file=paste0(dir_results,"simulation2/gumbel/s2_aic_gumbel_gompertz_summary.csv"))
 
 df <- NULL
 df <- df_setup(df)
