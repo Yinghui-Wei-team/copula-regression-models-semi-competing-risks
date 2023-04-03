@@ -99,6 +99,10 @@ table(df$gen)/dim(df)[1]
 table(df$donor)
 table(df$donor)/dim(df)[1]
 
+nrow(df)
+table(df$d1)/nrow(df)
+table(df$d2)/nrow(df)
+length(which(df$d1==0 & df$d2==0))/nrow(df)
 ################################################################################
 #Part 4. Cox PH Models                                                         #
 ################################################################################
