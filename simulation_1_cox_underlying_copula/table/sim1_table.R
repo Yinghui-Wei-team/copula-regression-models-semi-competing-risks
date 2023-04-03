@@ -9,7 +9,7 @@ library(dplyr); library(xtable); library(stringr)
 dir_results <- "../../results/simulation_results/"
 
 function_latex_table <- function(df){
-  for(j in 1:ncol(df)){
+  for(j in 2:ncol(df)){
     if(j!=ncol(df)){
       df[,j] = paste0(df[,j],"&")      # column separator
     }else{
@@ -43,7 +43,7 @@ df$items <- str_replace(df$items, "gen", "sex")
 df <- function_latex_table(df)
 
 df$items <- gsub("_", ",\\\\mbox{",df$items)
-df$items <- paste0("$\\mbox{HR}_", df$items, "}$")
+df$items <- paste0("$\\mbox{HR}_", df$items, "}$ &")
 df$items
 df
 

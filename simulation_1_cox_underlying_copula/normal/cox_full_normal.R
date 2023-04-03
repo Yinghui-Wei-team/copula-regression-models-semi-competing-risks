@@ -16,7 +16,7 @@ library(copula); library(mvtnorm); library(plyr); library(survival); library(num
 # results directory
 # directory if on own PC
 dir_results <- "../../"
-dir_results = paste0(dir_results, "results/simulation_results")
+dir_results = paste0(dir_results, "results/simulation_results/simulation1/")
 
 # directory if on cluster
 # dir = "/home/ywei/Simulation/Paper2/Normal"
