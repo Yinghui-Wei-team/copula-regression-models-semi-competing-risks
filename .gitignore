@@ -31,4 +31,5 @@ data_management/*
 # R Environment Variables
 .Renviron
 contour_frankweibull_YoungFD.pdf
--LB07748.Rhistory
+*.Rhistory
+2021-7-21

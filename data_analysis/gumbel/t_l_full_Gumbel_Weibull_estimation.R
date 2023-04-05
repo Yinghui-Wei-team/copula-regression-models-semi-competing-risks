@@ -1,51 +1,53 @@
+################################################################################
 # Real data analysis
-# YW: 15 July 2021  Gumbel Copula Weibull survival models
 # original script by LS; edited and updated for paper2 by YW
+# YW: 15 July 2021  Gumbel Copula Weibull survival models
 # YW: 2022-02-20: update load data and output results sections
-rm(list=ls())
-library(copula)
-library(mvtnorm)
-library(ggplot2)
-library(plyr)
-library(survival)
+# YW: 2022-12-29: revision - made parameters naming consistent, added comments
+#                            and output regression coefficients
+################################################################################
 
+rm(list=ls())
+library(copula); library(mvtnorm);library(plyr)
+start_time= Sys.time()
+
+################################################################################
+# Set up model specs and load data                                             #
+################################################################################
+# Model specs
 copula <- "gumbel"
 survival_distribution <- "weibull" 
 if(survival_distribution == "exp") {table_ref = "table3"}
 if(survival_distribution == "gompertz") {table_ref = "table4"}
 if(survival_distribution == "weibull") {table_ref = "table5"}
-########################################################
-##################### Load data ########################
-########################################################
 
-# YW: need to firstly set working directory to project directory and send through the next two lines
-setwd("../../../")
-df <- read.csv(file="NHSBT/paper2_data.csv")
-dim(df)
-attach(df)
-names(df)
+# Load data
+# set working directory to project directory and send through the next two lines
+dir_data <-dir_results <- "../../"
+df <- read.csv(file=paste0(dir_data, "NHSBT/paper2_data_v2.csv"))
 
-########################################################
-############### Gumbel pseudo likelihood ################
-########################################################
+################################################################################
+#               Gumbel pseudo likelihood                                       #
+################################################################################
+
 gpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
-  alpha1 <- para[1]
-  x0 <- para[2]
-  x1 <- para[3]
-  x2 <- para[4]
-  x3 <- para[5]
-  alpha2 <- para[6]
-  y0 <- para[7]
-  y1 <- para[8]
-  y2 <- para[9]
-  y3 <- para[10]
-  b0 <- para[11]
+  alpha1 <- para[1]   # Shape parameter in Weibull distribution for graft failure
+  a0 <- para[2]       # regression coefficients for hazard 1 (graft failure)
+  a1 <- para[3]
+  a2 <- para[4]
+  a3 <- para[5]
+  alpha2 <- para[6]   # Shape parameter in Weibull distribution for death
+  c0 <- para[7]       # regression coefficients for hazard 2 (death)
+  c1 <- para[8]
+  c2 <- para[9]
+  c3 <- para[10]
+  b0 <- para[11]      # regression coefficients for association parameter
   b1 <- para[12]
   b2 <- para[13]
   b3 <- para[14]
   
-  beta1 <- exp(x0+x1*age.grp+x2*gen+x3*donor)
-  beta2 <- exp(y0+y1*age.grp+y2*gen+y3*donor)
+  beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+  beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
   S1 <- exp(-beta1*X^alpha1)
   S2 <- exp(-beta2*Y^alpha2)
   f1 <- beta1*alpha1*X^(alpha1-1)*exp(-beta1*X^alpha1) 
@@ -77,13 +79,25 @@ gpl <- function(para, X, Y, d1, d2, donor, age.grp, gen){
   return(logpl)
 }
 
-#gpl(c(-0.2,-10,-10,-10,-10,  -0.2,-10,-10,-10,-10,  1,-0.5,-0.4,0),X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen)
-
-start_time= Sys.time()
-
-plgoptim <- optim(c(0.02, -1,-0.01,-0.01,-0.01,  0.02,-1,-0.01,-0.01,-0.01,  2,0.1,0.1,0.1), gpl, method="L-BFGS-B",
-                  lower=c(-0.2,-10,-10,-10,-10,  -0.2,-10,-10,-10,-10,  -5,-2,-1,-0.5),
-                  upper=c(1,-1,1,1,1, 1,-2,2,1,0.01  ,10,6,3,3), 
+plgoptim <- optim(c(
+  0.02,                  # alpha1
+  -1,-0.01,-0.01,-0.01,  # a: regression coefficients for lambda 1(graft failure)
+  0.02,                  # alpha2
+  -1,-0.01,-0.01,-0.01,  # c: regression coefficients for lambda 2(death)
+  2,0.1,0.1,0.1          # b: regression coefficients for association parameter
+  ), gpl, method="L-BFGS-B",
+                  lower=c(-0.2,               # alpha1
+                          -10,-10,-10,-10,    # a
+                          -0.2,               # alpha2
+                          -10,-10,-10,-10,    # c
+                          -5,-2,-1,-0.5       # b
+                          ),
+                  upper=c(1,                  # alpha1
+                          -1,1,1,1,           # a
+                          1,                  # alpha2
+                          -2,2,1,0.01,        # c
+                          10,6,3,3            # b
+                          ), 
                   X=df$X, Y=df$Y, d1=df$d1, d2=df$d2,age.grp=df$age.grp, donor=df$donor, gen=df$gen,
                   control=list(fnscale=-1),hessian=TRUE)
 
@@ -93,18 +107,15 @@ run_time
 
 plgoptim$par
 
-
-
 ########################################################
 ################## Confidence Intervals ################
 ########################################################
-
 #Fisher's Information matrix
 fisher_info<-solve(-plgoptim$hessian) #inverse -hess
 #Standard error = sqrt(var/n)
 se<-sqrt(diag(fisher_info)) 
 
-#beta ci#
+#b ci: regression coefficients for association parameter#
 est_b0 <- plgoptim$par[11]
 est_b1 <- plgoptim$par[12]
 est_b2 <- plgoptim$par[13]
@@ -118,66 +129,65 @@ upci_b1 <- est_b1 + 1.96*se[12]
 upci_b2 <- est_b2 + 1.96*se[13]
 upci_b3 <- est_b3 + 1.96*se[14] 
 
-#a ci#
-est_a1 <- plgoptim$par[1]
-est_a2 <- plgoptim$par[6]
-lwci_a1 <- est_a1 - 1.96*se[1]
-lwci_a2 <- est_a2 - 1.96*se[6]     
-upci_a1 <- est_a1 + 1.96*se[1] 
-upci_a2 <- est_a2 + 1.96*se[6]
+#alpha ci: shape parameters#
+est_alp1 <- plgoptim$par[1]
+est_alp2 <- plgoptim$par[6]
+lwci_alp1 <- est_alp1 - 1.96*se[1]
+lwci_alp2 <- est_alp2 - 1.96*se[6]     
+upci_alp1 <- est_alp1 + 1.96*se[1] 
+upci_alp2 <- est_alp2 + 1.96*se[6]
 
-#x ci#
-est_x0 <- plgoptim$par[2]
-est_x1 <- plgoptim$par[3]
-est_x2 <- plgoptim$par[4]
-est_x3 <- plgoptim$par[5]
-lwci_x0 <- est_x0 - 1.96*se[2]     
-lwci_x1 <- est_x1 - 1.96*se[3]
-lwci_x2 <- est_x2 - 1.96*se[4]     
-lwci_x3 <- est_x3 - 1.96*se[5]
-upci_x0 <- est_x0 + 1.96*se[2]
-upci_x1 <- est_x1 + 1.96*se[3] 
-upci_x2 <- est_x2 + 1.96*se[4]
-upci_x3 <- est_x3 + 1.96*se[5] 
+#a ci: regression coefficients for lambda 1 (graft failure)#
+est_a0 <- plgoptim$par[2]
+est_a1 <- plgoptim$par[3]
+est_a2 <- plgoptim$par[4]
+est_a3 <- plgoptim$par[5]
+lwci_a0 <- est_a0 - 1.96*se[2]     
+lwci_a1 <- est_a1 - 1.96*se[3]
+lwci_a2 <- est_a2 - 1.96*se[4]     
+lwci_a3 <- est_a3 - 1.96*se[5]
+upci_a0 <- est_a0 + 1.96*se[2]
+upci_a1 <- est_a1 + 1.96*se[3] 
+upci_a2 <- est_a2 + 1.96*se[4]
+upci_a3 <- est_a3 + 1.96*se[5] 
 
-#x ci#
-est_y0 <- plgoptim$par[7]
-est_y1 <- plgoptim$par[8]
-est_y2 <- plgoptim$par[9]
-est_y3 <- plgoptim$par[10]
-lwci_y0 <- est_y0 - 1.96*se[7]     
-lwci_y1 <- est_y1 - 1.96*se[8]
-lwci_y2 <- est_y2 - 1.96*se[9]     
-lwci_y3 <- est_y3 - 1.96*se[10]
-upci_y0 <- est_y0 + 1.96*se[7]
-upci_y1 <- est_y1 + 1.96*se[8] 
-upci_y2 <- est_y2 + 1.96*se[9]
-upci_y3 <- est_y3 + 1.96*se[10] 
+#c ci: regression coefficients for lambda 2 (death) #
+est_c0 <- plgoptim$par[7]
+est_c1 <- plgoptim$par[8]
+est_c2 <- plgoptim$par[9]
+est_c3 <- plgoptim$par[10]
+lwci_c0 <- est_c0 - 1.96*se[7]     
+lwci_c1 <- est_c1 - 1.96*se[8]
+lwci_c2 <- est_c2 - 1.96*se[9]     
+lwci_c3 <- est_c3 - 1.96*se[10]
+upci_c0 <- est_c0 + 1.96*se[7]
+upci_c1 <- est_c1 + 1.96*se[8] 
+upci_c2 <- est_c2 + 1.96*se[9]
+upci_c3 <- est_c3 + 1.96*se[10] 
 
 #hrs
-var_x1 <- fisher_info[3,3]
-var_x2 <- fisher_info[4,4]
-var_x3 <- fisher_info[5,5]
-var_y1 <- fisher_info[8,8]
-var_y2 <- fisher_info[9,9]
-var_y3 <- fisher_info[10,10]
+var_a1 <- fisher_info[3,3]
+var_a2 <- fisher_info[4,4]
+var_a3 <- fisher_info[5,5]
+var_c1 <- fisher_info[8,8]
+var_c2 <- fisher_info[9,9]
+var_c3 <- fisher_info[10,10]
 
-esthr_l1_age <- exp(est_x1)
-esthr_l1_gen <- exp(est_x2)
-esthr_l1_donor <- exp(est_x3)
+esthr_l1_age <- exp(est_a1)
+esthr_l1_gen <- exp(est_a2)
+esthr_l1_donor <- exp(est_a3)
 
-esthr_l2_age <- exp(est_y1)
-esthr_l2_gen <- exp(est_y2)
-esthr_l2_donor <- exp(est_y3)
+esthr_l2_age <- exp(est_c1)
+esthr_l2_gen <- exp(est_c2)
+esthr_l2_donor <- exp(est_c3)
 
-var_hr_l1_age <- exp(est_x1)^2 * var_x1
-var_hr_l1_gen <- exp(est_x2)^2 * var_x2
-var_hr_l1_donor <- exp(est_x3)^2 * var_x3
+var_hr_l1_age <- exp(est_a1)^2 * var_a1
+var_hr_l1_gen <- exp(est_a2)^2 * var_a2
+var_hr_l1_donor <- exp(est_a3)^2 * var_a3
 
-var_hr_l2_age <- exp(est_y1)^2 * var_y1
-var_hr_l2_gen <- exp(est_y2)^2 * var_y2
-var_hr_l2_donor <- exp(est_y3)^2 * var_y3
-
+var_hr_l2_age <- exp(est_c1)^2 * var_c1
+var_hr_l2_gen <- exp(est_c2)^2 * var_c2
+var_hr_l2_donor <- exp(est_c3)^2 * var_c3
 
 hr_l1_lwci_age <- esthr_l1_age - 1.96*sqrt(var_hr_l1_age)
 hr_l1_upci_age <- esthr_l1_age + 1.96*sqrt(var_hr_l1_age)
@@ -197,29 +207,27 @@ hr_l2_upci_gen <- esthr_l2_gen + 1.96*sqrt(var_hr_l2_gen)
 hr_l2_lwci_donor <- esthr_l2_donor - 1.96*sqrt(var_hr_l2_donor)
 hr_l2_upci_donor <- esthr_l2_donor + 1.96*sqrt(var_hr_l2_donor)
 
-
 # Results --------------------------------------------------------------------
-# YW data needed for paper 2: age
+# age
 hr_gf_age <-c(esthr_l1_age,hr_l1_lwci_age, hr_l1_upci_age)
 hr_gf_age
 hr_d_age <-c(esthr_l2_age,hr_l2_lwci_age, hr_l2_upci_age)
 hr_d_age
 
-# YW data needed for paper 2: gender
+# gender
 hr_gf_gender <-c(esthr_l1_gen,hr_l1_lwci_gen, hr_l1_upci_gen)
 hr_gf_gender
 hr_d_gender <-c(esthr_l2_gen,hr_l2_lwci_gen, hr_l2_upci_gen)
 hr_d_gender
 
-# YW data needed for paper 2: donor
+# donor
 hr_gf_donor <-c(esthr_l1_donor,hr_l1_lwci_donor, hr_l1_upci_donor)
 hr_gf_donor
 
 hr_d_donor <-c(esthr_l2_donor,hr_l2_lwci_donor, hr_l2_upci_donor)
 hr_d_donor
 
-
-# YW data needed for paper 2: regression coefficients on association
+# regression coefficients on association
 association_age <- c(est_b1, lwci_b1, upci_b1)
 association_gender<- c(est_b2, lwci_b2, upci_b2)
 association_donor<- c(est_b3, lwci_b3, upci_b3)
@@ -236,12 +244,14 @@ results <- data.frame(results)
 names(results) <-c("hr_gf", "l_gf", "u_gf", "hr_d", "l_d", "u_d", "theta", "l_theta", "u_theta")
 results <- round(results, 3)
 results
+
 # Results --------------------------------------------------------------------
-
-
-
 ##AIC BIC
-para <- c(est_a1, est_x0,est_x1, est_x2, est_x3, est_a2, est_y0, est_y1, est_y2, est_y3, est_b0, est_b1, est_b2, est_b3)
+para <- c(est_alp1, 
+          est_a0,est_a1, est_a2, est_a3, 
+          est_alp2, 
+          est_c0, est_c1, est_c2, est_c3, 
+          est_b0, est_b1, est_b2, est_b3)
 loglik <- gpl(para,X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age.grp=df$age.grp, gen=df$gen, donor=df$donor)
 k<-length(para)
 n<-length(X)
@@ -251,8 +261,56 @@ loglik
 aic
 bic
 
+# to indicate the level in the estimated results
 results$aic = c(round(aic,1), "NA", "NA")
 results$run_time= c(round(run_time,2), "NA", "NA")
 row.names(results) <- c("age.gl50", "gender.female","donor.living") 
-setwd("R/R code for paper 2/bivariate-copula-models-semi-competing-risks")
-write.csv(results, paste0("results/real_data_analysis/", table_ref, "_", copula, "_",survival_distribution, ".csv"))
+################################################################################
+# Create a data frame for regression coefficients                              #
+################################################################################
+#------------------------------------------------------------------------------------
+# regression coefficients in hazard 1 (graft failure): est_a0, est_a1, est_a2, est_a3
+# regression coefficients in hazard 2 (death): est_c0, est_c1, est_c2, est_c3
+# regression coefficients in association parameter: est_b0, est_b1, est_b2, est_b3, 
+# Weibull shape parameter: alp1 = alpha1, alp2 = alpha2, 
+# Weibull scale parameter: beta1 <- exp(a0+a1*age.grp+a2*gen+a3*donor)
+# Weibull scale parameter: beta2 <- exp(c0+c1*age.grp+c2*gen+c3*donor)
+#------------------------------------------------------------------------------------
+reg_coef <- c(est_alp1, lwci_alp1, upci_alp1,
+              est_alp2, lwci_alp2, upci_alp2, 
+              
+              est_a0, lwci_a0, upci_a0, 
+              est_a1, lwci_a1, upci_a1, 
+              est_a2, lwci_a2, upci_a2, 
+              est_a3, lwci_a3, upci_a3,
+              
+              est_c0, lwci_c0, upci_c0, 
+              est_c1, lwci_c1, upci_c1, 
+              est_c2, lwci_c2, upci_c2, 
+              est_c3, lwci_c3, upci_c3, 
+              
+              est_b0, lwci_b0, upci_b0, 
+              est_b1, lwci_b1, upci_b1, 
+              est_b2, lwci_b2, upci_b2, 
+              est_b3, lwci_b3, upci_b3
+)         
+
+reg_coef <- matrix(reg_coef, ncol=3, byrow=T)
+reg_coef <- round(reg_coef, 2)
+data.frame(reg_coef, row.names=NULL)
+
+row.names(reg_coef) <-c("alpha1","alpha2",      # shape parameters in Weibull distributions
+                        "a0", "a1","a2","a3",   # regression coefficients for hazard 1 (graft failure)
+                        "c0","c1","c2","c3",    # regression coefficients for hazard 2 (death)
+                        "b0","b1","b2","b3"     # regression coefficients for association parameter
+                        )
+
+reg_coef
+
+################################################################################
+# Output results                                                               #
+################################################################################
+dir_results <- paste0(dir_data, "results/real_data_analysis/revision_1/")
+write.csv(reg_coef, paste0(dir_results, "parameters_",copula, "_", survival_distribution,".csv"))
+write.csv(results, paste0(dir_results, table_ref, "_", copula, "_",survival_distribution, ".csv"))
+print(paste0("saved output for ", copula, " ", survival_distribution, "!"))
