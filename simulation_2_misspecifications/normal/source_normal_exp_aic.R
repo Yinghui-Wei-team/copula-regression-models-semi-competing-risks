@@ -9,18 +9,11 @@
 library(copula); library(mvtnorm); library(numDeriv)
 start_time = Sys.time()
 #####################################################################################
-#Output directory and output files                                                  #
+#Output files                                                  #
 #####################################################################################
-## directory if on own PC
-dir_results = "../../results/simulation_results/"
 
-# # directory if on cluster
-# dir = "/home/ywei/Simulation/Paper2/Normal"
-# setwd(dir)
-
-# likelihood function
-source("functions/function_sim2.R")
-out_file_estimates <- paste0("S2_misspec_underlying_normal_exp_", part, ".csv")
+# # likelihood function
+out_file_estimates <- paste0("S2_aic_normal_exp_", part, ".csv")
 
 #####################################################################################
 ################## Normal, age, gen from exp chose with aic #######################
@@ -214,7 +207,7 @@ for (i in 1:runs){
     b1_lw <- -0.8
     b1_up <-0.8
     
-    plnoptim_wei <- optim(c(0.67, -2.5, -0.6, 0.94, -3.3, -0.9, 0.3, 0.2), npl_wei, method="L-BFGS-B",
+    plnoptim_wei <- optim(c(0.65, -2.5, -0.6, 0.94, -3.3, -0.9, 0.3, 0.2), npl_wei, method="L-BFGS-B",
                           lower=c(a1_lw, x0_lw, x1_lw, a2_lw, y0_lw, y1_lw, b0_lw, b1_lw),
                           upper=c(a1_up, x0_up, x1_up, a2_up, y0_up, y1_up, b0_up, b1_up), 
                           X=df$X, Y=df$Y, d1=df$d1, d2=df$d2, age=df$age, control=list(fnscale=-1), hessian=TRUE)
